@@ -32,10 +32,13 @@ def context_based_swap(script, input_tbl, _):
     # Replace the input table file name in the script with the new file name and re-execute
     new_script = script.replace(MESSY_DATA, swapped_file)
     script_namespace = {}
-    exec(new_script, None, script_namespace)
-    coordinate_mapping = get_output_tbl(script_namespace)
-    
-    return coordinate_mapping
+    try: 
+        exec(new_script, None, script_namespace)
+    except Exception as e:
+        return False, e
+    else:
+        coordinate_mapping = get_output_tbl(script_namespace)
+        return True, coordinate_mapping
 
 
 def target_based_swap(script, input_tbl, output_tbl):
@@ -67,10 +70,13 @@ def target_based_swap(script, input_tbl, output_tbl):
     # Replace the input table file name in the script with the new file name and re-execute
     new_script = script.replace(MESSY_DATA, swapped_file)
     script_namespace = {}
-    exec(new_script, None, script_namespace)
-    coordinate_mapping = get_output_tbl(script_namespace)
-    
-    return coordinate_mapping
+    try: 
+        exec(new_script, None, script_namespace)
+    except Exception as e:
+        return False, e
+    else:
+        coordinate_mapping = get_output_tbl(script_namespace)
+        return True, coordinate_mapping
 
 
 SWAP_METHODS = {
@@ -130,6 +136,7 @@ def copy_and_rename_csv(path):
     if not csv_files:
         raise FileNotFoundError("No CSV files found in the parent directory")
     
+    csv_files.sort()
     csv_file = csv_files[0]
     target_file = path / MESSY_DATA
     shutil.copy(csv_file, target_file)
@@ -149,6 +156,16 @@ def compare_differences(df1, df2):
                 differences[f'({row_idx}, {col_idx})'] = [df1.iloc[row_idx, col_idx], df2.iloc[row_idx, col_idx]]
 
     return differences
+
+
+def delete_files(folder_path):
+    '''
+    delete csv and json files 
+    '''
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if filename.endswith('.csv') or filename.endswith('.json'):
+            os.remove(file_path)
 
 
 def gen_coordinate_mapping(script_path, save_data=True):
@@ -178,15 +195,25 @@ def gen_coordinate_mapping(script_path, save_data=True):
 
     res_data = {}
     for method in SWAP_METHODS.keys():
-         coord_map = SWAP_METHODS[method](script, input_tbl, output_tbl)
-         coord_map = coord_map.fillna('').astype(str)
-         new_output_tbl, in2out = source2target_mapping(df_messy, coord_map)
-         unused = get_unused_areas(input_tbl, in2out)
-         res_data[method + "_coord_map"] = coord_map
-         res_data[method + "_coord_output"] = new_output_tbl
+        res_swap, coord_map = SWAP_METHODS[method](script, input_tbl, output_tbl)
+        if not res_swap:
+            print(f"An error occurred in the case: {script_path} - {method}.")
+            print(f"The error is: {coord_map}.")
+            continue
+        coord_map = coord_map.fillna('').astype(str)
+        new_output_tbl, in2out = source2target_mapping(df_messy, coord_map)
+        unused = get_unused_areas(input_tbl, in2out)
+        res_data[method + "_coord_map"] = coord_map
+        res_data[method + "_coord_output"] = new_output_tbl
+
+        try:
+            output_differences = compare_differences(output_tbl, new_output_tbl)
+        except Exception as e:
+            print(f"An error occurred in the case: {script_path} - {method} - output_differences.")
+            print(f"The error is: {e}.")
+            output_differences = {}
         #  output_comparison = new_output_tbl.equals(output_tbl) 
-         output_differences = compare_differences(output_tbl, new_output_tbl)
-         res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences}
+        res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences}
 
     # ctx_coord_map = context_based_swap(script, input_tbl)
     # ctx_in2out = source2target_mapping(ctx_coord_map)
@@ -210,11 +237,21 @@ def gen_coordinate_mapping(script_path, save_data=True):
 
 if __name__ == '__main__':
 
+    # df_messy = pd.read_csv("cases/3.swap_counterexample/data.csv", dtype=str, keep_default_na=False, header=None)
+    # data = df_messy.values # .to_json(orient='values') 
+    # print(str(data))
+
     for root, dirs, files in os.walk("."):
         for dir_name in dirs:
             dir_path = os.path.join(root, dir_name)
             if len(dir_path.strip('/').split("/")) == 4:
-                gen_coordinate_mapping(dir_path)
+                # pass
+                # print(dir_path)
+                # gen_coordinate_mapping(dir_path)
+                # delete_files(dir_path)
+                if dir_path.startswith("./cases/3"):
+                    delete_files(dir_path)
+                    gen_coordinate_mapping(dir_path)
 
     # gen_coordinate_mapping('cases/1. university_rank/context-based')
     # gen_coordinate_mapping('cases/1. university_rank/position-based')
