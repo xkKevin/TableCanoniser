@@ -92,6 +92,9 @@ def neighbor_based_comparison(_, input_tbl, output_tbl):
             rx = []
             cy = []
             for j in range(output_tbl.shape[1]):
+                if not output_tbl.iloc[i, j]:
+                    col_map[output_keys[j]] = output_tbl.iloc[i, j]
+                    continue
                 posi_comp = input_tbl.eq(output_tbl.iloc[i, j])
                 stacked_posi = posi_comp.stack()
                 posi_map = list(stacked_posi[stacked_posi].index)
