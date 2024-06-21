@@ -99,7 +99,7 @@ def neighbor_based_comparison(_, input_tbl, output_tbl):
                 if len(posi_map) == 1:
                     rx.append(posi_map[0][0])
                     cy.append(posi_map[0][1])
-                    col_map[output_keys[j]] = posi_map[0]
+                    col_map[output_keys[j]] = f'({posi_map[0][0]},{posi_map[0][1]})'  # posi_map[0]
                 elif len(posi_map) == 0:
                     col_map[output_keys[j]] = output_tbl.iloc[i, j]
                 else:
@@ -110,7 +110,8 @@ def neighbor_based_comparison(_, input_tbl, output_tbl):
             cy_mean = sum(cy) / len(cy)
             for cn, cp in ambiguous_map.items():
                 if isinstance(cp, list):
-                    col_map[cn] = find_nearest_coordinate(cp, rx_mean, cy_mean)
+                    nearest_p = find_nearest_coordinate(cp, rx_mean, cy_mean)
+                    col_map[cn] = f'({nearest_p[0]},{nearest_p[1]})'
             
             ambiguous_posi[i] = ambiguous_map
             coordinate_mapping = coordinate_mapping.append(col_map, ignore_index=True)
@@ -284,6 +285,8 @@ def gen_coordinate_mapping(script_path, save_data=True):
             output_differences = {}
         #  output_comparison = new_output_tbl.equals(output_tbl) 
         res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences, "errors": errors}
+        if ambiguous_posi:
+            res_data[method + "_coord_info"]["ambiguous_posi"] = ambiguous_posi
 
     # ctx_coord_map = context_based_swap(script, input_tbl)
     # ctx_in2out = source2target_mapping(ctx_coord_map)
@@ -317,11 +320,11 @@ if __name__ == '__main__':
             if len(dir_path.strip('/').split("/")) == 4:
                 # pass
                 # print(dir_path)
-                # gen_coordinate_mapping(dir_path)
+                gen_coordinate_mapping(dir_path)
                 # delete_files(dir_path)
-                if dir_path.startswith("./cases/3"):
-                    delete_files(dir_path)
-                    gen_coordinate_mapping(dir_path)
+                # if dir_path.startswith("./cases/3"):
+                #     delete_files(dir_path)
+                #     gen_coordinate_mapping(dir_path)
 
     # gen_coordinate_mapping('cases/1. university_rank/context-based')
     # gen_coordinate_mapping('cases/1. university_rank/position-based')
