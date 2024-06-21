@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import re, os, shutil, json
 from pathlib import Path
 
@@ -11,6 +12,7 @@ def context_based_swap(script, input_tbl, _):
     strings = re.findall(r'\'(.*?)\'|\"(.*?)\"', script)
     context_words = set([s[0] or s[1] for s in strings])
     
+    input_tbl = input_tbl.values
     # Swap non-context words with their coordinates in the new data
     new_data = []
     for row_idx, row in enumerate(input_tbl):
@@ -35,10 +37,10 @@ def context_based_swap(script, input_tbl, _):
     try: 
         exec(new_script, None, script_namespace)
     except Exception as e:
-        return False, e
+        return False, e, None
     else:
         coordinate_mapping = get_output_tbl(script_namespace)
-        return True, coordinate_mapping
+        return True, coordinate_mapping, None
 
 
 def target_based_swap(script, input_tbl, output_tbl):
@@ -48,7 +50,7 @@ def target_based_swap(script, input_tbl, output_tbl):
         for j in range(output_tbl.shape[1]):
             target_words.add(output_tbl.iloc[i, j])
     
-
+    input_tbl = input_tbl.values
     # Swap target words with their coordinates in the new data
     new_data = []
     for row_idx, row in enumerate(input_tbl):
@@ -73,17 +75,81 @@ def target_based_swap(script, input_tbl, output_tbl):
     try: 
         exec(new_script, None, script_namespace)
     except Exception as e:
-        return False, e
+        return False, e, None
     else:
         coordinate_mapping = get_output_tbl(script_namespace)
-        return True, coordinate_mapping
+        return True, coordinate_mapping, None
+
+
+def neighbor_based_comparison(_, input_tbl, output_tbl):
+    coordinate_mapping = pd.DataFrame(columns=output_tbl.columns)
+    output_keys = output_tbl.keys()
+    ambiguous_posi = {}
+    try: 
+        for i in range(output_tbl.shape[0]):
+            col_map = {}
+            ambiguous_map = {}
+            rx = []
+            cy = []
+            for j in range(output_tbl.shape[1]):
+                posi_comp = input_tbl.eq(output_tbl.iloc[i, j])
+                stacked_posi = posi_comp.stack()
+                posi_map = list(stacked_posi[stacked_posi].index)
+                
+                if len(posi_map) == 1:
+                    rx.append(posi_map[0][0])
+                    cy.append(posi_map[0][1])
+                    col_map[output_keys[j]] = posi_map[0]
+                elif len(posi_map) == 0:
+                    col_map[output_keys[j]] = output_tbl.iloc[i, j]
+                else:
+                    # col_map[output_keys[j]] = posi_map
+                    ambiguous_map[output_keys[j]] = posi_map
+                    
+            rx_mean = sum(rx) / len(rx)
+            cy_mean = sum(cy) / len(cy)
+            for cn, cp in ambiguous_map.items():
+                if isinstance(cp, list):
+                    col_map[cn] = find_nearest_coordinate(cp, rx_mean, cy_mean)
+            
+            ambiguous_posi[i] = ambiguous_map
+            coordinate_mapping = coordinate_mapping.append(col_map, ignore_index=True)
+            # posi_map_tbl.loc[i] = col_map.values()
+    except Exception as e:
+        return False, e, ambiguous_posi
+    else:
+       return True, coordinate_mapping, ambiguous_posi
 
 
 SWAP_METHODS = {
     "ctx": context_based_swap,
-    "tgt": target_based_swap
+    "tgt": target_based_swap,
+    "nbr": neighbor_based_comparison
 }
 
+
+def euclidean_distance(coord1, coord2):
+    return np.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2)
+
+
+def find_nearest_coordinate(posi_arr, x, y):
+
+    target = np.array([x, y])
+
+    min_distance = float('inf')
+    nearest_coord = None
+ 
+    for coord in posi_arr:
+        distance = euclidean_distance(coord, target)
+
+        if distance < min_distance:
+            min_distance = distance
+            nearest_coord = coord
+
+    if nearest_coord is not None:
+        nearest_coord = tuple(nearest_coord)
+    
+    return nearest_coord
 
 
 # target2source_mapping
@@ -195,10 +261,13 @@ def gen_coordinate_mapping(script_path, save_data=True):
 
     res_data = {}
     for method in SWAP_METHODS.keys():
-        res_swap, coord_map = SWAP_METHODS[method](script, input_tbl, output_tbl)
+        errors = []
+        res_swap, coord_map, ambiguous_posi = SWAP_METHODS[method](script, df_messy, output_tbl)
         if not res_swap:
             print(f"An error occurred in the case: {script_path} - {method}.")
             print(f"The error is: {coord_map}.")
+            errors.append(str(coord_map))
+            res_data[method + "_coord_info"] = {"errors": errors}
             continue
         coord_map = coord_map.fillna('').astype(str)
         new_output_tbl, in2out = source2target_mapping(df_messy, coord_map)
@@ -211,9 +280,10 @@ def gen_coordinate_mapping(script_path, save_data=True):
         except Exception as e:
             print(f"An error occurred in the case: {script_path} - {method} - output_differences.")
             print(f"The error is: {e}.")
+            errors.append(str(e))
             output_differences = {}
         #  output_comparison = new_output_tbl.equals(output_tbl) 
-        res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences}
+        res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences, "errors": errors}
 
     # ctx_coord_map = context_based_swap(script, input_tbl)
     # ctx_in2out = source2target_mapping(ctx_coord_map)
