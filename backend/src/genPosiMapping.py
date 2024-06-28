@@ -19,7 +19,7 @@ def context_based_swap(script, input_tbl, _):
         new_row = []
         for col_idx, cell_value in enumerate(row):
             if cell_value and cell_value not in context_words:
-                new_row.append(f'({row_idx},{col_idx})') 
+                new_row.append(f'[{row_idx},{col_idx}]') 
             else:
                 new_row.append(cell_value)
         new_data.append(new_row)
@@ -57,7 +57,7 @@ def target_based_swap(script, input_tbl, output_tbl):
         new_row = []
         for col_idx, cell_value in enumerate(row):
             if cell_value and cell_value in target_words:
-                new_row.append(f'({row_idx},{col_idx})')
+                new_row.append(f'[{row_idx},{col_idx}]')
             else:
                 new_row.append(cell_value)
         new_data.append(new_row)
@@ -102,21 +102,22 @@ def neighbor_based_comparison(_, input_tbl, output_tbl):
                 if len(posi_map) == 1:
                     rx.append(posi_map[0][0])
                     cy.append(posi_map[0][1])
-                    col_map[output_keys[j]] = f'({posi_map[0][0]},{posi_map[0][1]})'  # posi_map[0]
+                    col_map[output_keys[j]] = f'[{posi_map[0][0]},{posi_map[0][1]}]'  # posi_map[0]
                 elif len(posi_map) == 0:
                     col_map[output_keys[j]] = output_tbl.iloc[i, j]
                 else:
                     # col_map[output_keys[j]] = posi_map
                     ambiguous_map[output_keys[j]] = posi_map
+                    ambiguous_posi[f'[{i},{j}]'] = posi_map
                     
             rx_mean = sum(rx) / len(rx)
             cy_mean = sum(cy) / len(cy)
             for cn, cp in ambiguous_map.items():
                 if isinstance(cp, list):
                     nearest_p = find_nearest_coordinate(cp, rx_mean, cy_mean)
-                    col_map[cn] = f'({nearest_p[0]},{nearest_p[1]})'
+                    col_map[cn] = f'[{nearest_p[0]},{nearest_p[1]}]'
             
-            ambiguous_posi[i] = ambiguous_map
+            # ambiguous_posi[i] = ambiguous_map
             coordinate_mapping = coordinate_mapping.append(col_map, ignore_index=True)
             # posi_map_tbl.loc[i] = col_map.values()
     except Exception as e:
@@ -162,18 +163,27 @@ def find_nearest_coordinate(posi_arr, x, y):
 def source2target_mapping(df_messy, coordinate_mapping):
     new_output_tbl = pd.DataFrame(columns=coordinate_mapping.columns)
     in2out = dict()
+    out2in = {
+        "cells": dict(),
+        "cols": [coordinate_mapping[col].tolist() for col in coordinate_mapping.columns],
+        "rows": []
+    }
     for i in range(coordinate_mapping.shape[0]):
         row = []
+        out2in["rows"].append(coordinate_mapping.iloc[i].tolist())
         for j in range(coordinate_mapping.shape[1]):
             in_posi = coordinate_mapping.iloc[i,j]
-            if in_posi.startswith('(') and in_posi.endswith(')'):
-                numbers_str = in_posi[1:-1].split(',')
+            out_posi = f'[{i},{j}]'
+            out2in["cells"][out_posi] = in_posi
+            if in_posi.startswith('[') and in_posi.endswith(']'):
+                # numbers_str = in_posi[1:-1].split(',')
+                numbers_str = json.loads(in_posi)
                 numbers_int = [int(num_str) for num_str in numbers_str]
                 value = df_messy.iloc[numbers_int[0], numbers_int[1]]
 
                 if in_posi not in in2out:
                     in2out[in_posi] = []
-                in2out[in_posi].append(f'({i+1},{j})')
+                in2out[in_posi].append(out_posi)
             else:
                 value = in_posi
             row.append(value)
@@ -181,7 +191,7 @@ def source2target_mapping(df_messy, coordinate_mapping):
 
     new_output_tbl
                 
-    return new_output_tbl, in2out
+    return new_output_tbl, in2out, out2in
 
 
 def get_unused_areas(input_tbl, in2out):
@@ -189,7 +199,7 @@ def get_unused_areas(input_tbl, in2out):
     unused_cells = []
     for row_idx, row in enumerate(input_tbl):
         for col_idx, cell_value in enumerate(row):
-            in_posi = f'({row_idx},{col_idx})'
+            in_posi = f'[{row_idx},{col_idx}]'
             if in_posi not in in2out:
                 unused_cells.append(in_posi)
                 
@@ -223,7 +233,7 @@ def compare_differences(df1, df2):
     for row_idx in range(df1.shape[0]):
         for col_idx in range(df1.shape[1]):
             if df1.iloc[row_idx, col_idx] != df2.iloc[row_idx, col_idx]:
-                differences[f'({row_idx}, {col_idx})'] = [df1.iloc[row_idx, col_idx], df2.iloc[row_idx, col_idx]]
+                differences[f'[{row_idx}, {col_idx}]'] = [df1.iloc[row_idx, col_idx], df2.iloc[row_idx, col_idx]]
 
     return differences
 
@@ -263,6 +273,8 @@ def gen_coordinate_mapping(script_path, save_data=True):
     output_tbl = get_output_tbl(script_namespace)
     output_tbl = output_tbl.fillna('').astype(str)
 
+    # print({"input_tbl": input_tbl, "output_tbl": [list(output_tbl.columns)] + output_tbl.values.tolist()})
+
     res_data = {}
     for method in SWAP_METHODS.keys():
         errors = []
@@ -274,7 +286,7 @@ def gen_coordinate_mapping(script_path, save_data=True):
             res_data[method + "_coord_info"] = {"errors": errors}
             continue
         coord_map = coord_map.fillna('').astype(str)
-        new_output_tbl, in2out = source2target_mapping(df_messy, coord_map)
+        new_output_tbl, in2out, out2in = source2target_mapping(df_messy, coord_map)
         unused = get_unused_areas(input_tbl, in2out)
         res_data[method + "_coord_map"] = coord_map
         res_data[method + "_coord_output"] = new_output_tbl
@@ -287,7 +299,7 @@ def gen_coordinate_mapping(script_path, save_data=True):
             errors.append(str(e))
             output_differences = {}
         #  output_comparison = new_output_tbl.equals(output_tbl) 
-        res_data[method + "_coord_info"] = {"in2out": in2out, "unused": unused, "output_differences": output_differences, "errors": errors}
+        res_data[method + "_coord_info"] = {"in2out": in2out, "out2in": out2in, "unused": unused, "output_differences": output_differences, "errors": errors}
         if ambiguous_posi:
             res_data[method + "_coord_info"]["ambiguous_posi"] = ambiguous_posi
 
@@ -323,7 +335,12 @@ if __name__ == '__main__':
             if len(dir_path.strip('/').split("/")) == 4:
                 # pass
                 # print(dir_path)
-                gen_coordinate_mapping(dir_path)
+                # gen_coordinate_mapping(dir_path)
+                # delete_files(dir_path)
+                if dir_path.startswith("./cases/3") and dir_path.endswith("4th round"):
+                    print(dir_path)
+                    # delete_files(dir_path)
+                    gen_coordinate_mapping(dir_path)
                 # delete_files(dir_path)
                 # if dir_path.startswith("./cases/3"):
                 #     delete_files(dir_path)
