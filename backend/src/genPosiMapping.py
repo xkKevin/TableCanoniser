@@ -274,16 +274,18 @@ def gen_coordinate_mapping(script_path, save_data=True):
     output_tbl = output_tbl.fillna('').astype(str)
 
     # print({"input_tbl": input_tbl, "output_tbl": [list(output_tbl.columns)] + output_tbl.values.tolist()})
+    # print({"input_tbl": input_tbl, "output_tbl": output_tbl.values})
 
     res_data = {}
     for method in SWAP_METHODS.keys():
+        res_data[method + "_coord_info"] = {"input_tbl": input_tbl.tolist(), "output_tbl": output_tbl.values.tolist(), "output_col": output_tbl.columns.tolist()}
         errors = []
         res_swap, coord_map, ambiguous_posi = SWAP_METHODS[method](script, df_messy, output_tbl)
         if not res_swap:
             print(f"An error occurred in the case: {script_path} - {method}.")
             print(f"The error is: {coord_map}.")
             errors.append(str(coord_map))
-            res_data[method + "_coord_info"] = {"errors": errors}
+            res_data[method + "_coord_info"]["errors"] = errors
             continue
         coord_map = coord_map.fillna('').astype(str)
         new_output_tbl, in2out, out2in = source2target_mapping(df_messy, coord_map)
@@ -299,7 +301,7 @@ def gen_coordinate_mapping(script_path, save_data=True):
             errors.append(str(e))
             output_differences = {}
         #  output_comparison = new_output_tbl.equals(output_tbl) 
-        res_data[method + "_coord_info"] = {"in2out": in2out, "out2in": out2in, "unused": unused, "output_differences": output_differences, "errors": errors}
+        res_data[method + "_coord_info"].update({"in2out": in2out, "out2in": out2in, "unused": unused, "output_differences": output_differences, "errors": errors})
         if ambiguous_posi:
             res_data[method + "_coord_info"]["ambiguous_posi"] = ambiguous_posi
 
@@ -337,7 +339,8 @@ if __name__ == '__main__':
                 # print(dir_path)
                 # gen_coordinate_mapping(dir_path)
                 # delete_files(dir_path)
-                if dir_path.startswith("./cases/3") and dir_path.endswith("4th round"):
+                # if dir_path.startswith("./cases/3") and dir_path.endswith("4th round"):
+                if dir_path.startswith("./cases/1"):
                     print(dir_path)
                     # delete_files(dir_path)
                     gen_coordinate_mapping(dir_path)

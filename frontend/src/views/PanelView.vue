@@ -6,15 +6,31 @@
       <!-- Column 1 -->
       <div class="column left">
         <div class="view left1">
-          <h2 class="view-title">Input Table</h2>
+          <div class="view-title">
+            <span class="head-text"> Input Table </span>
+            <span class="toolbar" style="float: right; margin-right: 50px">
+              <span class="controller">
+                <a-select
+                  ref="select"
+                  :value="currentCase"
+                  :options="caseOption"
+                  size="small"
+                  @change="handleCaseChange"
+                  @mouseenter="showDropdown"
+                  @mouseleave="hideDropdown"
+                ></a-select>
+              </span>
+            </span>
+          </div>
           <div class="view-content">
             <!-- <p>This is the content of Input Table.</p> -->
             <div id="input-tbl">
               <hot-table
                 ref="inputTbl"
-                :data="input_tbl"
+                :data="caseData.input_tbl"
                 :rowHeaders="true"
                 :colHeaders="true"
+                :manualColumnResize="true"
                 licenseKey="non-commercial-and-evaluation"
               ></hot-table>
             </div>
@@ -37,9 +53,11 @@
             <div id="output-tbl">
               <hot-table
                 ref="outputTbl"
-                :data="output_tbl"
+                :data="caseData.output_tbl"
                 :rowHeaders="true"
-                :colHeaders="output_col"
+                :colHeaders="caseData.output_col"
+                :manualColumnResize="true"
+                :contextMenu="true"
                 licenseKey="non-commercial-and-evaluation"
               ></hot-table>
             </div>
@@ -83,10 +101,12 @@
 </template>
 
 <script>
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { HotTable } from "@handsontable/vue3";
 import { registerAllModules } from "handsontable/registry";
 import "handsontable/dist/handsontable.full.css";
+
+import Data from "@/assets/data/case.json";
 
 // register Handsontable's modules
 registerAllModules();
@@ -94,373 +114,10 @@ registerAllModules();
 export default defineComponent({
   data() {
     return {
-      input_tbl: [
-        ["OnePlus 2", "$330", "", "", "", "", ""],
-        ["Release Date", "Aug 2015", "", "", "", "", ""],
-        [
-          "Dimensions",
-          "Height",
-          "151.8 mm",
-          "Width",
-          "74.9 mm",
-          "Depth",
-          "9.85 mm",
-        ],
-        ["Weight", "175 g", "", "", "", "", ""],
-        ["Camera", "5", "13", "", "", "", ""],
-        ["Battery", "3300 mAh LiPO", "", "", "", "", ""],
-        ["", "", "", "", "", "", ""],
-        ["Motorola X PURE", "$400", "", "", "", "", ""],
-        ["Release Date", "Sept 2015", "", "", "", "", ""],
-        [
-          "Dimensions",
-          "Width",
-          "76.2 mm",
-          "Height",
-          "153.9 mm",
-          "Depth",
-          "6.1 to 11.06 mm",
-        ],
-        ["Weight", "179 g", "", "", "", "", ""],
-        ["Camera", "5", "21", "", "", "", ""],
-        ["Battery", "3000 mAh", "", "", "", "", ""],
-        ["", "", "", "", "", "", ""],
-        ["Samsung Galaxy S6", "$580", "", "", "", "", ""],
-        ["Announced Date", "2015 Apr", "", "", "", "", ""],
-        ["Dimensions", "H", "143.4 mm", "W", "70.5 mm", "D", "6.8 mm"],
-        ["Weight", "138 g", "", "", "", "", ""],
-        ["Camera", "16", "5", "", "", "", ""],
-        ["Battery", "2550 mAh", "", "", "", "", ""],
-        ["", "", "", "", "", "", ""],
-        ["Samsung Galaxy Note 5", "$720", "", "", "", "", ""],
-        ["Announced Date", "2015 Aug", "", "", "", "", ""],
-        ["Dimensions", "W", "76.1 mm", "H", "153.2 mm", "D", "7.6 mm"],
-        ["Weight", "171 g", "", "", "", "", ""],
-        ["Camera", "16", "5", "", "", "", ""],
-        ["Battery", "3000 mAh LiPO", "", "", "", "", ""],
-        ["", "", "", "", "", "", ""],
-        ["Apple iPhone 6s", "$650", "", "", "", "", ""],
-        ["Release Date", "Sept 2015", "", "", "", "", ""],
-        [
-          "Dimensions",
-          "Height",
-          "138.3 mm",
-          "Width",
-          "67.1 mm",
-          "Depth",
-          "7.1 mm",
-        ],
-        ["Weight", "143 g", "", "", "", "", ""],
-        ["Camera", "5", "12", "", "", "", ""],
-        ["Battery", "1715 mAh LiPO", "", "", "", "", ""],
-      ],
-      output_col: [
-        "Phone",
-        "Price",
-        "Release Date",
-        "Height",
-        "Width",
-        "Depth",
-        "Weight",
-        "Front Camera",
-        "Rear Camera",
-        "Battery",
-      ],
-      output_tbl: [
-        [
-          "OnePlus 2",
-          "$330",
-          "Aug 2015",
-          "151.8 mm",
-          "74.9 mm",
-          "9.85 mm",
-          "175 g",
-          "5",
-          "13",
-          "3300 mAh LiPO",
-        ],
-        [
-          "Motorola X PURE",
-          "$400",
-          "Sept 2015",
-          "153.9 mm",
-          "76.2 mm",
-          "6.1 to 11.06 mm",
-          "179 g",
-          "5",
-          "21",
-          "3000 mAh",
-        ],
-        [
-          "Samsung Galaxy S6",
-          "$580",
-          "2015 Apr",
-          "143.4 mm",
-          "70.5 mm",
-          "6.8 mm",
-          "138 g",
-          "5",
-          "16",
-          "2550 mAh",
-        ],
-        [
-          "Samsung Galaxy Note 5",
-          "$720",
-          "2015 Aug",
-          "153.2 mm",
-          "76.1 mm",
-          "7.6 mm",
-          "171 g",
-          "5",
-          "16",
-          "3000 mAh LiPO",
-        ],
-        [
-          "Apple iPhone 6s",
-          "$650",
-          "Sept 2015",
-          "138.3 mm",
-          "67.1 mm",
-          "7.1 mm",
-          "143 g",
-          "5",
-          "12",
-          "1715 mAh LiPO",
-        ],
-      ],
-      in2out: {
-        "[0,0]": ["[0,0]"],
-        "[0,1]": ["[0,1]"],
-        "[1,1]": ["[0,2]"],
-        "[2,2]": ["[0,3]"],
-        "[2,4]": ["[0,4]"],
-        "[2,6]": ["[0,5]"],
-        "[3,1]": ["[0,6]"],
-        "[4,1]": ["[0,7]"],
-        "[4,2]": ["[0,8]"],
-        "[5,1]": ["[0,9]"],
-        "[7,0]": ["[1,0]"],
-        "[7,1]": ["[1,1]"],
-        "[8,1]": ["[1,2]"],
-        "[9,4]": ["[1,3]"],
-        "[9,2]": ["[1,4]"],
-        "[9,6]": ["[1,5]"],
-        "[10,1]": ["[1,6]"],
-        "[11,1]": ["[1,7]"],
-        "[11,2]": ["[1,8]"],
-        "[12,1]": ["[1,9]"],
-        "[14,0]": ["[2,0]"],
-        "[14,1]": ["[2,1]"],
-        "[15,1]": ["[2,2]"],
-        "[16,2]": ["[2,3]"],
-        "[16,4]": ["[2,4]"],
-        "[16,6]": ["[2,5]"],
-        "[17,1]": ["[2,6]"],
-        "[18,2]": ["[2,7]"],
-        "[18,1]": ["[2,8]"],
-        "[19,1]": ["[2,9]"],
-        "[21,0]": ["[3,0]"],
-        "[21,1]": ["[3,1]"],
-        "[22,1]": ["[3,2]"],
-        "[23,4]": ["[3,3]"],
-        "[23,2]": ["[3,4]"],
-        "[23,6]": ["[3,5]"],
-        "[24,1]": ["[3,6]"],
-        "[25,2]": ["[3,7]"],
-        "[25,1]": ["[3,8]"],
-        "[26,1]": ["[3,9]"],
-        "[28,0]": ["[4,0]"],
-        "[28,1]": ["[4,1]"],
-        "[29,1]": ["[4,2]"],
-        "[30,2]": ["[4,3]"],
-        "[30,4]": ["[4,4]"],
-        "[30,6]": ["[4,5]"],
-        "[31,1]": ["[4,6]"],
-        "[32,1]": ["[4,7]"],
-        "[32,2]": ["[4,8]"],
-        "[33,1]": ["[4,9]"],
-      },
-      out2in: {
-        cells: {
-          "[0,0]": "[0,0]",
-          "[0,1]": "[0,1]",
-          "[0,2]": "[1,1]",
-          "[0,3]": "[2,2]",
-          "[0,4]": "[2,4]",
-          "[0,5]": "[2,6]",
-          "[0,6]": "[3,1]",
-          "[0,7]": "[4,1]",
-          "[0,8]": "[4,2]",
-          "[0,9]": "[5,1]",
-          "[1,0]": "[7,0]",
-          "[1,1]": "[7,1]",
-          "[1,2]": "[8,1]",
-          "[1,3]": "[9,4]",
-          "[1,4]": "[9,2]",
-          "[1,5]": "[9,6]",
-          "[1,6]": "[10,1]",
-          "[1,7]": "[11,1]",
-          "[1,8]": "[11,2]",
-          "[1,9]": "[12,1]",
-          "[2,0]": "[14,0]",
-          "[2,1]": "[14,1]",
-          "[2,2]": "[15,1]",
-          "[2,3]": "[16,2]",
-          "[2,4]": "[16,4]",
-          "[2,5]": "[16,6]",
-          "[2,6]": "[17,1]",
-          "[2,7]": "[18,2]",
-          "[2,8]": "[18,1]",
-          "[2,9]": "[19,1]",
-          "[3,0]": "[21,0]",
-          "[3,1]": "[21,1]",
-          "[3,2]": "[22,1]",
-          "[3,3]": "[23,4]",
-          "[3,4]": "[23,2]",
-          "[3,5]": "[23,6]",
-          "[3,6]": "[24,1]",
-          "[3,7]": "[25,2]",
-          "[3,8]": "[25,1]",
-          "[3,9]": "[26,1]",
-          "[4,0]": "[28,0]",
-          "[4,1]": "[28,1]",
-          "[4,2]": "[29,1]",
-          "[4,3]": "[30,2]",
-          "[4,4]": "[30,4]",
-          "[4,5]": "[30,6]",
-          "[4,6]": "[31,1]",
-          "[4,7]": "[32,1]",
-          "[4,8]": "[32,2]",
-          "[4,9]": "[33,1]",
-        },
-        cols: [
-          ["[0,0]", "[7,0]", "[14,0]", "[21,0]", "[28,0]"],
-          ["[0,1]", "[7,1]", "[14,1]", "[21,1]", "[28,1]"],
-          ["[1,1]", "[8,1]", "[15,1]", "[22,1]", "[29,1]"],
-          ["[2,2]", "[9,4]", "[16,2]", "[23,4]", "[30,2]"],
-          ["[2,4]", "[9,2]", "[16,4]", "[23,2]", "[30,4]"],
-          ["[2,6]", "[9,6]", "[16,6]", "[23,6]", "[30,6]"],
-          ["[3,1]", "[10,1]", "[17,1]", "[24,1]", "[31,1]"],
-          ["[4,1]", "[11,1]", "[18,2]", "[25,2]", "[32,1]"],
-          ["[4,2]", "[11,2]", "[18,1]", "[25,1]", "[32,2]"],
-          ["[5,1]", "[12,1]", "[19,1]", "[26,1]", "[33,1]"],
-        ],
-        rows: [
-          [
-            "[0,0]",
-            "[0,1]",
-            "[1,1]",
-            "[2,2]",
-            "[2,4]",
-            "[2,6]",
-            "[3,1]",
-            "[4,1]",
-            "[4,2]",
-            "[5,1]",
-          ],
-          [
-            "[7,0]",
-            "[7,1]",
-            "[8,1]",
-            "[9,4]",
-            "[9,2]",
-            "[9,6]",
-            "[10,1]",
-            "[11,1]",
-            "[11,2]",
-            "[12,1]",
-          ],
-          [
-            "[14,0]",
-            "[14,1]",
-            "[15,1]",
-            "[16,2]",
-            "[16,4]",
-            "[16,6]",
-            "[17,1]",
-            "[18,2]",
-            "[18,1]",
-            "[19,1]",
-          ],
-          [
-            "[21,0]",
-            "[21,1]",
-            "[22,1]",
-            "[23,4]",
-            "[23,2]",
-            "[23,6]",
-            "[24,1]",
-            "[25,2]",
-            "[25,1]",
-            "[26,1]",
-          ],
-          [
-            "[28,0]",
-            "[28,1]",
-            "[29,1]",
-            "[30,2]",
-            "[30,4]",
-            "[30,6]",
-            "[31,1]",
-            "[32,1]",
-            "[32,2]",
-            "[33,1]",
-          ],
-        ],
-      },
-      ambiguous_posi: {
-        "[0,7]": [
-          [4, 1],
-          [11, 1],
-          [18, 2],
-          [25, 2],
-          [32, 1],
-        ],
-        "[1,2]": [
-          [8, 1],
-          [29, 1],
-        ],
-        "[1,7]": [
-          [4, 1],
-          [11, 1],
-          [18, 2],
-          [25, 2],
-          [32, 1],
-        ],
-        "[2,7]": [
-          [4, 1],
-          [11, 1],
-          [18, 2],
-          [25, 2],
-          [32, 1],
-        ],
-        "[2,8]": [
-          [18, 1],
-          [25, 1],
-        ],
-        "[3,7]": [
-          [4, 1],
-          [11, 1],
-          [18, 2],
-          [25, 2],
-          [32, 1],
-        ],
-        "[3,8]": [
-          [18, 1],
-          [25, 1],
-        ],
-        "[4,2]": [
-          [8, 1],
-          [29, 1],
-        ],
-        "[4,7]": [
-          [4, 1],
-          [11, 1],
-          [18, 2],
-          [25, 2],
-          [32, 1],
-        ],
-      },
+      isOpen: false,
+      currentCase: ref(""),
+      caseOption: ref([]),
+      caseData: ref({}),
       hotSettings: {
         data: [
           {
@@ -562,6 +219,14 @@ export default defineComponent({
   components: {
     HotTable,
   },
+  beforeMount() {
+    this.caseOption = Object.keys(Data).map((v) => {
+      return { value: v, label: v };
+    });
+    this.currentCase = this.caseOption[0].value;
+    this.caseData = Data[this.currentCase];
+    // console.log(this.caseData);
+  },
   mounted() {
     const inHotInst = this.$refs.inputTbl.hotInstance;
     const outHotInst = this.$refs.outputTbl.hotInstance;
@@ -579,8 +244,22 @@ export default defineComponent({
       //   console.log(coords);
       let cell_posi = [];
       if (coords.row < 0) {
-        if (this.out2in.cols[coords.col]) {
-          this.out2in.cols[coords.col].forEach((posi) => {
+        if (this.caseData.out2in.cols[coords.col]) {
+          this.caseData.out2in.cols[coords.col].forEach((posi) => {
+            if (posi.startsWith("[") && posi.endsWith("]")) {
+              posi = JSON.parse(posi);
+              cell.push({
+                row: posi[0],
+                col: posi[1],
+                className: "posi-mapping",
+              });
+              cell_posi.push(posi);
+            }
+          });
+        }
+      } else if (coords.col < 0) {
+        this.caseData.out2in.rows[coords.row].forEach((posi) => {
+          if (posi.startsWith("[") && posi.endsWith("]")) {
             posi = JSON.parse(posi);
             cell.push({
               row: posi[0],
@@ -588,20 +267,18 @@ export default defineComponent({
               className: "posi-mapping",
             });
             cell_posi.push(posi);
-          });
-        }
-      } else if (coords.col < 0) {
-        this.out2in.rows[coords.row].forEach((posi) => {
-          posi = JSON.parse(posi);
-          cell.push({ row: posi[0], col: posi[1], className: "posi-mapping" });
-          cell_posi.push(posi);
+          }
         });
       } else {
         let output_posi = `[${coords.row},${coords.col}]`;
-        let posi = this.out2in.cells[output_posi];
-        if (posi) {
-          if (output_posi in this.ambiguous_posi) {
-            this.ambiguous_posi[output_posi].forEach((in_posi) => {
+        let posi = this.caseData.out2in.cells[output_posi];
+        console.log(222, output_posi, posi);
+        if (posi.startsWith("[") && posi.endsWith("]")) {
+          if (
+            this.caseData.ambiguous_posi &&
+            output_posi in this.caseData.ambiguous_posi
+          ) {
+            this.caseData.ambiguous_posi[output_posi].forEach((in_posi) => {
               cell.push({
                 row: in_posi[0],
                 col: in_posi[1],
@@ -626,13 +303,15 @@ export default defineComponent({
         }
       }
       inHotInst.updateSettings({ cell });
-      let start_point = this.startPoint(cell_posi);
-      inHotInst.scrollViewportTo({
-        row: start_point[0],
-        col: start_point[1],
-        verticalSnap: "top",
-        horizontalSnap: "start",
-      });
+      if (cell_posi.length) {
+        let start_point = this.startPoint(cell_posi);
+        inHotInst.scrollViewportTo({
+          row: start_point[0],
+          col: start_point[1],
+          verticalSnap: "top",
+          horizontalSnap: "start",
+        });
+      }
     });
 
     inHotInst.updateSettings({
@@ -643,26 +322,36 @@ export default defineComponent({
     });
     inHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
       let cell = [];
-      let posi = this.in2out[`[${coords.row},${coords.col}]`];
+      let posi = this.caseData.in2out[`[${coords.row},${coords.col}]`];
       if (posi) {
-        posi = JSON.parse(posi);
-        cell.push({ row: posi[0], col: posi[1], className: "posi-mapping" });
-        outHotInst.scrollViewportTo({
-          row: posi[0],
-          col: posi[1],
-          verticalSnap: "top",
-          horizontalSnap: "start",
+        posi.forEach((pi) => {
+          pi = JSON.parse(pi);
+          cell.push({ row: pi[0], col: pi[1], className: "posi-mapping" });
+          outHotInst.scrollViewportTo({
+            row: pi[0],
+            col: pi[1],
+            verticalSnap: "top",
+            horizontalSnap: "start",
+          });
         });
       }
       outHotInst.updateSettings({ cell });
     });
   },
   methods: {
+    showDropdown() {
+      //   this.isOpen = true;
+    },
+    hideDropdown() {
+      //   this.isOpen = false;
+    },
+    handleCaseChange(value) {
+      this.currentCase = value;
+      this.caseData = Data[this.currentCase];
+      this.$refs.inputTbl.hotInstance.updateData(this.caseData.input_tbl);
+      this.$refs.outputTbl.hotInstance.updateData(this.caseData.output_tbl);
+    },
     startPoint(points) {
-      if (points.length === 0) {
-        throw new Error("Coordinate array is empty");
-      }
-
       let topLeft = points[0];
 
       for (let i = 1; i < points.length; i++) {
