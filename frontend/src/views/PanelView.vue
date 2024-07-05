@@ -1,69 +1,21 @@
 <template>
-  <div id="app">
+  <div id="panel">
     <div class="system-name">TableTydier</div>
 
     <div class="main-views">
       <!-- Column 1 -->
       <div class="column left">
-        <div class="view left1">
-          <div class="view-title">
-            <span class="head-text"> Input Table </span>
-            <span class="toolbar" style="float: right; margin-right: 50px">
-              <span class="controller">
-                <a-select
-                  ref="select"
-                  :value="currentCase"
-                  :options="caseOption"
-                  size="small"
-                  @change="handleCaseChange"
-                  @mouseenter="showDropdown"
-                  @mouseleave="hideDropdown"
-                ></a-select>
-              </span>
-            </span>
-          </div>
-          <div class="view-content">
-            <!-- <p>This is the content of Input Table.</p> -->
-            <div id="input-tbl">
-              <hot-table
-                ref="inputTbl"
-                :data="caseData.input_tbl"
-                :rowHeaders="true"
-                :colHeaders="true"
-                :manualColumnResize="true"
-                licenseKey="non-commercial-and-evaluation"
-              ></hot-table>
-            </div>
-          </div>
-        </div>
-
-        <div class="view left2">
-          <h2 class="view-title">Transformation Script</h2>
-          <div class="view-content">
-            <p>This is the content of Transformation Script.</p>
-          </div>
-        </div>
+        <!-- <in-out-table></in-out-table> -->
       </div>
 
       <!-- Column 2 -->
       <div class="column center">
         <div class="view center1">
-          <h2 class="view-title">Output Table</h2>
+          <h2 class="view-title">Transformation Script</h2>
           <div class="view-content">
-            <div id="output-tbl">
-              <hot-table
-                ref="outputTbl"
-                :data="caseData.output_tbl"
-                :rowHeaders="true"
-                :colHeaders="caseData.output_col"
-                :manualColumnResize="true"
-                :contextMenu="true"
-                licenseKey="non-commercial-and-evaluation"
-              ></hot-table>
-            </div>
+            <p>This is the content of Transformation Script.</p>
           </div>
         </div>
-
         <div class="view center2">
           <h2 class="view-title">Chat</h2>
           <div class="view-content">
@@ -106,6 +58,8 @@ import { HotTable } from "@handsontable/vue3";
 import { registerAllModules } from "handsontable/registry";
 import "handsontable/dist/handsontable.full.css";
 
+import { InOutTable } from "@/components/InOutTable.vue";
+
 import Data from "@/assets/data/case.json";
 
 // register Handsontable's modules
@@ -118,6 +72,7 @@ export default defineComponent({
       currentCase: ref(""),
       caseOption: ref([]),
       caseData: ref({}),
+
       hotSettings: {
         data: [
           {
@@ -218,6 +173,7 @@ export default defineComponent({
   },
   components: {
     HotTable,
+    InOutTable,
   },
   beforeMount() {
     this.caseOption = Object.keys(Data).map((v) => {
@@ -228,115 +184,9 @@ export default defineComponent({
     // console.log(this.caseData);
   },
   mounted() {
-    const inHotInst = this.$refs.inputTbl.hotInstance;
-    const outHotInst = this.$refs.outputTbl.hotInstance;
     const testHotInst = this.$refs.testTbl.hotInstance;
-    window.inHotInst = inHotInst;
+    console.log(typeof testHotInst, this.$refs.testTbl);
     window.testHotInst = testHotInst;
-    outHotInst.updateSettings({
-      outsideClickDeselects: (event) => {
-        inHotInst.updateSettings({ cell: [] });
-        return true;
-      },
-    });
-    outHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
-      let cell = [];
-      //   console.log(coords);
-      let cell_posi = [];
-      if (coords.row < 0) {
-        if (this.caseData.out2in.cols[coords.col]) {
-          this.caseData.out2in.cols[coords.col].forEach((posi) => {
-            if (posi.startsWith("[") && posi.endsWith("]")) {
-              posi = JSON.parse(posi);
-              cell.push({
-                row: posi[0],
-                col: posi[1],
-                className: "posi-mapping",
-              });
-              cell_posi.push(posi);
-            }
-          });
-        }
-      } else if (coords.col < 0) {
-        this.caseData.out2in.rows[coords.row].forEach((posi) => {
-          if (posi.startsWith("[") && posi.endsWith("]")) {
-            posi = JSON.parse(posi);
-            cell.push({
-              row: posi[0],
-              col: posi[1],
-              className: "posi-mapping",
-            });
-            cell_posi.push(posi);
-          }
-        });
-      } else {
-        let output_posi = `[${coords.row},${coords.col}]`;
-        let posi = this.caseData.out2in.cells[output_posi];
-        console.log(222, output_posi, posi);
-        if (posi.startsWith("[") && posi.endsWith("]")) {
-          if (
-            this.caseData.ambiguous_posi &&
-            output_posi in this.caseData.ambiguous_posi
-          ) {
-            this.caseData.ambiguous_posi[output_posi].forEach((in_posi) => {
-              cell.push({
-                row: in_posi[0],
-                col: in_posi[1],
-                className: "ambiguous-cell",
-              });
-            });
-            posi = JSON.parse(posi);
-            cell.push({
-              row: posi[0],
-              col: posi[1],
-              className: "determined-cell",
-            });
-          } else {
-            posi = JSON.parse(posi);
-            cell.push({
-              row: posi[0],
-              col: posi[1],
-              className: "posi-mapping",
-            });
-          }
-          cell_posi.push(posi);
-        }
-      }
-      inHotInst.updateSettings({ cell });
-      if (cell_posi.length) {
-        let start_point = this.startPoint(cell_posi);
-        inHotInst.scrollViewportTo({
-          row: start_point[0],
-          col: start_point[1],
-          verticalSnap: "top",
-          horizontalSnap: "start",
-        });
-      }
-    });
-
-    inHotInst.updateSettings({
-      outsideClickDeselects: (event) => {
-        outHotInst.updateSettings({ cell: [] });
-        return true;
-      },
-    });
-    inHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
-      let cell = [];
-      let posi = this.caseData.in2out[`[${coords.row},${coords.col}]`];
-      if (posi) {
-        posi.forEach((pi) => {
-          pi = JSON.parse(pi);
-          cell.push({ row: pi[0], col: pi[1], className: "posi-mapping" });
-          outHotInst.scrollViewportTo({
-            row: pi[0],
-            col: pi[1],
-            verticalSnap: "top",
-            horizontalSnap: "start",
-          });
-        });
-      }
-      outHotInst.updateSettings({ cell });
-    });
   },
   methods: {
     showDropdown() {
@@ -391,7 +241,7 @@ td.determined-cell {
   background-color: #37bc6c;
 }
 
-#app {
+#panel {
   font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
@@ -399,7 +249,7 @@ td.determined-cell {
   height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #f0f0f0; /* Background color for the whole app */
+  background-color: #f0f0f0; /* Background color for the whole panel */
 }
 
 .system-name {

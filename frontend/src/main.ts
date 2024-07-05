@@ -1,8 +1,14 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import store from './store'
+
+import { createPinia } from 'pinia'
+
+const pinia = createPinia()
+const app = createApp(App)
 
 import { Select, Upload, Button } from "ant-design-vue";
 // import 'ant-design-vue/dist/antd.css'
 
-createApp(App).use(store).use(Select).mount('#app')
+app.use(pinia).use(Select)
+
+app.mount('#app')
