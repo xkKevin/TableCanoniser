@@ -2,8 +2,9 @@ import { defineStore } from 'pinia'
 
 import caseData from "@/assets/data/case.json";
 
+// type Posi = [number, number];
 
-interface TblVisData {
+export interface TblVisData {
   input_tbl: string[][];
   output_tbl: string[][];
   output_col: string[];
@@ -13,6 +14,7 @@ interface TblVisData {
     cols: string[][],
     rows: string[][]
   },
+  ambiguous_posi?: { [key: string]: number[][] },
   [key: string]: any  // Index signature, allowing other fields
 }
 

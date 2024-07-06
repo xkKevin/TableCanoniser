@@ -5,7 +5,7 @@
     <div class="main-views">
       <!-- Column 1 -->
       <div class="column left">
-        <!-- <in-out-table></in-out-table> -->
+        <InOutTable />
       </div>
 
       <!-- Column 2 -->
@@ -19,11 +19,7 @@
         <div class="view center2">
           <h2 class="view-title">Chat</h2>
           <div class="view-content">
-            <hot-table
-              ref="testTbl"
-              :settings="hotSettings"
-              licenseKey="non-commercial-and-evaluation"
-            ></hot-table>
+            <hot-table ref="testTbl" :settings="hotSettings" licenseKey="non-commercial-and-evaluation"></hot-table>
           </div>
         </div>
       </div>
@@ -58,7 +54,7 @@ import { HotTable } from "@handsontable/vue3";
 import { registerAllModules } from "handsontable/registry";
 import "handsontable/dist/handsontable.full.css";
 
-import { InOutTable } from "@/components/InOutTable.vue";
+import InOutTable from "@/components/InOutTable.vue";
 
 import Data from "@/assets/data/case.json";
 
@@ -185,37 +181,12 @@ export default defineComponent({
   },
   mounted() {
     const testHotInst = this.$refs.testTbl.hotInstance;
-    console.log(typeof testHotInst, this.$refs.testTbl);
+    // console.log(typeof testHotInst, this.$refs.testTbl);
     window.testHotInst = testHotInst;
+    // console.log(this.$refs.Chat, this.$refs.inputTbl, this.$refs.outputTbl);
   },
   methods: {
-    showDropdown() {
-      //   this.isOpen = true;
-    },
-    hideDropdown() {
-      //   this.isOpen = false;
-    },
-    handleCaseChange(value) {
-      this.currentCase = value;
-      this.caseData = Data[this.currentCase];
-      this.$refs.inputTbl.hotInstance.updateData(this.caseData.input_tbl);
-      this.$refs.outputTbl.hotInstance.updateData(this.caseData.output_tbl);
-    },
-    startPoint(points) {
-      let topLeft = points[0];
 
-      for (let i = 1; i < points.length; i++) {
-        let current = points[i];
-        if (
-          current[0] < topLeft[0] ||
-          (current[0] === topLeft[0] && current[1] < topLeft[1])
-        ) {
-          topLeft = current;
-        }
-      }
-
-      return topLeft;
-    },
   },
 });
 </script>
@@ -249,7 +220,8 @@ td.determined-cell {
   height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #f0f0f0; /* Background color for the whole panel */
+  background-color: #f0f0f0;
+  /* Background color for the whole panel */
 }
 
 .system-name {
@@ -259,8 +231,10 @@ td.determined-cell {
   margin-top: 3px;
   //   margin: 20px 0;
   padding: 10px 16px;
-  background-color: #3498db; /* System name background color */
-  color: white; /* System name text color */
+  background-color: #3498db;
+  /* System name background color */
+  color: white;
+  /* System name text color */
   //   border-radius: 8px;
 }
 
@@ -273,18 +247,23 @@ td.determined-cell {
 
   .left {
     flex: 6;
+
     .view {
       flex: 1;
     }
   }
+
   .center {
     flex: 6;
+
     .view {
       flex: 1;
     }
   }
+
   .right {
     flex: 3;
+
     .view {
       height: calc(100vh - 80px);
     }
@@ -303,14 +282,16 @@ td.determined-cell {
   //   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #ffffff; /* View background color */
+  background-color: #ffffff;
+  /* View background color */
 }
 
 .view-title {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 10px;
-  color: #2c3e50; /* View title text color */
+  color: #2c3e50;
+  /* View title text color */
 }
 
 .view-content {
@@ -332,7 +313,8 @@ td.determined-cell {
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 5px;
-  color: #e67e22; /* Sub-view title text color */
+  color: #e67e22;
+  /* Sub-view title text color */
 }
 
 #input-tbl {
