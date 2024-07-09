@@ -31,7 +31,7 @@ export const useTableStore = defineStore('table', {
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
       mapping_spec: '',
-      transformation_script: '',
+      transform_script: '',
     }
   },
   // methods
@@ -54,7 +54,7 @@ export const useTableStore = defineStore('table', {
         }
         const script_res = await fetch(case_path + 'script.py');
         if (script_res.ok) {
-          this.transformation_script = await script_res.text();
+          this.transform_script = await script_res.text();
         } else {
           prompt.push(`Failed to load script from ${caseN}`);
         }

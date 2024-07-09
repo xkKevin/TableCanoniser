@@ -11,13 +11,13 @@
       <!-- Column 2 -->
       <div class="column center">
         <div class="view center1">
-          <h2 class="view-title">Mapping Specification</h2>
+          <h2 class="view-title">Mapping Template Specification</h2>
           <div class="view-content">
-            <MappingSepc />
+            <CodeView codeType="mapping_spec" />
           </div>
         </div>
         <div class="view center2">
-          <h2 class="view-title">Chat</h2>
+          <h2 class="view-title">Mapping Template Visualization</h2>
           <div class="view-content">
             <hot-table ref="testTbl" :settings="hotSettings" licenseKey="non-commercial-and-evaluation"></hot-table>
           </div>
@@ -26,21 +26,16 @@
 
       <!-- Column 3 -->
       <div class="column right">
-        <div class="view">
-          <h2 class="view-title">Mapping Details</h2>
-          <div class="view-content mapping-details">
-            <div class="sub-view sub1">
-              <h3 class="sub-view-title">Observation-based Mapping</h3>
-              <p>This is the content of Observation-based Mapping.</p>
-            </div>
-            <div class="sub-view sub2">
-              <h3 class="sub-view-title">Variable-based Mapping</h3>
-              <p>This is the content of Variable-based Mapping .</p>
-            </div>
-            <div class="sub-view sub3">
-              <h3 class="sub-view-title">Unused Area</h3>
-              <p>This is the content of Unused Area.</p>
-            </div>
+        <div class="view center1">
+          <h2 class="view-title">Transformation Script</h2>
+          <div class="view-content">
+            <CodeView codeType="transform_script" />
+          </div>
+        </div>
+        <div class="view center2">
+          <h2 class="view-title">Chat</h2>
+          <div class="view-content">
+
           </div>
         </div>
       </div>
@@ -55,7 +50,7 @@ import { registerAllModules } from "handsontable/registry";
 import "handsontable/dist/handsontable.full.css";
 
 import InOutTable from "@/components/InOutTable.vue";
-import MappingSepc from "@/components/MappingSepc.vue";
+import CodeView from "@/components/CodeView.vue";
 
 // register Handsontable's modules
 registerAllModules();
@@ -165,7 +160,7 @@ export default defineComponent({
   components: {
     HotTable,
     InOutTable,
-    MappingSepc,
+    CodeView,
   },
   beforeMount() {
   },
@@ -237,6 +232,7 @@ td.determined-cell {
 
   .left {
     flex: 6;
+    height: calc(100vh - 54px);
 
     .view {
       flex: 1;
@@ -244,7 +240,7 @@ td.determined-cell {
   }
 
   .center {
-    flex: 6;
+    flex: 5;
 
     .view {
       flex: 1;
@@ -252,10 +248,11 @@ td.determined-cell {
   }
 
   .right {
-    flex: 3;
+    flex: 4;
 
     .view {
-      height: calc(100vh - 80px);
+      flex: 1;
+      // height: calc(100vh - 80px);
     }
   }
 }

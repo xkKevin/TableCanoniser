@@ -3,67 +3,19 @@ let template_case1 = [
     {
       position: {
         x: StartPoint.x,
-        y: StartPoint.y,
+        y: Range(StartPoint.y, StartPoint.y + 3, 1),
       },
       target: {
-        column: "Rank",
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y + 1,
-      },
-      target: {
-        column: "Name",
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y + 2,
-      },
-      target: {
-        column: "Location",
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y + 3,
-      },
-      target: {
-        column: "Total Score",
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x + 2,
-        y: StartPoint.y + 1,
-      },
-      context: [
-        {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => {
-            if (value in ["Level", "Resource", "Education"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
+        column: (i) => {
+          let cols = ["Rank", "Name", "Location", "Total Score"];
+          return cols[i];
         },
-      ],
-      target: {
-        column: () => this.context[0].value,
       },
     },
     {
       position: {
-        x: StartPoint.x + 2,
-        y: StartPoint.y + 2,
+        x: Range(StartPoint.x + 2, StartPoint.x + 4, 2),
+        y: Range(StartPoint.y + 1, StartPoint.y + 3, 1),
       },
       context: [
         {
@@ -71,109 +23,7 @@ let template_case1 = [
             x: () => this.position.x - 1,
             y: () => this.position.y,
           },
-          value: (value) => {
-            if (value in ["Level", "Resource", "Education"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
-        },
-      ],
-      target: {
-        column: () => this.context[0].value,
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x + 2,
-        y: StartPoint.y + 3,
-      },
-      context: [
-        {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => {
-            if (value in ["Level", "Resource", "Education"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
-        },
-      ],
-      target: {
-        column: () => this.context[0].value,
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x + 4,
-        y: StartPoint.y + 1,
-      },
-      context: [
-        {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => {
-            if (value in ["Research", "Elite", "Global"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
-        },
-      ],
-      target: {
-        column: () => this.context[0].value,
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x + 4,
-        y: StartPoint.y + 2,
-      },
-      context: [
-        {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => {
-            if (value in ["Research", "Elite", "Global"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
-        },
-      ],
-      target: {
-        column: () => this.context[0].value,
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x + 4,
-        y: StartPoint.y + 3,
-      },
-      context: [
-        {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => {
-            if (value in ["Research", "Elite", "Global"]) {
-              return true;
-            } else {
-              return false;
-            }
-          },
+          value: (value) => value != "",
         },
       ],
       target: {

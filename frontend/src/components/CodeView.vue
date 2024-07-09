@@ -5,7 +5,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 export default defineComponent({
-    name: "MappingSepc"
+    name: "CodeView",
 });
 </script>
 
@@ -14,11 +14,26 @@ import * as monaco from "monaco-editor";
 import { onMounted, ref, watch } from "vue";
 import { useTableStore } from "@/store/table";
 
+
+const { codeType } = defineProps<{ codeType: "mapping_spec" | "transform_script" }>();
+
+// const props = defineProps(['codeType'])
+// const codeType: "mapping_spec" | "transform_script" = props.codeType;
+
+// const { codeType} = defineProps({
+//   codeType: {
+//     type: String as () => "mapping_spec" | "transform_script",
+//     required: true,
+//   },
+// });
+
+// const codeType = defineProps(['codeType']).codeType as "mapping_spec" | "transform_script"; // incorrect way to use defineProps
+
 const tableStore = useTableStore();
 
 const editorDefaultOptions = {
     value: '',
-    language: 'javascript',
+    language: codeType === "mapping_spec" ? 'javascript' : 'python',
     theme: 'vs',
     fontSize: 14,
     glyphMargin: false,
@@ -40,7 +55,7 @@ const initEditor = () => {
     }
     const editorOptions = {
         ...editorDefaultOptions,
-        value: tableStore.mapping_spec,
+        value: tableStore[codeType],
     };
     editor = monaco.editor.create(editorWrapper.value!, editorOptions as monaco.editor.IEditorConstructionOptions);  // ! means that editorWrapper.value is not null
 };
@@ -49,7 +64,7 @@ watch(() => tableStore.currentCase, (newVal) => {
     // mappingSpec = (await tableStore.loadCaseSpec(newVal)).spec;
     // mappingSpec = tableStore.mapping_spec;
     // initEditor();
-    editor?.setValue(tableStore.mapping_spec);  // update editor content; ? means if editor is not null then call setValue, else do nothing
+    editor?.setValue(tableStore[codeType]);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
 onMounted(() => {
