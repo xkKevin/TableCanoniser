@@ -40,21 +40,34 @@ export const useTableStore = defineStore('table', {
       let prompt: string[] = [];
       let case_path = `/${caseN}/`;
       try {
-        const data_res = await fetch(case_path + 'data.json');
-        if (data_res.ok) {
-          this.caseData = JSON.parse(await data_res.text());
+        // Parallel processing of all fetch requests
+        const [data_res, spec_res, script_res] = await Promise.all([
+          fetch(case_path + 'data.json'),
+          fetch(case_path + 'spec.js'),
+          fetch(case_path + 'script.py')
+        ]);
+
+        // Parallel processing of all text extraction
+        const [dataText, specText, scriptText] = await Promise.all([
+          data_res.ok ? data_res.text() : Promise.resolve(null),
+          spec_res.ok ? spec_res.text() : Promise.resolve(null),
+          script_res.ok ? script_res.text() : Promise.resolve(null)
+        ]);
+
+        if (dataText !== null) {
+          this.caseData = JSON.parse(dataText);
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
-        const spec_res = await fetch(case_path + 'spec.js');
-        if (spec_res.ok) {
-          this.mapping_spec = await spec_res.text();
+
+        if (specText !== null) {
+          this.mapping_spec = specText;
         } else {
           prompt.push(`Failed to load spec from ${caseN}`);
         }
-        const script_res = await fetch(case_path + 'script.py');
-        if (script_res.ok) {
-          this.transform_script = await script_res.text();
+
+        if (scriptText !== null) {
+          this.transform_script = scriptText;
         } else {
           prompt.push(`Failed to load script from ${caseN}`);
         }
