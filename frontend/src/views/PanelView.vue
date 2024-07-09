@@ -11,9 +11,9 @@
       <!-- Column 2 -->
       <div class="column center">
         <div class="view center1">
-          <h2 class="view-title">Transformation Script</h2>
+          <h2 class="view-title">Mapping Specification</h2>
           <div class="view-content">
-            <p>This is the content of Transformation Script.</p>
+            <MappingSepc />
           </div>
         </div>
         <div class="view center2">
@@ -55,8 +55,7 @@ import { registerAllModules } from "handsontable/registry";
 import "handsontable/dist/handsontable.full.css";
 
 import InOutTable from "@/components/InOutTable.vue";
-
-import Data from "@/assets/data/case.json";
+import MappingSepc from "@/components/MappingSepc.vue";
 
 // register Handsontable's modules
 registerAllModules();
@@ -65,10 +64,6 @@ export default defineComponent({
   data() {
     return {
       isOpen: false,
-      currentCase: ref(""),
-      caseOption: ref([]),
-      caseData: ref({}),
-
       hotSettings: {
         data: [
           {
@@ -170,14 +165,9 @@ export default defineComponent({
   components: {
     HotTable,
     InOutTable,
+    MappingSepc,
   },
   beforeMount() {
-    this.caseOption = Object.keys(Data).map((v) => {
-      return { value: v, label: v };
-    });
-    this.currentCase = this.caseOption[0].value;
-    this.caseData = Data[this.currentCase];
-    // console.log(this.caseData);
   },
   mounted() {
     const testHotInst = this.$refs.testTbl.hotInstance;

@@ -20,7 +20,7 @@
     <div class="view-title">Output Table</div>
     <div class="view-content">
       <div id="output-tbl">
-        <hot-table ref="outputTbl" :data="caseData.output_tbl" :rowHeaders="true" :colHeaders="caseData.output_col"
+        <hot-table ref="outputTbl" :data="caseData.output_tbl" :rowHeaders="true" :colHeaders="output_col"
           :manualColumnResize="true" :contextMenu="true" licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
@@ -53,20 +53,21 @@ import { useTableStore, TblVisData } from "@/store/table";
 registerAllModules();
 
 const tableStore = useTableStore();
-const tblCases: { [key: string]: TblVisData } = tableStore.cases;
+// const tblCases: { [key: string]: TblVisData } = tableStore.cases;
+let caseData: TblVisData = tableStore.caseData;
+let output_col = ref(caseData.output_col);
 
 // let caseOption: Ref<{ value: string; label: string; }[]> = ref([]);
 let caseOption = ref<{ value: string; label: string }[]>([]);
 
-caseOption.value = Object.keys(tblCases).map((v) => {
+caseOption.value = tableStore.caseList.map((v) => {
   return { value: v, label: v };
 });
 
-let currentCase = ref("");
-currentCase.value = caseOption.value[0].value;
+let currentCase = ref(tableStore.caseList[0]);
 
 // let caseData = ref(tblCases[currentCase.value]);
-let caseData = tblCases[currentCase.value];
+// let caseData = tblCases[currentCase.value];
 
 function startPoint(points: [number, number][]) {
   let topLeft = points[0];
@@ -87,9 +88,28 @@ function startPoint(points: [number, number][]) {
 let inHotInst: Handsontable;
 let outHotInst: Handsontable;
 
-onMounted(() => {
-  const proxy = getCurrentInstance()?.proxy as ComponentPublicInstance;
+// onBeforeMount(async () => { // if onBeforeMount is async, it may execute after onMounted
+//   console.log("1");
+//   let prompt = await tableStore.loadCaseData();
+//   caseData = tableStore.caseData;
+//   console.log(prompt, caseData, tableStore.mapping_spec);
+//   console.log("3", caseData);
+// });
 
+// let prompt = async () => await tableStore.loadCaseData();
+// prompt();
+// caseData = tableStore.caseData;
+// console.log("prompt", prompt, caseData);
+
+// async () => {
+//   let prompt = await tableStore.loadCaseData();
+//   caseData = tableStore.caseData;
+//   loading.value = true;
+// }
+
+onMounted(() => {
+
+  const proxy = getCurrentInstance()?.proxy as ComponentPublicInstance;
   inHotInst = (proxy.$refs.inputTbl as any).hotInstance as Handsontable;
   outHotInst = (proxy.$refs.outputTbl as any).hotInstance as Handsontable;
 
@@ -203,6 +223,7 @@ onMounted(() => {
     }
     outHotInst.updateSettings({ cell });
   });
+  handleCaseChange(currentCase.value);
 });
 
 function showDropdown() {
@@ -211,9 +232,13 @@ function showDropdown() {
 function hideDropdown() {
   //   isOpen = false;
 }
-function handleCaseChange(value: string) {
+async function handleCaseChange(value: string) {
   currentCase.value = value;
-  caseData = tblCases[currentCase.value];
+  // tableStore.currentCase = value;
+  // caseData = tblCases[currentCase.value];
+  await tableStore.loadCaseData(value);
+  caseData = tableStore.caseData;
+  output_col.value = caseData.output_col;
   inHotInst.updateData(caseData.input_tbl);
   outHotInst.updateData(caseData.output_tbl);
 }
