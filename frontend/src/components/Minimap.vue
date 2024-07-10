@@ -45,7 +45,7 @@ const drawGrid = (rows: number, cols: number) => {
     const cellHeight = Math.min(20, Math.ceil(containerHeight / rows) - 1);
 
     zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.5, 3])  // set the zoom scale range
+        .scaleExtent([0.5, 3.5])  // set the zoom scale range
         .on('zoom', function (event) {
             // svg.attr('transform', event.transform);  // 直接设置svg的transform属性会导致缩放后的坐标系不正确（导致的问题是：用鼠标平移（pan）矩形的时候，矩形会抖动，导致矩形实际平移的距离小于鼠标平移的距离），因此需要在svg内部再添加一个g元素
             // d3.select('g.matrix').attr('transform', event.transform);
@@ -93,25 +93,33 @@ const drawGrid = (rows: number, cols: number) => {
     matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
     transformStatue = d3.zoomIdentity;
 
-    const texts = matrix.selectAll('text')
-        .data(d3.range(rows * cols))
-        .enter().append('text').classed('cell-text', true)
-        .attr('x', d => (d % cols) * cellWidth + cellWidth / 2)
-        .attr('y', d => Math.floor(d / cols) * cellHeight + cellHeight / 2)
-        .attr('dy', '.30em')
-        .attr('font-size', '10px')
-        .attr('text-anchor', 'middle')
-        .text(d => `(${Math.floor(d / cols)}, ${d % cols})`)
-        .style('display', 'none') // Initially hide text
-        .style('pointer-events', 'none'); // Ensure text does not capture mouse events, in order to allow clicking on the cells
+    let texts: any = null;
 
     const updateCellTextVisibility = (scale: number) => {
         const scaledCellWidth = cellWidth * scale;
         const scaledCellHeight = cellHeight * scale;
-        const cellArea = scaledCellWidth * scaledCellHeight;
-
-        svg.selectAll('text.cell-text')
-            .style('display', cellArea >= 900 ? 'block' : 'none');
+        // const cellArea = scaledCellWidth * scaledCellHeight;
+        if (scaledCellWidth >= 45 && scaledCellHeight >= 20) {
+            if (texts) {
+                texts.style('display', 'block');
+            } else {
+                texts = matrix.selectAll('text')
+                    .data(d3.range(rows * cols))
+                    .enter().append('text').classed('cell-text', true)
+                    .attr('x', d => (d % cols) * cellWidth + cellWidth / 2)
+                    .attr('y', d => Math.floor(d / cols) * cellHeight + cellHeight / 2)
+                    .attr('dy', '.30em')
+                    .attr('font-size', 15 / scale)
+                    .attr('text-anchor', 'middle')
+                    .text(d => `(${Math.floor(d / cols)}, ${d % cols})`)
+                    .style('display', 'block')
+                    .style('pointer-events', 'none'); // Ensure text does not capture mouse events, in order to allow clicking on the cells
+            }
+        } else {
+            if (texts) {
+                texts.style('display', 'none');
+            }
+        }
     };
 
     updateCellTextVisibility(1); // Initial update for default scale 1
