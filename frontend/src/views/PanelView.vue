@@ -13,7 +13,7 @@
         <div class="view center1">
           <h2 class="view-title">Mapping Minimap</h2>
           <div class="view-content">
-            <Minimap :dimensions="[10, 10]" />
+            <Minimap />
           </div>
         </div>
         <div class="view center2">
