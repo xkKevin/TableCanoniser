@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script lang="ts">
+<!-- <script lang="ts">
 import { defineComponent } from "vue";
 import { HotTable } from "@handsontable/vue3";
 import "handsontable/dist/handsontable.full.css";
@@ -36,7 +36,7 @@ export default defineComponent({
   name: "InOutTable",
   components: { HotTable },
 });
-</script>
+</script> -->
 
 <script setup lang="ts">
 import {
@@ -45,6 +45,8 @@ import {
   ref,
   onMounted,
 } from "vue";
+import { HotTable } from "@handsontable/vue3";
+import "handsontable/dist/handsontable.full.css";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
 import { useTableStore, TblVisData } from "@/store/table";

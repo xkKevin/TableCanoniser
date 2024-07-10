@@ -2,12 +2,12 @@
     <div ref="editorWrapper" class="editor-container"></div>
 </template>
 
-<script lang="ts">
+<!-- <script lang="ts">
 import { defineComponent } from "vue";
 export default defineComponent({
     name: "CodeView",
 });
-</script>
+</script> -->
 
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
@@ -37,10 +37,17 @@ const editorDefaultOptions = {
     theme: 'vs',
     fontSize: 14,
     glyphMargin: false,
-    automaticLayout: true,
+    automaticLayout: false, // Automatic layout may cause "ResizeObserver loop completed with undelivered notifications." warning. To avoid this, set automaticLayout to false
     autoIndent: 'advanced',
     readOnly: false,
+    minimap: {
+        enabled: false,
+    },
     lineNumbersMinChars: 1,
+    scrollBeyondLastLine: false, // Prevent scrolling beyond the last line
+    padding: {
+        bottom: 80, // Adjust the bottom padding to 80px
+    },
 };
 
 const editorWrapper = ref<HTMLElement | null>(null);
@@ -67,9 +74,27 @@ watch(() => tableStore.currentCase, (newVal) => {
     editor?.setValue(tableStore[codeType]);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
+import { debounce } from 'lodash';
+const handleResize = debounce(() => {
+    if (editor) {
+        editor.layout();
+    }
+}, 100); // Adjust the delay time, in milliseconds
+
+// 监听整个窗口的大小变化，通常会引发更多不必要的回调执行，可能会影响性能。
+// window.addEventListener('resize', handleResize);
+
+const resizeObserver = new ResizeObserver(() => {
+    // console.log("Resize observed", entries);
+    handleResize();
+});
+
 onMounted(() => {
-    // mappingSpec = (await tableStore.loadCaseSpec(tableStore.currentCase)).spec;
-    initEditor();
+    if (editorWrapper.value) {
+        initEditor();
+        // 可以精确地监听元素大小变化，避免了全局 resize 事件可能带来的性能问题，尤其是当页面上有多个需要监听大小变化的元素时。
+        resizeObserver.observe(editorWrapper.value);
+    }
 });
 
 

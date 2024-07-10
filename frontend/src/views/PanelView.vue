@@ -11,30 +11,43 @@
       <!-- Column 2 -->
       <div class="column center">
         <div class="view center1">
-          <h2 class="view-title">Mapping Template Specification</h2>
+          <h2 class="view-title">Mapping Minimap</h2>
           <div class="view-content">
-            <CodeView codeType="mapping_spec" />
+            <Minimap :dimensions="[10, 10]" />
           </div>
         </div>
         <div class="view center2">
           <h2 class="view-title">Mapping Template Visualization</h2>
           <div class="view-content">
-            <hot-table ref="testTbl" :settings="hotSettings" licenseKey="non-commercial-and-evaluation"></hot-table>
           </div>
         </div>
       </div>
 
       <!-- Column 3 -->
       <div class="column right">
-        <div class="view center1">
-          <h2 class="view-title">Transformation Script</h2>
+        <div class="view">
+          <h2 class="view-title">Code Panel</h2>
           <div class="view-content">
-            <CodeView codeType="transform_script" />
-          </div>
-        </div>
-        <div class="view center2">
-          <h2 class="view-title">Chat</h2>
-          <div class="view-content">
+            <a-tabs v-model:activeKey="codePanel" type="card">
+              <a-tab-pane key="1">
+                <template #tab>
+                  <span>
+                    <!-- <apple-outlined /> -->
+                    Mapping Specification
+                  </span>
+                </template>
+                <CodeView codeType="mapping_spec" />
+              </a-tab-pane>
+              <a-tab-pane key="2">
+                <template #tab>
+                  <span>
+                    <!-- <android-outlined /> -->
+                    Transformation Script
+                  </span>
+                </template>
+                <CodeView codeType="transform_script" />
+              </a-tab-pane>
+            </a-tabs>
 
           </div>
         </div>
@@ -45,130 +58,27 @@
 
 <script>
 import { defineComponent, ref } from "vue";
-import { HotTable } from "@handsontable/vue3";
-import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.css";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
-
-// register Handsontable's modules
-registerAllModules();
+import Minimap from "@/components/Minimap.vue";
 
 export default defineComponent({
   data() {
     return {
       isOpen: false,
-      hotSettings: {
-        data: [
-          {
-            brand: "Jetpulse",
-            model: "Racing Socks",
-            price: 30,
-            sellDate: "Oct 11, 2023",
-            sellTime: "01:23 AM",
-            inStock: false,
-          },
-          {
-            brand: "Gigabox",
-            model: "HL Mountain Frame",
-            price: 1890.9,
-            sellDate: "May 3, 2023",
-            sellTime: "11:27 AM",
-            inStock: false,
-          },
-          {
-            brand: "Camido",
-            model: "Cycling Cap",
-            price: 130.1,
-            sellDate: "Mar 27, 2023",
-            sellTime: "03:17 AM",
-            inStock: true,
-          },
-          {
-            brand: "Chatterpoint",
-            model: "Road Tire Tube",
-            price: 59,
-            sellDate: "Aug 28, 2023",
-            sellTime: "08:01 AM",
-            inStock: true,
-          },
-          {
-            brand: "Eidel",
-            model: "HL Road Tire",
-            price: 279.99,
-            sellDate: "Oct 2, 2023",
-            sellTime: "01:23 AM",
-            inStock: true,
-          },
-        ],
-        colHeaders: true,
-        columns: [
-          {
-            title: "Brand",
-            type: "text",
-            data: "brand",
-          },
-          {
-            title: "Model",
-            type: "text",
-            data: "model",
-          },
-          {
-            title: "Price",
-            type: "numeric",
-            data: "price",
-            numericFormat: {
-              pattern: "$ 0,0.00",
-              culture: "en-US",
-            },
-          },
-          {
-            title: "Date",
-            // type: "date",
-            data: "sellDate",
-            // dateFormat: "MMM D, YYYY",
-            correctFormat: false,
-            className: "htRight",
-          },
-          {
-            title: "Time",
-            type: "time",
-            data: "sellTime",
-            timeFormat: "hh:mm A",
-            correctFormat: true,
-            className: "htRight",
-          },
-          {
-            title: "In stock",
-            type: "checkbox",
-            data: "inStock",
-            className: "htCenter",
-          },
-        ],
-        rowHeaders: true,
-        cell: [
-          {
-            row: 0,
-            col: 0,
-            className: "posi-mapping",
-          },
-        ],
-      },
+      codePanel: "1",
     };
   },
   components: {
-    HotTable,
     InOutTable,
     CodeView,
+    Minimap,
   },
   beforeMount() {
   },
   mounted() {
-    const testHotInst = this.$refs.testTbl.hotInstance;
-    // console.log(typeof testHotInst, this.$refs.testTbl);
-    window.testHotInst = testHotInst;
-    // console.log(this.$refs.Chat, this.$refs.inputTbl, this.$refs.outputTbl);
+
   },
   methods: {
 
@@ -230,9 +140,12 @@ td.determined-cell {
   padding: 1px;
   box-sizing: border-box;
 
+  .column {
+    height: calc(100vh - 54px);
+  }
+
   .left {
     flex: 6;
-    height: calc(100vh - 54px);
 
     .view {
       flex: 1;
@@ -248,11 +161,20 @@ td.determined-cell {
   }
 
   .right {
-    flex: 4;
+    flex: 5;
 
     .view {
+
       flex: 1;
-      // height: calc(100vh - 80px);
+
+      // // height: calc(100vh - 80px);
+      .ant-tabs {
+        height: 100%;
+
+        .ant-tabs-content {
+          height: 100%;
+        }
+      }
     }
   }
 }
@@ -282,7 +204,8 @@ td.determined-cell {
 }
 
 .view-content {
-  overflow-y: auto;
+  // overflow-y: auto;
+  overflow: hidden;
   height: calc(100% - 40px);
 }
 

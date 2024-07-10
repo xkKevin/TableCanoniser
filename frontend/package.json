@@ -11,6 +11,7 @@
     "@handsontable/vue3": "^14.4.0",
     "ant-design-vue": "^4.2.3",
     "core-js": "^3.8.3",
+    "d3": "^7.9.0",
     "handsontable": "^14.4.0",
     "monaco-editor": "^0.50.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
@@ -19,6 +20,8 @@
   },
   "devDependencies": {
     "@babel/plugin-transform-class-static-block": "^7.24.7",
+    "@types/d3": "^7.4.3",
+    "@types/lodash": "^4.17.6",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",

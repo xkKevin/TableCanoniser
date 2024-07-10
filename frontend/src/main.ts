@@ -6,9 +6,9 @@ import { createPinia } from 'pinia'
 const pinia = createPinia()
 const app = createApp(App)
 
-import { Select, Upload, Button } from "ant-design-vue";
+import { Select, Upload, Button, Tabs } from "ant-design-vue";
 // import 'ant-design-vue/dist/antd.css'
 
-app.use(pinia).use(Select)
+app.use(pinia).use(Select).use(Tabs)
 
 app.mount('#app')
