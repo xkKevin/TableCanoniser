@@ -115,6 +115,7 @@ onMounted(() => {
   outHotInst.updateSettings({
     outsideClickDeselects: () => {
       inHotInst.updateSettings({ cell: [] });
+      tableStore.highlightMinimapCells([])
       return true;
     },
   });

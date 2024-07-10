@@ -1,7 +1,7 @@
 <template>
   <div id="panel">
     <div class="system-name">TableTydier</div>
-
+    <ChatBot />
     <div class="main-views">
       <!-- Column 1 -->
       <div class="column left">
@@ -57,6 +57,7 @@ import { ref } from "vue";
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
+import ChatBot from "@/components/ChatBot.vue";
 
 let codePanel = ref("1");
 
