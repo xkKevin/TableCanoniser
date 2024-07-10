@@ -71,22 +71,6 @@ let currentCase = ref(tableStore.caseList[0]);
 // let caseData = ref(tblCases[currentCase.value]);
 // let caseData = tblCases[currentCase.value];
 
-function startPoint(points: [number, number][]) {
-  let topLeft = points[0];
-
-  for (let i = 1; i < points.length; i++) {
-    let current = points[i];
-    if (
-      current[0] < topLeft[0] ||
-      (current[0] === topLeft[0] && current[1] < topLeft[1])
-    ) {
-      topLeft = current;
-    }
-  }
-
-  return topLeft;
-}
-
 let inHotInst: Handsontable;
 let outHotInst: Handsontable;
 
@@ -115,6 +99,9 @@ onMounted(() => {
   inHotInst = (proxy.$refs.inputTbl as any).hotInstance as Handsontable;
   outHotInst = (proxy.$refs.outputTbl as any).hotInstance as Handsontable;
 
+  tableStore.input_tbl.instance = inHotInst;
+  tableStore.output_tbl.instance = outHotInst;
+
   // console.log("96", proxy.$refs.inputTbl, proxy.$refs.testTbl, proxy.$refs.Chat);
 
   // const inputTbl = ref();
@@ -134,75 +121,10 @@ onMounted(() => {
   outHotInst.addHook("afterOnCellMouseDown", () => {
     inHotInst.updateSettings({ cell: [] });
   });
-  outHotInst.addHook("afterOnCellMouseUp", (event, coords) => {
-    let cell: Handsontable.GridSettings["cell"] = [];
-    let cell_posi: [number, number][] = [];
-    if (coords.row < 0) {
-      if (caseData.out2in.cols[coords.col]) {
-        caseData.out2in.cols[coords.col].forEach((posi) => {
-          if (posi.startsWith("[") && posi.endsWith("]")) {
-            let pi_n = JSON.parse(posi) as [number, number];
-            cell.push({
-              row: pi_n[0],
-              col: pi_n[1],
-              className: "posi-mapping",
-            });
-            cell_posi.push(pi_n);
-          }
-        });
-      }
-    } else if (coords.col < 0) {
-      caseData.out2in.rows[coords.row].forEach((posi) => {
-        if (posi.startsWith("[") && posi.endsWith("]")) {
-          // posi = JSON.parse(posi);
-          let pi_n = JSON.parse(posi) as [number, number];
-          cell.push({
-            row: pi_n[0],
-            col: pi_n[1],
-            className: "posi-mapping",
-          });
-          cell_posi.push(pi_n);
-        }
-      });
-    } else {
-      let output_posi = `[${coords.row},${coords.col}]`;
-      let posi = caseData.out2in.cells[output_posi];
-      if (posi.startsWith("[") && posi.endsWith("]")) {
-        let pi_n = JSON.parse(posi) as [number, number];
-        if (caseData.ambiguous_posi && output_posi in caseData.ambiguous_posi) {
-          caseData.ambiguous_posi[output_posi].forEach((in_posi) => {
-            cell.push({
-              row: in_posi[0],
-              col: in_posi[1],
-              className: "ambiguous-cell",
-            });
-          });
-          cell.push({
-            row: pi_n[0],
-            col: pi_n[1],
-            className: "determined-cell",
-          });
-        } else {
-          cell.push({
-            row: pi_n[0],
-            col: pi_n[1],
-            className: "posi-mapping",
-          });
-        }
-        cell_posi.push(pi_n);
-      }
-    }
-    inHotInst.updateSettings({ cell });
-    if (cell_posi.length) {
-      let start_point = startPoint(cell_posi);
-
-      inHotInst.scrollViewportTo({
-        row: start_point[0],
-        col: start_point[1],
-        verticalSnap: "top",
-        horizontalSnap: "start",
-      });
-    }
+  outHotInst.addHook("afterOnCellMouseUp", (event, coords, grid) => {
+    const cells = tableStore.out2in_mapping(coords);
+    tableStore.highlightTblCells("input_tbl", cells);
+    tableStore.highlightMinimapCells(cells);
   });
 
   inHotInst.updateSettings({
@@ -215,21 +137,9 @@ onMounted(() => {
     outHotInst.updateSettings({ cell: [] });
   });
   inHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
-    let cell: Handsontable.GridSettings["cell"] = [];
-    let posi = caseData.in2out[`[${coords.row},${coords.col}]`];
-    if (posi) {
-      posi.forEach((pi) => {
-        let pi_n = JSON.parse(pi) as [number, number];
-        cell.push({ row: pi_n[0], col: pi_n[1], className: "posi-mapping" });
-        outHotInst.scrollViewportTo({
-          row: pi_n[0],
-          col: pi_n[1],
-          verticalSnap: "top",
-          horizontalSnap: "start",
-        });
-      });
-    }
-    outHotInst.updateSettings({ cell });
+    const cells = tableStore.in2out_mapping(coords);
+    tableStore.highlightTblCells("output_tbl", cells);
+    tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
   });
   handleCaseChange(currentCase.value);
 });

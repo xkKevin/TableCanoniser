@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
-import { useTableStore } from "@/store/table";
+import { useTableStore, TblCell } from "@/store/table";
 
 const tableStore = useTableStore();
 
@@ -31,6 +31,16 @@ function resetZoom() {
         d3.select(container.value).select('svg').transition().duration(750)
             .call(zoom.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
     }
+}
+
+function generateGrid(rows: number, cols: number) {
+    const grid: TblCell[] = [];
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            grid.push({ row: i, col: j });
+        }
+    }
+    return grid;
 }
 
 const drawGrid = (rows: number, cols: number) => {
@@ -61,30 +71,42 @@ const drawGrid = (rows: number, cols: number) => {
         .call(zoom)  // 注意，这里添加zoom的是svg元素，而不是g.matrix元素，所以当resetZoom时，需要对svg元素进行transform操作
 
     const matrix = svg.append('g').classed("matrix", true);  // Append a 'g' element for better transform management to avoid jittering
+    let texts: any = null;
+
+    const grids = generateGrid(rows, cols);
 
     const cells = matrix.selectAll('rect')
-        .data(d3.range(rows * cols))
-        .enter().append('rect')
-        .attr('x', d => (d % cols) * cellWidth)
-        .attr('y', d => Math.floor(d / cols) * cellHeight)
+        .data(grids)
+        .enter().append('rect').classed('grid-cell', true)
+        .attr('x', d => d.col * cellWidth)
+        .attr('y', d => d.row * cellHeight)
+        .attr('id', d => `grid-${d.row}-${d.col}`)
         .attr('width', cellWidth)
         .attr('height', cellHeight)
-        .attr('fill', 'grey')
-        .attr('stroke', 'black')
+        .attr('fill', '#f9f7ff')
+        .attr('stroke', '#cccccc')
         .on('mouseover', function () {
-            d3.select(this)
-                .attr('stroke', 'red')
-                .attr('fill', 'blue');
+            d3.select(this).raise() // Bring the cell to the front 
+                // .attr('fill', '#ece9e6')
+                // .attr('stroke', '#4b8aff')
+                .attr('stroke-width', 2);
+            if (texts) {
+                texts.raise();
+            }
         })
         .on('mouseout', function () {
             d3.select(this)
-                .attr('stroke', 'black')
-                .attr('fill', 'grey');
+                // .attr('fill', '#f9f7ff')
+                // .attr('stroke', '#cccccc')
+                .attr('stroke-width', 1);
         })
         .on('click', function (event, d) {
-            const x = d % cols;
-            const y = Math.floor(d / cols);
-            console.log(`Clicked on cell: (${y}, ${x})`);
+            // console.log(`Clicked on cell: (${d.row}, ${d.col})`);
+            // const input_tbl_cell = d3.select('#input-tbl tbody').select(`tr:nth-child(${d.row + 1})`).select(`td:nth-child(${d.col + 2})`) as d3.Selection<HTMLElement, unknown, HTMLElement, any>;
+
+            // input_tbl_cell.node()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); // Dispatch a click event on the corresponding cell in the input table
+            // input_tbl_cell.dispatch('mouseup')
+            tableStore.grid_cell_click({ row: d.row, col: d.col })
         });
 
     // Calculate the offset to center the matrix in the SVG container
@@ -93,7 +115,7 @@ const drawGrid = (rows: number, cols: number) => {
     matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
     transformStatue = d3.zoomIdentity;
 
-    let texts: any = null;
+
 
     const updateCellTextVisibility = (scale: number) => {
         const scaledCellWidth = cellWidth * scale;
@@ -104,14 +126,16 @@ const drawGrid = (rows: number, cols: number) => {
                 texts.style('display', 'block');
             } else {
                 texts = matrix.selectAll('text')
-                    .data(d3.range(rows * cols))
-                    .enter().append('text').classed('cell-text', true)
-                    .attr('x', d => (d % cols) * cellWidth + cellWidth / 2)
-                    .attr('y', d => Math.floor(d / cols) * cellHeight + cellHeight / 2)
+                    .data(grids)
+                    .enter().append('text').classed('grid-text', true)
+                    .attr('x', d => d.col * cellWidth + cellWidth / 2)
+                    .attr('y', d => d.row * cellHeight + cellHeight / 2)
+                    .attr('id', d => `text-${d.row}-${d.col}`)
                     .attr('dy', '.30em')
                     .attr('font-size', 15 / scale)
+                    .attr('fill', '#000')
                     .attr('text-anchor', 'middle')
-                    .text(d => `(${Math.floor(d / cols)}, ${d % cols})`)
+                    .text(d => `(${d.row}, ${d.col})`)
                     .style('display', 'block')
                     .style('pointer-events', 'none'); // Ensure text does not capture mouse events, in order to allow clicking on the cells
             }
@@ -152,9 +176,25 @@ watch(() => tableStore.currentCase, (newVal) => {
 });
 </script>
 
-<style>
+<style lang="less">
 .grid-container {
     width: 100%;
     height: 100%;
+
+    /*
+    rect.cell-grid {
+        fill: #f9f7ff;
+        stroke: grey;
+        stroke-width: 1px;
+        transition: fill 0.2s, stroke 0.2s; //添加过渡效果，使颜色变化更平滑 
+    }
+
+    rect.cell-grid:hover {
+        fill: #ece9e6;
+        stroke: black;
+        stroke-width: 2px;
+        // outline: 2px solid black; // 确保边框宽度能够高亮显示
+    }
+    */
 }
 </style>
