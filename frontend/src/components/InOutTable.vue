@@ -1,5 +1,5 @@
 <template>
-  <div class="view left1">
+  <div class="view">
     <div class="view-title">
       <span class="head-text"> Input Table </span>
       <span class="toolbar" style="float: right; margin-right: 50px">
@@ -16,7 +16,7 @@
       </div>
     </div>
   </div>
-  <div class="view left2">
+  <div class="view">
     <div class="view-title">Output Table</div>
     <div class="view-content">
       <div id="output-tbl">

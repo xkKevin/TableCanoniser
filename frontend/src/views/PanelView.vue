@@ -10,13 +10,8 @@
 
       <!-- Column 2 -->
       <div class="column center">
-        <div class="view center1">
-          <h2 class="view-title">Mapping Minimap</h2>
-          <div class="view-content">
-            <Minimap />
-          </div>
-        </div>
-        <div class="view center2">
+        <Minimap />
+        <div class="view">
           <h2 class="view-title">Mapping Template Visualization</h2>
           <div class="view-content">
           </div>
@@ -56,34 +51,15 @@
   </div>
 </template>
 
-<script>
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
 
-export default defineComponent({
-  data() {
-    return {
-      isOpen: false,
-      codePanel: "1",
-    };
-  },
-  components: {
-    InOutTable,
-    CodeView,
-    Minimap,
-  },
-  beforeMount() {
-  },
-  mounted() {
+let codePanel = ref("1");
 
-  },
-  methods: {
-
-  },
-});
 </script>
 
 <style lang="less">
