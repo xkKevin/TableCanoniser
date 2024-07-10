@@ -129,6 +129,9 @@ onMounted(() => {
       return true;
     },
   });
+  outHotInst.addHook("afterOnCellMouseDown", () => {
+    inHotInst.updateSettings({ cell: [] });
+  });
   outHotInst.addHook("afterOnCellMouseUp", (event, coords) => {
     let cell: Handsontable.GridSettings["cell"] = [];
     let cell_posi: [number, number][] = [];
@@ -205,6 +208,9 @@ onMounted(() => {
       outHotInst.updateSettings({ cell: [] });
       return true;
     },
+  });
+  inHotInst.addHook("afterOnCellMouseDown", () => {
+    outHotInst.updateSettings({ cell: [] });
   });
   inHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
     let cell: Handsontable.GridSettings["cell"] = [];

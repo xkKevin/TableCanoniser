@@ -27,7 +27,7 @@ let template_case1 = [
         },
       ],
       target: {
-        column: () => this.context[0].value,
+        column: (i) => this.context[0].value,
       },
     },
   ],

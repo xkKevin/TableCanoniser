@@ -39,8 +39,9 @@ export const useTableStore = defineStore('table', {
     async loadCaseData(caseN: string) {
       let prompt: string[] = [];
       let case_path = `/${caseN}/`;
+      // const begin = Date.now();
       try {
-        // Parallel processing of all fetch requests
+        // Parallel processing of all fetch requests ==> faster: 0.678s vs 0.275s
         const [data_res, spec_res, script_res] = await Promise.all([
           fetch(case_path + 'data.json'),
           fetch(case_path + 'spec.js'),
@@ -74,6 +75,8 @@ export const useTableStore = defineStore('table', {
       } catch (error) {
         prompt.push(`Error loading data: ${error}`);
       }
+      // const end = Date.now();
+      // console.log(`Loaded case ${caseN} in seconds: ${(end - begin) / 1000}`);
       this.currentCase = caseN;
       return prompt;
     },

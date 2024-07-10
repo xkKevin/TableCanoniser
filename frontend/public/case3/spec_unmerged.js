@@ -3,17 +3,24 @@ let template_case3 = [
     {
       position: {
         x: StartPoint.x,
-        y: [StartPoint.y, StartPoint.y + 1], // Range(StartPoint.y, StartPoint.y + 1),
+        y: StartPoint.y,
       },
       target: {
-        column: (i) => {
-          return ["Phone", "Price"][i];
-        },
+        column: "Phone",
       },
     },
     {
       position: {
-        x: [StartPoint.x + 1, StartPoint.x + 3, StartPoint.x + 5],
+        x: StartPoint.x,
+        y: StartPoint.y + 1,
+      },
+      target: {
+        column: "Price",
+      },
+    },
+    {
+      position: {
+        x: StartPoint.x + 1,
         y: StartPoint.y + 1,
       },
       context: [
@@ -22,14 +29,11 @@ let template_case3 = [
             x: () => this.position.x,
             y: () => this.position.y - 1,
           },
-          value: (value) => value != "",
+          value: (value) => ["Release Date", "Announced Date"].includes(value),
         },
       ],
       target: {
-        column: () =>
-          this.context[0].value === "Announced Date"
-            ? "Release Date"
-            : this.context[0].value,
+        column: "Release Date",
       },
     },
     {
@@ -65,6 +69,24 @@ let template_case3 = [
     },
     {
       position: {
+        x: StartPoint.x + 3,
+        y: StartPoint.y + 1,
+      },
+      context: [
+        {
+          position: {
+            x: () => this.position.x,
+            y: () => this.position.y - 1,
+          },
+          value: (value) => value === "Weight",
+        },
+      ],
+      target: {
+        column: "Weight",
+      },
+    },
+    {
+      position: {
         x: StartPoint.x + 4,
         y: Range(StartPoint.y + 1, StartPoint.y + 2, 1),
       },
@@ -85,6 +107,24 @@ let template_case3 = [
           if (this.value < neighbor_value) return "Front Camera";
           else return "Rear Camera";
         },
+      },
+    },
+    {
+      position: {
+        x: StartPoint.x + 5,
+        y: StartPoint.y + 1,
+      },
+      context: [
+        {
+          position: {
+            x: () => this.position.x,
+            y: () => this.position.y - 1,
+          },
+          value: (value) => value === "Battery",
+        },
+      ],
+      target: {
+        column: "Battery",
       },
     },
   ],
