@@ -10,12 +10,11 @@
 
       <!-- Column 2 -->
       <div class="column center">
-        <Minimap />
         <div class="view">
           <h2 class="view-title">Mapping Template Visualization</h2>
-          <div class="view-content">
-          </div>
+          <div class="view-content"></div>
         </div>
+        <Minimap />
       </div>
 
       <!-- Column 3 -->
@@ -43,7 +42,6 @@
                 <CodeView codeType="transform_script" />
               </a-tab-pane>
             </a-tabs>
-
           </div>
         </div>
       </div>
@@ -60,7 +58,6 @@ import Minimap from "@/components/Minimap.vue";
 import ChatBot from "@/components/ChatBot.vue";
 
 let codePanel = ref("1");
-
 </script>
 
 <style lang="less">
@@ -141,7 +138,6 @@ td.determined-cell {
     flex: 5;
 
     .view {
-
       flex: 1;
 
       // // height: calc(100vh - 80px);
