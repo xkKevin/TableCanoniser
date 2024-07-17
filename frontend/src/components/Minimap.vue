@@ -51,11 +51,11 @@ const drawGrid = (rows: number, cols: number) => {
 
     const containerWidth = container.value.clientWidth;
     const containerHeight = container.value.clientHeight;
-    const cellWidth = Math.min(45, Math.ceil(containerWidth / cols) - 1);
-    const cellHeight = Math.min(20, Math.ceil(containerHeight / rows) - 1);
+    const cellWidth = Math.max(2, Math.min(45, Math.floor(containerWidth / cols)));
+    const cellHeight = Math.max(2, Math.min(20, Math.floor(containerHeight / rows)));
 
     zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.5, 3.5])  // set the zoom scale range
+        // .scaleExtent([0.5, 3.5])  // set the zoom scale range
         .on('zoom', function (event) {
             // svg.attr('transform', event.transform);  // 直接设置svg的transform属性会导致缩放后的坐标系不正确（导致的问题是：用鼠标平移（pan）矩形的时候，矩形会抖动，导致矩形实际平移的距离小于鼠标平移的距离），因此需要在svg内部再添加一个g元素
             // d3.select('g.matrix').attr('transform', event.transform);
@@ -106,6 +106,7 @@ const drawGrid = (rows: number, cols: number) => {
 
             // input_tbl_cell.node()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); // Dispatch a click event on the corresponding cell in the input table
             // input_tbl_cell.dispatch('mouseup')
+            // console.log(d3.select(this).attr('width'), d3.select(this).attr('height'), d);
             tableStore.grid_cell_click({ row: d.row, col: d.col })
         });
 

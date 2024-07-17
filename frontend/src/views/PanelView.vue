@@ -1,6 +1,6 @@
 <template>
   <div id="panel">
-    <div class="system-name">TableTydier</div>
+    <div class="system-name">TableTidier</div>
     <ChatBot />
     <div class="main-views">
       <!-- Column 1 -->
@@ -61,26 +61,6 @@ let codePanel = ref("1");
 </script>
 
 <style lang="less">
-td.htRight {
-  background-color: #3498db;
-}
-
-td.posi-mapping {
-  color: #fff !important;
-  background-color: #37bc6c;
-}
-
-td.ambiguous-cell {
-  color: #e91010 !important;
-  background-color: #83e4aa;
-}
-
-td.determined-cell {
-  color: #e91010 !important;
-  font-weight: bold;
-  background-color: #37bc6c;
-}
-
 #panel {
   font-family: "Arial", sans-serif;
   display: flex;
@@ -198,10 +178,5 @@ td.determined-cell {
   margin-bottom: 5px;
   color: #e67e22;
   /* Sub-view title text color */
-}
-
-#input-tbl {
-  //   height: calc(100% - px);
-  //   overflow: ceil(10);
 }
 </style>

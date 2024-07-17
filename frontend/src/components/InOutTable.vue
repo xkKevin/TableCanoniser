@@ -12,7 +12,7 @@
     <div class="view-content">
       <div id="input-tbl">
         <hot-table ref="inputTbl" :data="caseData.input_tbl" :rowHeaders="true" :colHeaders="true"
-          :manualColumnResize="true" licenseKey="non-commercial-and-evaluation"></hot-table>
+          :manualColumnResize="true" :renderer="renderTblCell" licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
@@ -21,22 +21,12 @@
     <div class="view-content">
       <div id="output-tbl">
         <hot-table ref="outputTbl" :data="caseData.output_tbl" :rowHeaders="true" :colHeaders="output_col"
-          :manualColumnResize="true" :contextMenu="true" licenseKey="non-commercial-and-evaluation"></hot-table>
+          :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true"
+          licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
 </template>
-
-<!-- <script lang="ts">
-import { defineComponent } from "vue";
-import { HotTable } from "@handsontable/vue3";
-import "handsontable/dist/handsontable.full.css";
-
-export default defineComponent({
-  name: "InOutTable",
-  components: { HotTable },
-});
-</script> -->
 
 <script setup lang="ts">
 import {
@@ -74,24 +64,17 @@ let currentCase = ref(tableStore.caseList[0]);
 let inHotInst: Handsontable;
 let outHotInst: Handsontable;
 
-// onBeforeMount(async () => { // if onBeforeMount is async, it may execute after onMounted
-//   console.log("1");
-//   let prompt = await tableStore.loadCaseData();
-//   caseData = tableStore.caseData;
-//   console.log(prompt, caseData, tableStore.mapping_spec);
-//   console.log("3", caseData);
-// });
-
-// let prompt = async () => await tableStore.loadCaseData();
-// prompt();
-// caseData = tableStore.caseData;
-// console.log("prompt", prompt, caseData);
-
-// async () => {
-//   let prompt = await tableStore.loadCaseData();
-//   caseData = tableStore.caseData;
-//   loading.value = true;
-// }
+function renderTblCell(instance: Handsontable,
+  td: HTMLElement,
+  row: number,
+  col: number,
+  prop: any,
+  value: any,
+  cellProperties: any) {
+  // @ts-ignore
+  Handsontable.renderers.TextRenderer.apply(this, arguments);
+  td.innerHTML = `<div class="truncated">${value}</div>`
+}
 
 onMounted(() => {
 
@@ -101,16 +84,6 @@ onMounted(() => {
 
   tableStore.input_tbl.instance = inHotInst;
   tableStore.output_tbl.instance = outHotInst;
-
-  // console.log("96", proxy.$refs.inputTbl, proxy.$refs.testTbl, proxy.$refs.Chat);
-
-  // const inputTbl = ref();
-  // console.log("sdfsdf", inputTbl);
-  // const outputTbl = ref();
-
-  // inHotInst = inputTbl.value.hotInstance;
-  // outHotInst = outputTbl.value.hotInstance;
-  // console.log("sdfsdf", inputTbl);
 
   outHotInst.updateSettings({
     outsideClickDeselects: () => {
@@ -143,6 +116,7 @@ onMounted(() => {
     tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
   });
   handleCaseChange(currentCase.value);
+
 });
 
 function showDropdown() {
@@ -163,4 +137,33 @@ async function handleCaseChange(value: string) {
 }
 </script>
 
-<style scoped></style>
+<style lang="less">
+.handsontable {
+  .truncated {
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  td.htRight {
+    background-color: #3498db;
+  }
+
+  td.posi-mapping {
+    color: #fff !important;
+    background-color: #37bc6c;
+  }
+
+  td.ambiguous-cell {
+    color: #e91010 !important;
+    background-color: #83e4aa;
+  }
+
+  td.determined-cell {
+    color: #e91010 !important;
+    font-weight: bold;
+    background-color: #37bc6c;
+  }
+}
+</style>

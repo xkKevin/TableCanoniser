@@ -4,7 +4,7 @@
         <a-textarea v-model:value="configRole" :rows="8"></a-textarea>
     </a-modal>
 
-    <a-popover v-model:open="visible" trigger="click" placement="topRight" @openChange="visibleChange">
+    <a-popover v-model:open="chatUIFlag" trigger="click" placement="topRight" @openChange="visibleChange">
         <template #title>
             <div>
                 <span>Chat With GPT</span>
@@ -83,8 +83,8 @@ const uploadShow = ref(true);
 const configFlag = ref(false);
 const configRole = ref('You are a data transformation assistant. Your task is to generate a transformation script that converts messy, non-standard tabular data into a standardized relational table. The script should be clear, efficient, and easy to understand. Follow best practices for data manipulation and ensure the output matches the specified format.');
 
-let visible = ref(true);
-let chatClick = true;
+const chatUIFlag = ref(false);  // false
+let chatClick = false;   // false
 let chatText = ref('');
 
 let chatContentDiv: HTMLDivElement | null = null
@@ -162,7 +162,7 @@ const uploadleave = () => {
 
 const hide = () => {
     // click "close" button will not trigger visibleChange event
-    visible.value = false;
+    chatUIFlag.value = false;
     uploadflag.value = false;
     chatClick = false;
 };
@@ -211,6 +211,16 @@ function clearHistory() {
 
 function openConfig() {
     configFlag.value = true;
+    setTimeout(() => {
+        const roleConfig = document.querySelector('.ant-modal-content');
+        console.log("roleConfig", roleConfig);
+        roleConfig?.addEventListener('click', (event) => {
+            chatUIFlag.value = true;
+            uploadflag.value = true;
+            chatClick = true;
+        })
+    }, 100)
+
 }
 
 function hideConfig() {

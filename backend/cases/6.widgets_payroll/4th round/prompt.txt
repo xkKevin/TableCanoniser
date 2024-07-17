@@ -1,0 +1,1 @@
+很好，答案已经很接近了，但是你还需要在现有代码的基础上，不要选择"Period End Date", "Pay Frequency", "Location", "Description", "Hours", "Amount" 这样的数据放在table body中，它们是用来指明 columns的，而不应该充当表格的行数据。
