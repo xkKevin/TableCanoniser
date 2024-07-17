@@ -77,11 +77,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { dataManager, getAnswer } from '@/api';
+import { ChatMessage } from '@/types';
 
 const uploadflag = ref(true);
 const uploadShow = ref(true);
 const configFlag = ref(false);
-const configRole = ref('You are a data transformation assistant. Your task is to generate a transformation script that converts messy, non-standard tabular data into a standardized relational table. The script should be clear, efficient, and easy to understand. Follow best practices for data manipulation and ensure the output matches the specified format.');
+const configRole = ref('');
 
 const chatUIFlag = ref(false);  // false
 let chatClick = false;   // false
@@ -89,66 +91,7 @@ let chatText = ref('');
 
 let chatContentDiv: HTMLDivElement | null = null
 
-let chatList = ref([
-    {
-        role: 'user',
-        content: 'hello, how are you?',
-        time: '09:00'
-    },
-    {
-        role: 'gpt',
-        content: 'I am fine, thank you. And you?',
-        time: '09:01'
-    },
-    {
-        role: 'user',
-        content: 'I am also fine',
-        time: '09:02'
-    },
-    {
-        role: 'gpt',
-        content: 'Great. What about you?',
-        time: '09:03'
-    },
-    {
-        role: 'user',
-        content: 'messy_data = [["Unsupervised DA", "", "SOTA (image-based)", ""], ["baseline", "93.78", "DeepFace", "91.4"], ["PCA", "93.56", "FaceNet", "95.12"], ["CORAL", "94.5", "CenterFace", "94.9"], ["Ours (F)", "95.38", "CNN+AvePool", "95.2"]]',
-        time: '09:04'
-    }, {
-        role: 'gpt',
-        content: 'The output DataFrame should contain the following columns: Method, Accuracy, Category.',
-        time: '09:05'
-    },
-    {
-        role: 'user',
-        content: 'hello, how are you?',
-        time: '09:00'
-    },
-    {
-        role: 'gpt',
-        content: 'I am fine, thank you. And you?',
-        time: '09:01'
-    },
-    {
-        role: 'user',
-        content: 'I am also fine',
-        time: '09:02'
-    },
-    {
-        role: 'gpt',
-        content: 'Great. What about you?',
-        time: '09:03'
-    },
-    {
-        role: 'user',
-        content: 'messy_data = [["Unsupervised DA", "", "SOTA (image-based)", ""], ["baseline", "93.78", "DeepFace", "91.4"], ["PCA", "93.56", "FaceNet", "95.12"], ["CORAL", "94.5", "CenterFace", "94.9"], ["Ours (F)", "95.38", "CNN+AvePool", "95.2"]]',
-        time: '09:04'
-    }, {
-        role: 'gpt',
-        content: 'The output DataFrame should contain the following columns: Method, Accuracy, Category.',
-        time: '09:05'
-    }
-]);
+let chatList = ref<ChatMessage[]>([]);
 
 const uploadenter = () => {
     uploadflag.value = true;
@@ -182,12 +125,20 @@ const uploadanimated = () => {
 };
 
 function sendMessage() {
-    console.log(chatText.value);
-    chatList.value.push({
+
+    getAnswer(chatText.value).then((res) => {
+        chatList.value.push({
+            role: 'gpt',
+            content: res.data.answer,
+        })
+    })
+
+    const chatMessage: ChatMessage = {
         role: 'user',
         content: chatText.value,
-        time: '09:00'
-    });
+    };
+
+    chatList.value.push(chatMessage);
     chatText.value = '';
 
     // scroll to bottom
@@ -200,27 +151,22 @@ function sendMessage() {
 
 function clearHistory() {
     chatList.value = [];
-    // if (chatContentDiv) {
-    //     // chatContentDiv.scrollTop = 0;
-    //     chatContentDiv.style.overflowY = 'hidden';
-    //     setTimeout(() => {
-    //         chatContentDiv!.style.overflowY = 'auto'; // 恢复滚动条样式
-    //     }, 0);
-    // }
+    dataManager("clear").then((res) => {
+        console.log(res.data);
+    })
 }
 
 function openConfig() {
     configFlag.value = true;
-    setTimeout(() => {
-        const roleConfig = document.querySelector('.ant-modal-content');
-        console.log("roleConfig", roleConfig);
-        roleConfig?.addEventListener('click', (event) => {
-            chatUIFlag.value = true;
-            uploadflag.value = true;
-            chatClick = true;
-        })
-    }, 100)
-
+    // setTimeout(() => {
+    //     const roleConfig = document.querySelector('.ant-modal-content');
+    //     console.log("roleConfig", roleConfig);
+    //     roleConfig?.addEventListener('click', (event) => {
+    //         chatUIFlag.value = true;
+    //         uploadflag.value = true;
+    //         chatClick = true;
+    //     })
+    // }, 100)
 }
 
 function hideConfig() {
@@ -228,12 +174,19 @@ function hideConfig() {
 }
 
 function setConfig() {
-    console.log(configRole.value);
+    dataManager("role", configRole.value).then((res) => {
+        console.log(res.data);
+    })
+    configFlag.value = false;
 }
 
 onMounted(() => {
     uploadanimated();
     chatContentDiv = document.querySelector('.chatbot-content');
+    dataManager("role").then((res) => {
+        configRole.value = res.data.role;
+    });
+
     // document.addEventListener('click', (event) => {
     //     const target = event.target as HTMLElement;
     //     console.log(target, target.id, target.className);

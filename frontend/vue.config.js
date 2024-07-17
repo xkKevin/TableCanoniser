@@ -14,4 +14,16 @@ module.exports = defineConfig({
       }),
     ],
   },
+  devServer: {
+    proxy: {
+      "/backend": {
+        target: "http://127.0.0.1:5001", // 5000是flask debug时的端口，正常启动是app.run port的端口
+        ws: true,
+        changeOrigin: true,
+        pathRewrite: {
+          "^/backend/(.*)": "/$1",
+        },
+      },
+    },
+  },
 });

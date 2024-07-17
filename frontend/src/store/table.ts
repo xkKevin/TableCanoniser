@@ -59,7 +59,7 @@ export const useTableStore = defineStore('table', {
   state() {
     return {
       // cases: caseData as { [key: string]: TblVisData },
-      caseList: ["case1", "case2", "case3", "case5"],
+      caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
       mapping_spec: '',

@@ -395,7 +395,8 @@ if __name__ == "__main__":
                 # gen_coordinate_mapping(dir_path)
                 # delete_files(dir_path)
                 # if dir_path.startswith("./cases/3") and dir_path.endswith("4th round"):
-                if dir_path.startswith("./cases/6") and dir_path.endswith("4th round"):
+                # if dir_path.startswith("./cases/6") and dir_path.endswith("4th round"):
+                if dir_path.startswith("./cases/5"):
                     print(dir_path)
                     # delete_files(dir_path)
                     gen_coordinate_mapping(dir_path)

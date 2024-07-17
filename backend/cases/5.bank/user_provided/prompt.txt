@@ -1,0 +1,28 @@
+Please write code to transform the messy_data into a relational table.
+
+
+
+```Python
+import pandas as pd
+
+# Load the messy DataFrame
+df_messy = pd.read_csv("messy_data.csv", dtype=str, keep_default_na=False, header=None)
+messy_data = df_messy.values
+
+def transform_messy_data(messy_data):
+    
+    # Write code to transform the messy data into relational table
+
+    return transformed_df
+
+transformed_df = transform_messy_data(messy_data)
+```
+
+Please return the code for the `transform_messy_data` function. 
+
+
+
+Your code encountered an error during execution:
+ File "main.py", line 95, in transform_messy_data
+    transformed_df = pd.DataFrame(transformed_data[1:], columns=transformed_data[0])
+ValueError: 14 columns passed, passed data had 16 columns

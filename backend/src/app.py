@@ -1,11 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
+import json
 
 # from flask_cors import CORS # If frontend has set CORS, the backend doesn't need to set again.
 from loguru import logger
 from openai import OpenAI
-
-# flask configuration--------------------------------------------------------------
-DEBUG = True
 
 # instantiate the app
 app = Flask(__name__)
@@ -16,6 +14,12 @@ app = Flask(__name__)
 # CORS(app, resources={r'/*': {'origins': '*'}})
 # CORS(app, supports_credentials=True) # Fix CORS warning
 # flask configuration--------------------------------------------------------------
+
+
+# load cases/5.bank/user_provided/input_tbl_first_200_rows.json data
+MESSY_DATA = json.load(
+    open("cases/5.bank/user_provided/input_tbl_first_200_rows.json")
+)["input_tbl_first_200_rows"]
 
 
 # openai chatGPT configuration--------------------------------------------------------------
@@ -34,7 +38,7 @@ client = OpenAI(api_key=api_key)
 
 all_messages = {}
 bot_name = "DT Assistant"
-init_prompt = """You are a data transformation assistant. Your task is to generate a script that converts messy tabular data into a relational table.
+init_prompt = """You are a data transformation assistant. Your task is to write code that transforms messy tabular data into a relational table.
 
 Here is an example of messy tabular data:
 [["Rank", "Name", "Age"],
@@ -48,17 +52,31 @@ The desired relational table should look like this:
  ["1", "Bob", "16", "92"],
  ["2", "Sam", "15", "89"]]
 
-In the following conversation, I will provide you with messy tabular data, and you will return the code to convert it into a standardized relational table. If I am not satisfied with your code, I will provide further prompts for modifications. You should only return the transformation script."""
+ This is a script template:
+ ```Python
+import pandas as pd
+
+# Load the messy DataFrame
+df_messy = pd.read_csv("messy_data.csv", dtype=str, keep_default_na=False, header=None)
+messy_data = df_messy.values
+
+def transform_messy_data(messy_data):
+    
+    # Write code to transform the messy data into relational table
+
+    return transformed_df
+
+transformed_df = transform_messy_data(messy_data)
+```
+
+In the upcoming conversation, I will give you the messy_data, and you need to complete the functionality of the `transform_messy_data` function. Note that your response should only be the code for the `transform_messy_data` function."""
 
 
 def chat_init(bot_name=bot_name):
-    logger.critical("System initializing.")
-
-    all_messages["DT Assistant"] = [
+    all_messages[bot_name] = [
         {"role": "system", "content": init_prompt},
     ]
-
-    logger.info("Role: %s\nInit prompt: %s" % (bot_name, init_prompt))
+    logger.critical("\nRole: %s\nInit prompt: %s\n" % (bot_name, init_prompt))
 
 
 # init_prompt = """You are a data transformation assistant. Your task is to generate a transformation script that converts messy, non-standard tabular data into a standardized relational table. The script should be clear, efficient, and easy to understand. Follow best practices for data manipulation and ensure the output matches the specified format.
@@ -94,34 +112,38 @@ def get_answer_from_bot(prompt, bot_name=bot_name):
         logger.info("user: " + prompt)
 
         # completion = openai.ChatCompletion.create(
-        # completion = client.chat.completions.create(
-        #     # model="gpt-3.5-turbo",
-        #     model="gpt-4o",
-        #     messages=messages,
-        #     # max_tokens=500,  # set the max answer length
-        # )
+        completion = client.chat.completions.create(
+            # model="gpt-3.5-turbo",
+            model="gpt-4o",
+            messages=messages,
+            # max_tokens=500,  # set the max answer length
+        )
 
-        # message = completion.choices[0].message
-        message = "Response: %s" % prompt
+        message = completion.choices[0].message
+        # message = {"role": "system", "content": "new_message: " + prompt}
+        message = {"role": message.role, "content": message.content}
         messages.append(message)
-        logger.info("%s: %s" % (bot_name, message))
+        logger.info(
+            "%s: %s \nMessage Length: %d"
+            % (bot_name, message["content"], len(messages))
+        )
         return message
 
-    except KeyError:
-        logger.warning("all_messages[%s] is none, so init it." % bot_name)
-        all_messages[bot_name] = [
-            {
-                "role": "system",
-                "content": init_prompt,
-            }
-        ]
-        return get_answer_from_bot(prompt, bot_name)
+    except KeyError as e:
+        warning = "KeyError: %s." % e
+        logger.warning(warning)
+        return {"role": "system", "content": warning}
     except Exception as e:
-        logger.error(e)
-        return "Sorry, I'm having trouble. Please try again later."
+        error = "Exception: %s." % e
+        logger.error(error)
+        message = {"role": "system", "content": error}
+        return message
 
 
-@app.route("/get_answer", methods=["GET", "POST"])
+init_data_flag = False
+
+
+@app.route("/get_answer", methods=["POST"])
 def get_answer():
     # post_data = request.get_json()
     # logger.info("post_data: " + str(post_data))
@@ -129,8 +151,62 @@ def get_answer():
     # bot_name = post_data["bot"]
 
     # return {"status": "success", "answer": get_answer_from_bot(bot_name, prompt)}
+    global init_data_flag
 
-    return {"status": "success", "answer": get_answer_from_bot("hello")}
+    prompt = request.json.get("prompt")
+
+    if not init_data_flag:
+        init_data_flag = True
+        prompt = "messy_data = " + json.dumps(MESSY_DATA) + "\n" + prompt
+    message = get_answer_from_bot(prompt)
+
+    return {"status": "success", "answer": message["content"]}
+
+
+@app.route("/data_manager", methods=["POST"])
+def data_manager():
+    data = request.json  # .to_dict()  # request.args.get("param")
+    variable = data.get("variable")
+    value = data.get("value", None)
+    response_data = {"status": False}
+    if variable == "role":
+        global init_prompt
+        if value != None:
+            init_prompt = value
+            response_data["status"] = "Set role success"
+            response_data["role"] = init_prompt
+        else:
+            response_data["status"] = "Get role success"
+            response_data["role"] = init_prompt
+        chat_init()
+
+    if variable == "clear":
+        logger.info("Clear Messages\n")
+        chat_init()
+        response_data["status"] = "Clear success"
+
+    return jsonify(response_data)
+
+
+@app.route("/get_example", methods=["GET"])
+def get_example():
+    param = request.args  # .to_dict()  # request.args.get("param")
+    print(param)
+    response_data = {
+        "message": f"This is a GET request response with param: {param}",
+        "received_data": param,
+    }
+    return jsonify(response_data)
+
+
+@app.route("/post_example", methods=["POST"])
+def post_example():
+    data = request.json
+    response_data = {
+        "message": "This is a POST request response",
+        "received_data": data,
+    }
+    return jsonify(response_data)
 
 
 @app.route("/test", methods=["GET", "POST"])
@@ -152,6 +228,7 @@ def get_answer_test():
 
 
 if __name__ == "__main__":
+    logger.remove()  # remove the default logger, so that the log will not appear in the terminal
     logger.add(
         "./log/app.log",
         encoding="utf-8",
@@ -162,7 +239,7 @@ if __name__ == "__main__":
     )
 
     # Before officially using the model, initialize the model by giving it `init_prompt`
-    chat_init()
+    # chat_init()
 
     # Bind to all network interfaces
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5001, debug=True)
