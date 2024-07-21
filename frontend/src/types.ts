@@ -66,107 +66,148 @@ export interface TableTidierMapping {
     target?: string | string[] | DeriveTargetFn
 }
 
+
 // The Declarative Grammar v0.3
 
-interface AreaInfo {
-    parent: AreaInfo | null, // 该区域的父区域
-    areaLayer: number,       // 该区域在root区域下的层级
-    templateIndex: number,   // 该区域属于父区域定义下的第几个模板
-    xIndex: number,          // 该区域在父区域x轴方向上是第几个符合该模板的区域
-    yIndex: number,          // 该区域在父区域y轴方向上是第几个符合该模板的区域
-    xOffset: number,         // 该区域在父区域x轴方向上的偏移量
-    yOffset: number,         // 该区域在父区域y轴方向上的偏移量
-    x: number,               // 该区域在整个表格x轴方向上的坐标
-    y: number,               // 该区域在整个表格y轴方向上的坐标
-    width: number,           // 该区域的宽度
-    height: number,          // 该区域的高度
-    areaCells: AreaCell[],   // 该区域的所有单元格
-    children: AreaInfo[]     // 该区域的子区域
-}
+type cellValueType = string | number;
 
-interface AreaCell {
-    xOffset: number,   // 该单元格在所在区域x轴方向上的偏移量
-    yOffset: number,   // 该单元格在所在区域y轴方向上的偏移量
-    value: cellValueType      // 该单元格的值
-}
-
-interface CellMapCol extends AreaCell {
-    targetCol: string | null
-}
-
-type cellValueType = string | number
 export enum ValueType {
     String,
     Number,
     None
 }
-type offsetFn = (currentAreaInfo: AreaInfo, rootAreaInfo: AreaInfo) => number
-type checkValueFn = (value: cellValueType) => boolean
-type mapColsFn = (currentAreaCells: AreaCell[]) => (string | null)[]
-type mapColbyContextFn = (contextValue: cellValueType) => string | null
-type contextPosiFn = (currentAreaInfo: AreaInfo, rootAreaInfo: AreaInfo) => CellSelection[]
-type areaLayerFn = (currentAreaInfo: AreaInfo) => number
 
-interface CellSelection {
-    referenceAreaLayer?: 'current' | 'parent' | 'root' | areaLayerFn,  // 选定区域时参考区域的层级，默认为current
-    referenceAreaPosi?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight',  // 选定区域时参考区域的位置，默认为topLeft
-    xOffset?: number | offsetFn,  // 选定区域时相对参考区域x轴方向上的偏移量，默认为0
-    yOffset?: number | offsetFn   // 选定区域时相对参考区域y轴方向上的偏移量，默认为0
+// Function types
+
+/**
+ * A function type that calculates an offset based on the current area information and the root area information.
+ * @param currentAreaInfo - The current area information.
+ * @param rootAreaInfo - The root area information.
+ * @returns The calculated offset.
+ */
+type offsetFn = (currentAreaInfo: AreaInfo, rootAreaInfo: AreaInfo) => number;
+
+/**
+ * A function type that checks if a cell value meets a custom condition.
+ * @param value - The value of the cell.
+ * @returns A boolean indicating whether the cell value meets the condition.
+ */
+type checkValueFn = (value: cellValueType) => boolean;
+
+/**
+ * A function type that maps the cells in an area to their corresponding target columns.
+ * @param currentAreaCells - The cells in the current area.
+ * @returns An array of target column names or null values.
+ */
+type mapColsFn = (currentAreaCells: AreaCell[]) => (string | null)[];
+
+/**
+ * A function type that maps a context value to a target column.
+ * @param contextValue - The value of the context cell.
+ * @returns The name of the target column or null.
+ */
+type mapColbyContextFn = (contextValue: cellValueType) => string | null;
+
+/**
+ * A function type that selects a range of cells based on the current area information and the root area information.
+ * @param currentAreaInfo - The current area information.
+ * @param rootAreaInfo - The root area information.
+ * @returns An array of cell selections.
+ */
+type contextPosiFn = (currentAreaInfo: AreaInfo, rootAreaInfo: AreaInfo) => CellSelection[];
+
+/**
+ * A function type that determines the layer of an area based on its current area information.
+ * @param currentAreaInfo - The current area information.
+ * @returns The layer number of the area.
+ */
+type areaLayerFn = (currentAreaInfo: AreaInfo) => number;
+
+// Represents a single cell within an area
+interface AreaCell {
+    xOffset: number;   // The x-axis offset of the cell within the area
+    yOffset: number;   // The y-axis offset of the cell within the area
+    value: cellValueType;  // The value of the cell
 }
 
-interface CellConstraint extends CellSelection {
-    // cellValueType表示该单元格的值必须为某指定值；'string' | 'number'表示该单元格的值必须为字符串或数字；checkValueFn表示该单元格的值必须满足的自定义条件
-    valueCstr: cellValueType | ValueType | checkValueFn
+// Represents a selected area within the table
+interface AreaInfo {
+    parent: AreaInfo | null;  // The parent area of this area
+    areaLayer: number;        // The layer level of this area within the root area
+    templateIndex: number;    // The template index of this area within the parent area
+    xIndex: number;           // The x-axis index of this area within the parent area
+    yIndex: number;           // The y-axis index of this area within the parent area
+    xOffset: number;          // The x-axis offset of this area within the parent area
+    yOffset: number;          // The y-axis offset of this area within the parent area
+    x: number;                // The x-coordinate of this area within the entire table
+    y: number;                // The y-coordinate of this area within the entire table
+    width: number;            // The width of this area
+    height: number;           // The height of this area
+    areaCells: AreaCell[];    // All cells within this area
+    children: AreaInfo[];     // The child areas of this area
+}
+
+// Represents the selection of a cell within the table
+interface CellSelection {
+    referenceAreaLayer?: 'current' | 'parent' | 'root' | areaLayerFn;  // The reference area layer for selection, default is 'current'
+    referenceAreaPosi?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';  // The reference area position for selection, default is 'topLeft'
+    xOffset?: number | offsetFn;  // The x-axis offset relative to the reference area, default is 0
+    yOffset?: number | offsetFn;  // The y-axis offset relative to the reference area, default is 0
 }
 
 /**
- * position: 表示指定位置的单元格作为该单元格的 context cell
- * targetCol: 表示如何根据context cell得到该单元格对应的target column。其中：'cellValue' 表示使用该context cell的值作为target column，如果该context cell的值为空，则target column为null，此单元格不会被转换到output table中；mapColbyContextFn表示按照自定义规则根据context value匹配到指定target column。如果返回null，此单元格不会被映射到output table中。
+* Represents a constraint on a cell's value
+* - `valueCstr`: The value constraint.
+*   - `cellValueType`: Specifies that the cell's value must be equal to the provided value.
+*   - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
+*   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
+*/
+interface CellConstraint extends CellSelection {
+    // The value constraint can be a specific value, a type (string or number), or a custom check function
+    valueCstr: cellValueType | ValueType | checkValueFn;
+}
+
+/**
+ * ContextTransform specifies how to derive the target column for a cell based on its context cell.
+ * 
+ * - `position`: Defines the location of the context cell relative to the current cell.
+ *   - 'top': The context cell is located directly above the current cell.
+ *   - 'bottom': The context cell is located directly below the current cell.
+ *   - 'left': The context cell is located directly to the left of the current cell.
+ *   - 'right': The context cell is located directly to the right of the current cell.
+ *   - `contextPosiFn`: A custom function to determine the position of the context cell.
+ * 
+ * - `targetCol`: Determines how to derive the target column based on the context cell's value.
+ *   - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+ *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
 interface ContextTransform {
-    // 
-    position: 'top' | 'bottom' | 'left' | 'right' | contextPosiFn,
-    targetCol: 'cellValue' | mapColbyContextFn
+    position: 'top' | 'bottom' | 'left' | 'right' | contextPosiFn;
+    targetCol: 'cellValue' | mapColbyContextFn;
 }
 
+
+// The main template for defining the transformation rules
 export interface TableTidierTemplate {
-    startCell: CellSelection,
+    startCell: CellSelection;  // The starting cell for the selection
     size?: {
-        width?: number | 'toParentX' | undefined,  // 选择区域的宽度，'toParentX' 表示从startCell到父区域的x轴终点的距离， undefined 表示不限制宽度；默认为1
-        height?: number | 'toParentY' | undefined  // 选择区域的高度，'toParentY' 表示从startCell到父区域的y轴终点的距离， undefined 表示不限制高度；默认为1
-    },
-    constraints?: CellConstraint[],
+        width?: number | 'toParentX' | undefined;  // The width of the selection area, 'toParentX' means the distance from the startCell to the parent's x-axis end; undefined means no width constraint, default is 1
+        height?: number | 'toParentY' | undefined; // The height of the selection area, 'toParentY' means the distance from the startCell to the parent's y-axis end; undefined means no height constraint, default is 1
+    };
+    constraints?: CellConstraint[];  // Constraints to apply to the cells within the selection area
     traverse?: {
-        xDirection?: 'none' | 'after' | 'before' | 'whole';  // 遍历区域时x轴方向上的遍历顺序，after表示从startCell向后方向遍历，before表示从startCell向前方向遍历，whole表示遍历整个区域，默认为 none，表示不遍历
-        yDirection?: 'none' | 'after' | 'before' | 'whole';  // 遍历区域时y轴方向上的遍历顺序，after表示从startCell向后方向遍历，before表示从startCell向前方向遍历，whole表示遍历整个区域，默认为 none，表示不遍历
-    },
+        // The traversal direction for the selection area: 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is 'none', meaning no traversal
+        xDirection?: 'none' | 'after' | 'before' | 'whole';  // The x-axis traversal direction 
+        yDirection?: 'none' | 'after' | 'before' | 'whole';  // The y-axis traversal direction
+    };
     transform?: {
-        context?: ContextTransform,
-        // string[] 表示该区域的所有单元格按照索引位置匹配到该数组对应的列内；'context' 表示该区域的所有单元格按照context cell返回值匹配到对应的列内;mapColsFn表示该区域的所有单元格按照自定义规则匹配到该函数返回的列内
-        targetCols: (string | null)[] | 'context' | mapColsFn
-    },
-    children?: TableTidierTemplate[]
+        context?: ContextTransform;  // The context-based transformation for the selection area
+        // The target columns for the transformation, which can be an array (position-based transformation), 'context' (context-based transformation), or a custom function (value-based transformation)
+        targetCols: (string | null)[] | 'context' | mapColsFn;
+    };
+    children?: TableTidierTemplate[];  // The child templates for nested selections
 }
 
-const defaultTemplate: TableTidierTemplate = {
-    startCell: {
-        referenceAreaLayer: 'current',
-        referenceAreaPosi: 'topLeft',
-        xOffset: 0,
-        yOffset: 0
-    },
-    size: {
-        width: 1,
-        height: 1
-    },
-    constraints: [],
-    traverse: {
-        xDirection: 'none',
-        yDirection: 'none'
-    },
-    transform: undefined,
-    children: []
-}
 
 
 type Pair = { value: number, originalIndex: number, correspondingValue: string };
