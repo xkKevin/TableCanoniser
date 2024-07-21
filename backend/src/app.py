@@ -62,7 +62,7 @@ messy_data = df_messy.values
 
 def transform_messy_data(messy_data):
     
-    # Write code to transform the messy data into relational table
+    # Write code to transform the messy data into a relational table
 
     return transformed_df
 

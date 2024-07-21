@@ -1,7 +1,7 @@
 <template>
 
     <a-modal v-model:open="configFlag" title="Set GPT Role" centered @ok="setConfig" okText="Confirm">
-        <a-textarea v-model:value="configRole" :rows="8"></a-textarea>
+        <a-textarea v-model:value="configRole" :rows="16"></a-textarea>
     </a-modal>
 
     <a-popover v-model:open="chatUIFlag" trigger="click" placement="topRight" @openChange="visibleChange">
@@ -56,8 +56,8 @@
                     </ul>
                 </div>
                 <a-input-group compact>
-                    <a-textarea v-model:value="chatText" placeholder="input your prompt" :rows="1"
-                        style="width: calc(100% - 40px)"></a-textarea>
+                    <a-textarea v-model:value="chatText" placeholder="input your prompt"
+                        style="width: calc(100% - 40px)" :autosize="{ minRows: 1, maxRows: 3 }"></a-textarea>
                     <a-button type="primary" @click="sendMessage">
                         <img :src="require('@/assets/paper-plane.png')" style="height: 100%;">
                     </a-button>
@@ -224,6 +224,7 @@ onMounted(() => {
         height: 500px;
         overflow: auto;
         padding: 8px;
+        // border: 1px solid #ccc;
 
         .chatbot-content {
             display: flex;
@@ -272,8 +273,12 @@ onMounted(() => {
                     box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
                 }
             }
+        }
 
-
+        .ant-input-group {
+            position: absolute;
+            bottom: 18px;
+            width: 450px;
         }
     }
 

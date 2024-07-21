@@ -86,10 +86,14 @@ onMounted(() => {
   tableStore.output_tbl.instance = outHotInst;
 
   outHotInst.updateSettings({
-    outsideClickDeselects: () => {
-      inHotInst.updateSettings({ cell: [] });
-      tableStore.highlightMinimapCells([])
-      return true;
+    outsideClickDeselects: (targetEle) => {
+      if (targetEle?.className === "wtHolder") {
+        return false;
+      } else {
+        inHotInst.updateSettings({ cell: [] });
+        tableStore.highlightMinimapCells([])
+        return true;
+      }
     },
   });
   outHotInst.addHook("afterOnCellMouseDown", () => {
@@ -102,9 +106,13 @@ onMounted(() => {
   });
 
   inHotInst.updateSettings({
-    outsideClickDeselects: (event) => {
-      outHotInst.updateSettings({ cell: [] });
-      return true;
+    outsideClickDeselects: (targetEle) => {
+      if (targetEle?.className === "wtHolder") {
+        return false;
+      } else {
+        outHotInst.updateSettings({ cell: [] });
+        return true;
+      }
     },
   });
   inHotInst.addHook("afterOnCellMouseDown", () => {

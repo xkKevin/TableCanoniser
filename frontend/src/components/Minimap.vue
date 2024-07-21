@@ -51,8 +51,9 @@ const drawGrid = (rows: number, cols: number) => {
 
     const containerWidth = container.value.clientWidth;
     const containerHeight = container.value.clientHeight;
-    const cellWidth = Math.max(2, Math.min(45, Math.floor(containerWidth / cols)));
-    const cellHeight = Math.max(2, Math.min(20, Math.floor(containerHeight / rows)));
+    let cellWidth = Math.max(5, Math.min(45, Math.floor(containerWidth / cols)));
+    let cellHeight = Math.max(5, Math.min(20, Math.floor(containerHeight / rows)));
+    cellWidth = cellHeight = Math.min(cellWidth, cellHeight)
 
     zoom = d3.zoom<SVGSVGElement, unknown>()
         // .scaleExtent([0.5, 3.5])  // set the zoom scale range
