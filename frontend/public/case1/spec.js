@@ -1,34 +1,64 @@
-let template_case1 = [
-  [
+const case1 = {
+  startCell: {
+    xOffset: 0,
+    yOffset: 0,
+  },
+  size: {
+    width: 4,
+    height: 5,
+  },
+  constraints: [
     {
-      position: {
-        x: StartPoint.x,
-        y: Range(StartPoint.y, StartPoint.y + 3, 1),
+      xOffset: 0,
+      yOffset: 0,
+      valueCstr: ValueType.Number,
+    },
+  ],
+  traverse: {
+    yDirection: "after",
+  },
+  children: [
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 0,
       },
-      target: {
-        column: (i) => {
-          let cols = ["Rank", "Name", "Location", "Total Score"];
-          return cols[i];
-        },
+      size: {
+        width: 4,
+        height: 1,
+      },
+      transform: {
+        targetCols: ["Rank", "Name", "Location", "Total Score"],
       },
     },
     {
-      position: {
-        x: Range(StartPoint.x + 2, StartPoint.x + 4, 2),
-        y: Range(StartPoint.y + 1, StartPoint.y + 3, 1),
+      startCell: {
+        xOffset: 2,
+        yOffset: 1,
       },
-      context: [
+      constraints: [
         {
-          position: {
-            x: () => this.position.x - 1,
-            y: () => this.position.y,
-          },
-          value: (value) => value != "",
+          xOffset: 0,
+          yOffset: 0,
+          valueCstr: ValueType.Number,
+        },
+        {
+          xOffset: 0,
+          yOffset: -1,
+          valueCstr: ValueType.String,
         },
       ],
-      target: {
-        column: (i) => this.context[0].value,
+      traverse: {
+        xDirection: "after",
+        yDirection: "after",
+      },
+      transform: {
+        context: {
+          position: "top",
+          targetCol: "cellValue",
+        },
+        targetCols: "context",
       },
     },
   ],
-];
+};

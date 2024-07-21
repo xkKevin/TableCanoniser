@@ -1,31 +1,70 @@
-let template_case2 = [
-  [
+const case5 = {
+  startCell: {
+    xOffset: 0,
+    yOffset: 0,
+  },
+  size: {
+    width: "toParentX", // 12,
+    height: undefined,
+  },
+  constraints: [
     {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y,
-      },
-      target: {
-        column: "Method",
-      },
+      xOffset: 5,
+      yOffset: 0,
+      valueCstr: "Employee Previous Earnings",
     },
     {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y + 1,
-      },
-      target: {
-        column: "Accuracy",
-      },
-    },
-    {
-      position: {
-        x: 1,
-        y: StartPoint.y,
-      },
-      target: {
-        column: "Category",
+      referenceAreaPosi: "bottomLeft",
+      xOffset: 0,
+      yOffset: 0,
+      valueCstr: (value) => {
+        if (typeof value === "string") return value.startsWith("ACME Payroll");
+        return false;
       },
     },
   ],
-];
+  traverse: {
+    yDirection: "after",
+  },
+  children: [
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 4,
+      },
+      size: {
+        width: 2,
+      },
+      transform: {
+        targetCols: ["EmployeeID", "Employee Name"],
+      },
+    },
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 8,
+      },
+      size: {
+        width: "toParentX",
+      },
+      transform: {
+        context: {
+          position: (currentAreaInfo) => {
+            return currentAreaInfo.areaCells.map((ci) => {
+              let xOffset = ci.xOffset,
+                yOffset = 7;
+              if (ci.xOffset == 5) yOffset = 6;
+              return {
+                xOffset,
+                yOffset,
+                referenceAreaLayer: "parent",
+              };
+            });
+          },
+          targetCol: "cellValue",
+        },
+        targetCols: "context",
+      },
+    },
+  ],
+};

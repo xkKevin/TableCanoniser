@@ -1,70 +1,18 @@
-export interface ChatMessage {
-    role: string
-    content: string
-}
+我的科研是将messy Table转换为 tidy Table.
+Here is an example of messy tabular data:
+[["Rank", "Name", "Age"],
+ [1, "Bob", 16],
+ ["", "Score", 92],
+ [2, "Sam", 15], 
+ ["", "Score", 89]]
 
-// The Declarative Grammar v0.2
+The desired relational table should look like this:
+[["Rank", "Name", "Age", "Score"],
+ [1, "Bob", 16, 92],
+ [2, "Sam", 15, 89]]
 
-/**
- * PositionFn: (pi: Position2D, areaCells: AreaCellInfo[])
- * For startCell and endCell:
- *   pi is the instance index that matches this template (pi.row means traverse in the row direction, pi.col means traverse in the col direction)
- *   areaCells contains all the selected cells of parent template area
- * For context:
- *   pi is the cell index position of this template area
- *   areaCells contains all the selected cells of this template area
- */
-type PositionFn = (pi: Position2D, areaCells: AreaCellInfo[]) => Position
-
-/**
- * Set rules for value, if return false, means the value does not meet the rule
- */
-type CheckValueFn = (value: string) => boolean
-
-/**
- * Derive the target variable based on the selected/context cells
- * vi: the cell index of this template area
- * areaCells: all selected cells of this template area
- * contextCells: the context cells corresponding to the selected cells of this template area (Note that there may be multiple context cells for each selected cell, so contextCells is a 2D array)
- */
-type DeriveTargetFn = (vi: number, areaCells: AreaCellInfo[], contextCells: AreaCellInfo[][]) => string | string[]
-
-interface Position {
-    // If null, means no rule for row/col
-    row?: number | null,
-    col?: number | null
-}
-
-interface Position2D {
-    row: number
-    col: number
-}
-
-/**
- * For startCell and endCell:
- * if position is not null, means involving position-based selection
- * if value is not null, means involving value-based selection
- */
-type CellInfo = {
-    position: Position | PositionFn,
-    value?: CheckValueFn | string // | number | null
-}
-
-type AreaCellInfo = {
-    position: Position2D,
-    value: string // string | number | null
-}
-
-export interface TableTidierMapping {
-    startCell?: CellInfo,
-    endCell?: CellInfo,
-    // if context is not null, means involving value-based selection
-    context?: CellInfo[],
-    subMapping?: TableTidierMapping[],
-    // if target is string or string[], means position-based mapping;
-    // if target is function, means value-based or context-based mapping;
-    target?: string | string[] | DeriveTargetFn
-}
+ 但是现有data transformation工具或者编程库(如R语言中的tidyr，dplyr等，Python中的pandas等)都难以处理这种行列语义不一致的messy表格（如上述例子messy Table中的Age列既包含学生年龄信息，还包括学生分数信息，列的语义不一致。To address this issue, data practitioners currently resort to manually editing tables in tools like Excel or writing custom scripts in programming languages to transform non-standard tabular data into a standard format. However, manual editing is a tedious and labor-intensive process, while script development requires users to possess programming skills. Therefore, we propose an interactive transformation technique to support the transformation of messy tabular data into a desired relational table.
+ 为此，我先提出了一个声明式的转换语法，如下所述：
 
 // The Declarative Grammar v0.3
 
@@ -148,70 +96,50 @@ export interface TableTidierTemplate {
     children?: TableTidierTemplate[]
 }
 
-const defaultTemplate: TableTidierTemplate = {
+为了将上述列子中的 messy Table 转化为 desired relational table，基于上述语法，我们可以构造一个转换模板，如下所示：
+
+const example: TableTidierTemplate = {
     startCell: {
-        referenceAreaLayer: 'current',
-        referenceAreaPosi: 'topLeft',
         xOffset: 0,
-        yOffset: 0
+        yOffset: 1
     },
     size: {
-        width: 1,
-        height: 1
+        width: 'toParentX',
+        height: 2
     },
-    constraints: [],
+    constraints: [{
+        xOffset: 0,
+        yOffset: 0,
+        valueCstr: ValueType.Number
+    }],
     traverse: {
-        xDirection: 'none',
-        yDirection: 'none'
+        yDirection: 'after'
     },
-    transform: undefined,
-    children: []
-}
-
-
-type Pair = { value: number, originalIndex: number, correspondingValue: string };
-
-export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
-    // Create a combined array of objects
-    let combined: Pair[] = A.map((value, index) => ({
-        value: value,
-        originalIndex: index,
-        correspondingValue: B[index]
-    }));
-
-    // Sort the combined array based on the value in the specified order
-    combined.sort((a, b) => {
-        if (sortOrder === 'asc') {
-            return a.value - b.value;
-        } else {
-            return b.value - a.value;
+    children: [{
+        startCell: {
+            xOffset: 0,
+            yOffset: 0
+        },
+        size: {
+            width: 'toParentX',
+        },
+        transform: {
+            targetCols: ["Rank", "Name", "Age"]
         }
-    });
-
-    // Extract the sorted corresponding values based on the original indices
-    let sortedB: string[] = new Array(B.length);
-    combined.forEach((pair, index) => {
-        sortedB[pair.originalIndex] = pair.correspondingValue;
-    });
-
-    return sortedB;
+    }, {
+        startCell: {
+            xOffset: 2,
+            yOffset: 1
+        },
+        constraints: [{
+            xOffset: -1,
+            yOffset: 0,
+            valueCstr: 'Score'
+        }],
+        transform: {
+            targetCols: ["Score"]
+        }
+    }]
 }
 
-
-
-// interface aa {
-//     a: string,
-//     b: number
-// }
-
-// // type bb = aa & {c: 12 | 22}
-// interface bb extends aa {
-//     c: 12 | 22
-// }
-
-
-// let xy: bb = {
-//     a: '12',
-//     b: 1,
-//     c: 22
-// }
+请你帮我规范我的语法：The Declarative Grammar v0.3，并为我的语法中每一个类别(包括函数类别)，每一个属性配上英文注释

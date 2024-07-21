@@ -1,31 +1,84 @@
-let template_case2 = [
-  [
+const case2_1 = {
+  startCell: {
+    xOffset: 1,
+    yOffset: 0,
+  },
+  size: {
+    width: 2,
+    height: 1,
+  },
+  traverse: {
+    xDirection: "after",
+    yDirection: "after",
+  },
+  transform: {
+    targetCols: ["Method", "Accuracy"],
+  },
+  children: [
     {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y,
+      startCell: {
+        referenceAreaLayer: "root",
+        xOffset: (currentAreaInfo) => currentAreaInfo.xIndex * 2,
+        yOffset: 0,
       },
-      target: {
-        column: "Method",
-      },
-    },
-    {
-      position: {
-        x: StartPoint.x,
-        y: StartPoint.y + 1,
-      },
-      target: {
-        column: "Accuracy",
-      },
-    },
-    {
-      position: {
-        x: 1,
-        y: StartPoint.y,
-      },
-      target: {
-        column: "Category",
+      transform: {
+        targetCols: ["Category"],
       },
     },
   ],
-];
+};
+
+const case2_2 = {
+  startCell: {
+    xOffset: 0,
+    yOffset: 0,
+  },
+  size: {
+    width: 2,
+    height: undefined,
+  },
+  constraints: [
+    {
+      xOffset: 1,
+      yOffset: 0,
+      valueCstr: ValueType.None,
+    },
+    {
+      referenceAreaPosi: "bottomRight",
+      xOffset: 0,
+      yOffset: 1,
+      valueCstr: ValueType.None,
+    },
+  ],
+  traverse: {
+    xDirection: "after",
+    yDirection: "after",
+  },
+  children: [
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 0,
+      },
+      transform: {
+        targetCols: ["Category"],
+      },
+    },
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 1,
+      },
+      size: {
+        width: 2,
+        height: 1,
+      },
+      traverse: {
+        yDirection: "after",
+      },
+      transform: {
+        targetCols: ["Method", "Accuracy"],
+      },
+    },
+  ],
+};

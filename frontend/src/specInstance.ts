@@ -1,4 +1,4 @@
-import { TableTidierMapping } from "./types";
+import { TableTidierMapping, sortWithCorrespondingArray } from "./types";
 
 const case1: TableTidierMapping = {
 
@@ -154,7 +154,7 @@ const case3_1: TableTidierMapping = {
                     }
                 }
             },
-            target: ["Camera", "Price"]
+            target: ["Phone", "Price"]
         }, {
             startCell: {
                 position: (pi, areaCells) => {
@@ -229,7 +229,7 @@ const case3_2: TableTidierMapping = {
                     }
                 }
             },
-            target: ["Camera", "Price"]
+            target: ["Phone", "Price"]
         }, {
             startCell: {
                 position: (pi, areaCells) => {
@@ -331,34 +331,6 @@ const case3_2: TableTidierMapping = {
             }
         }
     ]
-}
-
-type Pair = { value: number, originalIndex: number, correspondingValue: string };
-
-function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
-    // Create a combined array of objects
-    let combined: Pair[] = A.map((value, index) => ({
-        value: value,
-        originalIndex: index,
-        correspondingValue: B[index]
-    }));
-
-    // Sort the combined array based on the value in the specified order
-    combined.sort((a, b) => {
-        if (sortOrder === 'asc') {
-            return a.value - b.value;
-        } else {
-            return b.value - a.value;
-        }
-    });
-
-    // Extract the sorted corresponding values based on the original indices
-    let sortedB: string[] = new Array(B.length);
-    combined.forEach((pair, index) => {
-        sortedB[pair.originalIndex] = pair.correspondingValue;
-    });
-
-    return sortedB;
 }
 
 
