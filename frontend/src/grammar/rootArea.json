@@ -1,0 +1,222 @@
+{
+  "parent": null,
+  "areaLayer": 0,
+  "templateIndex": 0,
+  "xIndex": 0,
+  "yIndex": 0,
+  "xOffset": 0,
+  "yOffset": 0,
+  "x": 0,
+  "y": 0,
+  "width": 3,
+  "height": 9,
+  "areaCells": [
+    ["Rank", "Name", "Age"],
+    [1, "Bob", 16],
+    ["", "Score", 92],
+    [2, "Sam", 15],
+    ["", "Score", 89],
+    [3, "Alice", 16],
+    ["", "Score", 87],
+    [4, "John", 16],
+    ["", "Score", 86]
+  ],
+  "children": [
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 0,
+      "xIndex": 0,
+      "yIndex": 0,
+      "xOffset": 0,
+      "yOffset": 1,
+      "x": 0,
+      "y": 1,
+      "width": 3,
+      "height": 2,
+      "areaCells": [
+        [1, "Bob", 16],
+        ["", "Score", 92]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 1,
+          "width": 3,
+          "height": 1,
+          "areaCells": [[1, "Bob", 16]],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 1,
+          "x": 2,
+          "y": 2,
+          "width": 1,
+          "height": 1,
+          "areaCells": [[92]],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 1,
+      "xIndex": 0,
+      "yIndex": 1,
+      "xOffset": 0,
+      "yOffset": 3,
+      "x": 0,
+      "y": 3,
+      "width": 3,
+      "height": 2,
+      "areaCells": [
+        [2, "Sam", 15],
+        ["", "Score", 89]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 3,
+          "width": 3,
+          "height": 1,
+          "areaCells": [[2, "Sam", 15]],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 1,
+          "x": 2,
+          "y": 4,
+          "width": 1,
+          "height": 1,
+          "areaCells": [[89]],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 2,
+      "xIndex": 0,
+      "yIndex": 2,
+      "xOffset": 0,
+      "yOffset": 5,
+      "x": 0,
+      "y": 5,
+      "width": 3,
+      "height": 2,
+      "areaCells": [
+        [3, "Alice", 16],
+        ["", "Score", 87]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 5,
+          "width": 3,
+          "height": 1,
+          "areaCells": [[3, "Alice", 16]],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 1,
+          "x": 2,
+          "y": 6,
+          "width": 1,
+          "height": 1,
+          "areaCells": [[87]],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 3,
+      "xIndex": 0,
+      "yIndex": 3,
+      "xOffset": 0,
+      "yOffset": 7,
+      "x": 0,
+      "y": 7,
+      "width": 3,
+      "height": 2,
+      "areaCells": [
+        [4, "John", 16],
+        ["", "Score", 86]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 7,
+          "width": 3,
+          "height": 1,
+          "areaCells": [[4, "John", 16]],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 1,
+          "x": 2,
+          "y": 8,
+          "width": 1,
+          "height": 1,
+          "areaCells": [[86]],
+          "children": []
+        }
+      ]
+    }
+  ]
+}

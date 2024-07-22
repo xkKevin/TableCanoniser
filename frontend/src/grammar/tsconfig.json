@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es2015", // 或者更高版本，取决于你的Node.js版本支持情况
+    "module": "commonjs", // 如果你在Node.js环境中运行代码，使用commonjs
+    "strict": true, // 启用所有严格类型检查选项
+    "esModuleInterop": true, // 允许default imports from modules with no default export
+    "skipLibCheck": true, // 跳过所有声明文件的类型检查
+    "forceConsistentCasingInFileNames": true // 确保引用的大小写与磁盘上的大小写匹配
+  }
+}
