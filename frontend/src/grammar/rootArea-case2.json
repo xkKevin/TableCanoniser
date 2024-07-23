@@ -1,0 +1,367 @@
+{
+  "parent": null,
+  "areaLayer": 0,
+  "templateIndex": 0,
+  "xIndex": 0,
+  "yIndex": 0,
+  "xOffset": 0,
+  "yOffset": 0,
+  "x": 0,
+  "y": 0,
+  "width": 4,
+  "height": 5,
+  "areaTbl": [
+    [
+      "Unsupervised DA",
+      "",
+      "SOTA (image-based)",
+      ""
+    ],
+    [
+      "baseline",
+      "93.78",
+      "DeepFace",
+      "91.4"
+    ],
+    [
+      "PCA",
+      "93.56",
+      "FaceNet",
+      "95.12"
+    ],
+    [
+      "CORAL",
+      "94.5",
+      "CenterFace",
+      "94.9"
+    ],
+    [
+      "Ours (F)",
+      "95.38",
+      "CNN+AvePool",
+      "95.2"
+    ]
+  ],
+  "children": [
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 0,
+      "xIndex": 0,
+      "yIndex": 0,
+      "xOffset": 0,
+      "yOffset": 1,
+      "x": 0,
+      "y": 1,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "baseline",
+          "93.78"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Unsupervised DA"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 1,
+      "xIndex": 1,
+      "yIndex": 0,
+      "xOffset": 2,
+      "yOffset": 1,
+      "x": 2,
+      "y": 1,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "DeepFace",
+          "91.4"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 0,
+          "x": 2,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "SOTA (image-based)"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 2,
+      "xIndex": 0,
+      "yIndex": 1,
+      "xOffset": 0,
+      "yOffset": 2,
+      "x": 0,
+      "y": 2,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "PCA",
+          "93.56"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Unsupervised DA"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 3,
+      "xIndex": 1,
+      "yIndex": 1,
+      "xOffset": 2,
+      "yOffset": 2,
+      "x": 2,
+      "y": 2,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "FaceNet",
+          "95.12"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 0,
+          "x": 2,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "SOTA (image-based)"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 4,
+      "xIndex": 0,
+      "yIndex": 2,
+      "xOffset": 0,
+      "yOffset": 3,
+      "x": 0,
+      "y": 3,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "CORAL",
+          "94.5"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Unsupervised DA"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 5,
+      "xIndex": 1,
+      "yIndex": 2,
+      "xOffset": 2,
+      "yOffset": 3,
+      "x": 2,
+      "y": 3,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "CenterFace",
+          "94.9"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 0,
+          "x": 2,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "SOTA (image-based)"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 6,
+      "xIndex": 0,
+      "yIndex": 3,
+      "xOffset": 0,
+      "yOffset": 4,
+      "x": 0,
+      "y": 4,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "Ours (F)",
+          "95.38"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Unsupervised DA"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 7,
+      "xIndex": 1,
+      "yIndex": 3,
+      "xOffset": 2,
+      "yOffset": 4,
+      "x": 2,
+      "y": 4,
+      "width": 2,
+      "height": 1,
+      "areaTbl": [
+        [
+          "CNN+AvePool",
+          "95.2"
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 2,
+          "yOffset": 0,
+          "x": 2,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "SOTA (image-based)"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    }
+  ]
+}

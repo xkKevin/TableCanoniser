@@ -1,0 +1,1895 @@
+{
+  "parent": null,
+  "areaLayer": 0,
+  "templateIndex": 0,
+  "xIndex": 0,
+  "yIndex": 0,
+  "xOffset": 0,
+  "yOffset": 0,
+  "x": 0,
+  "y": 0,
+  "width": 7,
+  "height": 42,
+  "areaTbl": [
+    [
+      "OnePlus 2",
+      "$330",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Release Date",
+      "Aug 2015",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "Height",
+      "151.8 mm",
+      "Width",
+      "74.9 mm",
+      "Depth",
+      "9.85 mm"
+    ],
+    [
+      "Weight",
+      "175 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "5",
+      "13",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "3300 mAh LiPO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "test_phone",
+      "$379",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Release Date",
+      "Nov 2015",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "Height",
+      "72.6 mm",
+      "Width",
+      "72.6 mm",
+      "Depth",
+      "7.9 mm"
+    ],
+    [
+      "Weight",
+      "136 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "6",
+      "6",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "2700 mAh LiPO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Motorola X PURE",
+      "$400",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Release Date",
+      "Sept 2015",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "Width",
+      "76.2 mm",
+      "Height",
+      "153.9 mm",
+      "Depth",
+      "6.1 to 11.06 mm"
+    ],
+    [
+      "Weight",
+      "179 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "5",
+      "21",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "3000 mAh",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Samsung Galaxy S6",
+      "$580",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Announced Date",
+      "2015 Apr",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "H",
+      "143.4 mm",
+      "W",
+      "70.5 mm",
+      "D",
+      "6.8 mm"
+    ],
+    [
+      "Weight",
+      "138 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "16",
+      "5",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "2550 mAh",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Samsung Galaxy Note 5",
+      "$720",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Announced Date",
+      "2015 Aug",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "W",
+      "76.1 mm",
+      "H",
+      "153.2 mm",
+      "D",
+      "7.6 mm"
+    ],
+    [
+      "Weight",
+      "171 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "16",
+      "5",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "3000 mAh LiPO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Apple iPhone 6s",
+      "$650",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Release Date",
+      "Sept 2015",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Dimensions",
+      "Height",
+      "138.3 mm",
+      "Width",
+      "67.1 mm",
+      "Depth",
+      "7.1 mm"
+    ],
+    [
+      "Weight",
+      "143 g",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Camera",
+      "5",
+      "12",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Battery",
+      "1715 mAh LiPO",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ],
+  "children": [
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 0,
+      "xIndex": 0,
+      "yIndex": 0,
+      "xOffset": 0,
+      "yOffset": 0,
+      "x": 0,
+      "y": 0,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "OnePlus 2",
+          "$330",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Release Date",
+          "Aug 2015",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "Height",
+          "151.8 mm",
+          "Width",
+          "74.9 mm",
+          "Depth",
+          "9.85 mm"
+        ],
+        [
+          "Weight",
+          "175 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "5",
+          "13",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "3300 mAh LiPO",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 0,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "OnePlus 2",
+              "$330"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 1,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Aug 2015"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 1,
+          "xIndex": 0,
+          "yIndex": 1,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 3,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "175 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 2,
+          "xIndex": 0,
+          "yIndex": 2,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 5,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "3300 mAh LiPO"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 2,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Height",
+              "151.8 mm",
+              "Width",
+              "74.9 mm",
+              "Depth",
+              "9.85 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 2,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "151.8 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 2,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "74.9 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 2,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "9.85 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 4,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "5",
+              "13"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 1,
+      "xIndex": 0,
+      "yIndex": 1,
+      "xOffset": 0,
+      "yOffset": 7,
+      "x": 0,
+      "y": 7,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "test_phone",
+          "$379",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Release Date",
+          "Nov 2015",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "Height",
+          "72.6 mm",
+          "Width",
+          "72.6 mm",
+          "Depth",
+          "7.9 mm"
+        ],
+        [
+          "Weight",
+          "136 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "6",
+          "6",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "2700 mAh LiPO",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 7,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "test_phone",
+              "$379"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 3,
+          "xIndex": 0,
+          "yIndex": 3,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 8,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Nov 2015"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 4,
+          "xIndex": 0,
+          "yIndex": 4,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 10,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "136 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 5,
+          "xIndex": 0,
+          "yIndex": 5,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 12,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "2700 mAh LiPO"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 1,
+          "xIndex": 0,
+          "yIndex": 1,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 9,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Height",
+              "72.6 mm",
+              "Width",
+              "72.6 mm",
+              "Depth",
+              "7.9 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 9,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "72.6 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 9,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "72.6 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 9,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "7.9 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 1,
+          "xIndex": 0,
+          "yIndex": 1,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 11,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "6",
+              "6"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 2,
+      "xIndex": 0,
+      "yIndex": 2,
+      "xOffset": 0,
+      "yOffset": 14,
+      "x": 0,
+      "y": 14,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "Motorola X PURE",
+          "$400",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Release Date",
+          "Sept 2015",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "Width",
+          "76.2 mm",
+          "Height",
+          "153.9 mm",
+          "Depth",
+          "6.1 to 11.06 mm"
+        ],
+        [
+          "Weight",
+          "179 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "5",
+          "21",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "3000 mAh",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 14,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Motorola X PURE",
+              "$400"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 6,
+          "xIndex": 0,
+          "yIndex": 6,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 15,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Sept 2015"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 7,
+          "xIndex": 0,
+          "yIndex": 7,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 17,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "179 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 8,
+          "xIndex": 0,
+          "yIndex": 8,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 19,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "3000 mAh"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 2,
+          "xIndex": 0,
+          "yIndex": 2,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 16,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Width",
+              "76.2 mm",
+              "Height",
+              "153.9 mm",
+              "Depth",
+              "6.1 to 11.06 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 16,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "76.2 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 16,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "153.9 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 16,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "6.1 to 11.06 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 2,
+          "xIndex": 0,
+          "yIndex": 2,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 18,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "5",
+              "21"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 3,
+      "xIndex": 0,
+      "yIndex": 3,
+      "xOffset": 0,
+      "yOffset": 21,
+      "x": 0,
+      "y": 21,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "Samsung Galaxy S6",
+          "$580",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Announced Date",
+          "2015 Apr",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "H",
+          "143.4 mm",
+          "W",
+          "70.5 mm",
+          "D",
+          "6.8 mm"
+        ],
+        [
+          "Weight",
+          "138 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "16",
+          "5",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "2550 mAh",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 21,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Samsung Galaxy S6",
+              "$580"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 9,
+          "xIndex": 0,
+          "yIndex": 9,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 22,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "2015 Apr"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 10,
+          "xIndex": 0,
+          "yIndex": 10,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 24,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "138 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 11,
+          "xIndex": 0,
+          "yIndex": 11,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 26,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "2550 mAh"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 3,
+          "xIndex": 0,
+          "yIndex": 3,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 23,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "H",
+              "143.4 mm",
+              "W",
+              "70.5 mm",
+              "D",
+              "6.8 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 23,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "143.4 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 23,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "70.5 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 23,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "6.8 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 3,
+          "xIndex": 0,
+          "yIndex": 3,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 25,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "16",
+              "5"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 4,
+      "xIndex": 0,
+      "yIndex": 4,
+      "xOffset": 0,
+      "yOffset": 28,
+      "x": 0,
+      "y": 28,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "Samsung Galaxy Note 5",
+          "$720",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Announced Date",
+          "2015 Aug",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "W",
+          "76.1 mm",
+          "H",
+          "153.2 mm",
+          "D",
+          "7.6 mm"
+        ],
+        [
+          "Weight",
+          "171 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "16",
+          "5",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "3000 mAh LiPO",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 28,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Samsung Galaxy Note 5",
+              "$720"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 12,
+          "xIndex": 0,
+          "yIndex": 12,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 29,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "2015 Aug"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 13,
+          "xIndex": 0,
+          "yIndex": 13,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 31,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "171 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 14,
+          "xIndex": 0,
+          "yIndex": 14,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 33,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "3000 mAh LiPO"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 4,
+          "xIndex": 0,
+          "yIndex": 4,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 30,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "W",
+              "76.1 mm",
+              "H",
+              "153.2 mm",
+              "D",
+              "7.6 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 30,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "76.1 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 30,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "153.2 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 30,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "7.6 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 4,
+          "xIndex": 0,
+          "yIndex": 4,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 32,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "16",
+              "5"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "parent": "[Circular reference: parent]",
+      "areaLayer": 1,
+      "templateIndex": 5,
+      "xIndex": 0,
+      "yIndex": 5,
+      "xOffset": 0,
+      "yOffset": 35,
+      "x": 0,
+      "y": 35,
+      "width": 7,
+      "height": 6,
+      "areaTbl": [
+        [
+          "Apple iPhone 6s",
+          "$650",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Release Date",
+          "Sept 2015",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Dimensions",
+          "Height",
+          "138.3 mm",
+          "Width",
+          "67.1 mm",
+          "Depth",
+          "7.1 mm"
+        ],
+        [
+          "Weight",
+          "143 g",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Camera",
+          "5",
+          "12",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Battery",
+          "1715 mAh LiPO",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "children": [
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 0,
+          "xIndex": 0,
+          "yIndex": 0,
+          "xOffset": 0,
+          "yOffset": 0,
+          "x": 0,
+          "y": 35,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Apple iPhone 6s",
+              "$650"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 15,
+          "xIndex": 0,
+          "yIndex": 15,
+          "xOffset": 1,
+          "yOffset": 1,
+          "x": 1,
+          "y": 36,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Sept 2015"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 16,
+          "xIndex": 0,
+          "yIndex": 16,
+          "xOffset": 1,
+          "yOffset": 3,
+          "x": 1,
+          "y": 38,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "143 g"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 17,
+          "xIndex": 0,
+          "yIndex": 17,
+          "xOffset": 1,
+          "yOffset": 5,
+          "x": 1,
+          "y": 40,
+          "width": 1,
+          "height": 1,
+          "areaTbl": [
+            [
+              "1715 mAh LiPO"
+            ]
+          ],
+          "children": []
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 5,
+          "xIndex": 0,
+          "yIndex": 5,
+          "xOffset": 1,
+          "yOffset": 2,
+          "x": 1,
+          "y": 37,
+          "width": 6,
+          "height": 1,
+          "areaTbl": [
+            [
+              "Height",
+              "138.3 mm",
+              "Width",
+              "67.1 mm",
+              "Depth",
+              "7.1 mm"
+            ]
+          ],
+          "children": [
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 0,
+              "xIndex": 0,
+              "yIndex": 0,
+              "xOffset": 1,
+              "yOffset": 0,
+              "x": 2,
+              "y": 37,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "138.3 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 1,
+              "xIndex": 1,
+              "yIndex": 0,
+              "xOffset": 3,
+              "yOffset": 0,
+              "x": 4,
+              "y": 37,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "67.1 mm"
+                ]
+              ],
+              "children": []
+            },
+            {
+              "parent": "[Circular reference: parent]",
+              "areaLayer": 3,
+              "templateIndex": 2,
+              "xIndex": 2,
+              "yIndex": 0,
+              "xOffset": 5,
+              "yOffset": 0,
+              "x": 6,
+              "y": 37,
+              "width": 1,
+              "height": 1,
+              "areaTbl": [
+                [
+                  "7.1 mm"
+                ]
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "parent": "[Circular reference: parent]",
+          "areaLayer": 2,
+          "templateIndex": 5,
+          "xIndex": 0,
+          "yIndex": 5,
+          "xOffset": 1,
+          "yOffset": 4,
+          "x": 1,
+          "y": 39,
+          "width": 2,
+          "height": 1,
+          "areaTbl": [
+            [
+              "5",
+              "12"
+            ]
+          ],
+          "children": []
+        }
+      ]
+    }
+  ]
+}

@@ -10,16 +10,52 @@
   "y": 0,
   "width": 3,
   "height": 9,
-  "areaCells": [
-    ["Rank", "Name", "Age"],
-    [1, "Bob", 16],
-    ["", "Score", 92],
-    [2, "Sam", 15],
-    ["", "Score", 89],
-    [3, "Alice", 16],
-    ["", "Score", 87],
-    [4, "John", 16],
-    ["", "Score", 86]
+  "areaTbl": [
+    [
+      "Rank",
+      "Name",
+      "Age"
+    ],
+    [
+      1,
+      "Bob",
+      16
+    ],
+    [
+      "",
+      "Score",
+      92
+    ],
+    [
+      2,
+      "Sam",
+      15
+    ],
+    [
+      "",
+      "Score",
+      89
+    ],
+    [
+      3,
+      "Alice",
+      16
+    ],
+    [
+      "",
+      "Score",
+      87
+    ],
+    [
+      4,
+      "John",
+      16
+    ],
+    [
+      "",
+      "Score",
+      86
+    ]
   ],
   "children": [
     {
@@ -34,9 +70,17 @@
       "y": 1,
       "width": 3,
       "height": 2,
-      "areaCells": [
-        [1, "Bob", 16],
-        ["", "Score", 92]
+      "areaTbl": [
+        [
+          1,
+          "Bob",
+          16
+        ],
+        [
+          "",
+          "Score",
+          92
+        ]
       ],
       "children": [
         {
@@ -51,7 +95,13 @@
           "y": 1,
           "width": 3,
           "height": 1,
-          "areaCells": [[1, "Bob", 16]],
+          "areaTbl": [
+            [
+              1,
+              "Bob",
+              16
+            ]
+          ],
           "children": []
         },
         {
@@ -66,7 +116,11 @@
           "y": 2,
           "width": 1,
           "height": 1,
-          "areaCells": [[92]],
+          "areaTbl": [
+            [
+              92
+            ]
+          ],
           "children": []
         }
       ]
@@ -83,9 +137,17 @@
       "y": 3,
       "width": 3,
       "height": 2,
-      "areaCells": [
-        [2, "Sam", 15],
-        ["", "Score", 89]
+      "areaTbl": [
+        [
+          2,
+          "Sam",
+          15
+        ],
+        [
+          "",
+          "Score",
+          89
+        ]
       ],
       "children": [
         {
@@ -100,7 +162,13 @@
           "y": 3,
           "width": 3,
           "height": 1,
-          "areaCells": [[2, "Sam", 15]],
+          "areaTbl": [
+            [
+              2,
+              "Sam",
+              15
+            ]
+          ],
           "children": []
         },
         {
@@ -115,7 +183,11 @@
           "y": 4,
           "width": 1,
           "height": 1,
-          "areaCells": [[89]],
+          "areaTbl": [
+            [
+              89
+            ]
+          ],
           "children": []
         }
       ]
@@ -132,9 +204,17 @@
       "y": 5,
       "width": 3,
       "height": 2,
-      "areaCells": [
-        [3, "Alice", 16],
-        ["", "Score", 87]
+      "areaTbl": [
+        [
+          3,
+          "Alice",
+          16
+        ],
+        [
+          "",
+          "Score",
+          87
+        ]
       ],
       "children": [
         {
@@ -149,7 +229,13 @@
           "y": 5,
           "width": 3,
           "height": 1,
-          "areaCells": [[3, "Alice", 16]],
+          "areaTbl": [
+            [
+              3,
+              "Alice",
+              16
+            ]
+          ],
           "children": []
         },
         {
@@ -164,7 +250,11 @@
           "y": 6,
           "width": 1,
           "height": 1,
-          "areaCells": [[87]],
+          "areaTbl": [
+            [
+              87
+            ]
+          ],
           "children": []
         }
       ]
@@ -181,9 +271,17 @@
       "y": 7,
       "width": 3,
       "height": 2,
-      "areaCells": [
-        [4, "John", 16],
-        ["", "Score", 86]
+      "areaTbl": [
+        [
+          4,
+          "John",
+          16
+        ],
+        [
+          "",
+          "Score",
+          86
+        ]
       ],
       "children": [
         {
@@ -198,7 +296,13 @@
           "y": 7,
           "width": 3,
           "height": 1,
-          "areaCells": [[4, "John", 16]],
+          "areaTbl": [
+            [
+              4,
+              "John",
+              16
+            ]
+          ],
           "children": []
         },
         {
@@ -213,7 +317,11 @@
           "y": 8,
           "width": 1,
           "height": 1,
-          "areaCells": [[86]],
+          "areaTbl": [
+            [
+              86
+            ]
+          ],
           "children": []
         }
       ]

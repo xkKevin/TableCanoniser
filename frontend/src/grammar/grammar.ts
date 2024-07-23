@@ -1,6 +1,6 @@
 // The Declarative Grammar v0.3
 
-type cellValueType = string | number;
+type CellValueType = string | number;
 
 export enum ValueType {
     String = 'TableTidier.String',
@@ -23,7 +23,7 @@ type offsetFn = (currentArea: AreaInfo, rootArea: AreaInfo) => number;
  * @param value - The value of the cell.
  * @returns A boolean indicating whether the cell value meets the condition.
  */
-type checkValueFn = (value: cellValueType) => boolean;
+type checkValueFn = (value: CellValueType) => boolean;
 
 /**
  * A function type that maps the cells in an area to their corresponding target columns.
@@ -34,18 +34,19 @@ type mapColsFn = (currentAreaTbl: Table2D) => (string | null)[];
 
 /**
  * A function type that maps a context value to a target column.
- * @param contextValue - The value of the context cell.
+ * @param ctxCells - The info (position and value) of the context cells.
  * @returns The name of the target column or null.
  */
-type mapColbyContextFn = (contextValue: cellValueType) => string | null;
+type mapColbyContextFn = (ctxCells: CellInfo[]) => string | null;
 
 /**
  * A function type that selects a range of cells based on the current area information and the root area information.
+ * @param cell - The current cell in the current area.
  * @param currentArea - The current area information.
  * @param rootArea - The root area information.
  * @returns An array of cell selections.
  */
-type contextPosiFn = (currentArea: AreaInfo, rootArea: AreaInfo) => CellSelection[];
+type contextPosiFn = (cell: AreaCell, currentArea: AreaInfo, rootArea: AreaInfo) => CellSelection[];
 
 /**
  * A function type that determines the layer of an area based on its current area information.
@@ -63,7 +64,7 @@ type areaLayerFn = (currentArea: AreaInfo) => number;
 interface AreaCell {
     xOffset: number;
     yOffset: number;
-    value: cellValueType;
+    value: CellValueType;
 }
 
 interface CellPosi {
@@ -71,7 +72,11 @@ interface CellPosi {
     y: number;
 }
 
-type Table2D = cellValueType[][];
+interface CellInfo extends CellPosi {
+    value: CellValueType;
+}
+
+type Table2D = CellValueType[][];
 
 /**
  * Represents the information of a selected area within the table
@@ -86,7 +91,7 @@ type Table2D = cellValueType[][];
  * - `y`: The y-coordinate of this area within the entire table
  * - `width`: The width of this area
  * - `height`: The height of this area
- * - `areaCells`: All cells within this area
+ * - `areaTbl`: All cells within this area
  * - `children`: The child areas of this area
  */
 export interface AreaInfo {
@@ -101,7 +106,7 @@ export interface AreaInfo {
     y: number;
     width: number;
     height: number;
-    areaCells: Table2D;
+    areaTbl: Table2D;
     children: AreaInfo[];
 }
 
@@ -122,12 +127,12 @@ interface CellSelection {
 /**
  * Represents a constraint on a cell's value
  * - `valueCstr`: The value constraint.
- *   - `cellValueType`: Specifies that the cell's value must be equal to the provided value.
+ *   - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
  *   - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
  *   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
  */
 interface CellConstraint extends CellSelection {
-    valueCstr: cellValueType | ValueType | checkValueFn;
+    valueCstr: CellValueType | ValueType | checkValueFn;
 }
 
 /**
@@ -186,15 +191,11 @@ export interface TableTidierTemplate {
 type Pair = { value: number, originalIndex: number, correspondingValue: string };
 
 export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
-    // Create a combined array of objects
-    let combined: Pair[] = A.map((value, index) => ({
-        value: value,
-        originalIndex: index,
-        correspondingValue: B[index]
-    }));
+    // 创建一个数组包含元素及其对应的索引
+    let indexedArray = A.map((value, index) => ({ value, index }));
 
-    // Sort the combined array based on the value in the specified order
-    combined.sort((a, b) => {
+    // 按照A数组的值进行排序
+    indexedArray.sort((a, b) => {
         if (sortOrder === 'asc') {
             return a.value - b.value;
         } else {
@@ -202,11 +203,8 @@ export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'as
         }
     });
 
-    // Extract the sorted corresponding values based on the original indices
-    let sortedB: string[] = new Array(B.length);
-    combined.forEach((pair, index) => {
-        sortedB[pair.originalIndex] = pair.correspondingValue;
-    });
+    // 根据排序后的索引重新排列B数组
+    let sortedB = indexedArray.map(item => B[item.index]);
 
     return sortedB;
 }
@@ -281,13 +279,13 @@ function completeTemplate(template: TableTidierTemplate): TableTidierTemplate {
     return {
         startCell: completeCellSelection(template.startCell),
         size: {
-            width: template.size?.width ?? DEFAULT_WIDTH,
-            height: template.size?.height ?? DEFAULT_HEIGHT
+            width: template.size?.width === undefined ? DEFAULT_WIDTH : template.size.width,
+            height: template.size?.height === undefined ? DEFAULT_HEIGHT : template.size.height
         },
         constraints: template.constraints?.map(completeCellConstraint) || [],
         traverse: {
-            xDirection: template.traverse?.xDirection || DEFAULT_X_DIRECTION,
-            yDirection: template.traverse?.yDirection || DEFAULT_Y_DIRECTION
+            xDirection: template.traverse?.xDirection === undefined ? DEFAULT_X_DIRECTION : template.traverse.xDirection,
+            yDirection: template.traverse?.yDirection === undefined ? DEFAULT_Y_DIRECTION : template.traverse.yDirection
         },
         transform: template.transform
             ? {
@@ -316,15 +314,15 @@ type MatchedIndex = {
 function transformTable(table: Table2D, spec: TableTidierTemplate) {
 
     const specWithDefaults = completeSpecification(spec);
-    // console.log(JSON.stringify(specWithDefaults, null, 2));
+    console.log(JSON.stringify(specWithDefaults, null, 2));
 
     // Helper function to get a cell value safely
-    const getCellValue = (table: Table2D, x: number, y: number): cellValueType => {
+    const getCellValue = (table: Table2D, x: number, y: number): CellValueType => {
         return table[y] && table[y][x];
     };
 
     // Helper function to evaluate constraints
-    const evaluateConstraint = (cellValue: cellValueType, constraint: CellConstraint): boolean => {
+    const evaluateConstraint = (cellValue: CellValueType, constraint: CellConstraint): boolean => {
         if (typeof constraint.valueCstr === 'function') {
             return constraint.valueCstr(cellValue);
         }
@@ -344,7 +342,7 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
         return typeof offset === 'number' ? offset : offset(currentArea, rootArea);
     };
 
-    const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo) => {
+    const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo): CellInfo | null => {
         let area: AreaInfo = currentArea;
         if (select.referenceAreaLayer === 'current') {
             area = currentArea;
@@ -366,19 +364,25 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
         if (select.referenceAreaPosi === 'topLeft') {
         }
         if (select.referenceAreaPosi === 'bottomLeft') {
-            cellPosi.y += area.height
+            cellPosi.y += area.height - 1
         }
         if (select.referenceAreaPosi === 'topRight') {
-            cellPosi.x += area.width
+            cellPosi.x += area.width - 1
         }
         if (select.referenceAreaPosi === 'bottomRight') {
-            cellPosi.x += area.width
-            cellPosi.y += area.height
+            cellPosi.x += area.width - 1
+            cellPosi.y += area.height - 1
+        }
+
+        // 判断是否越界
+        if (cellPosi.x < 0 || cellPosi.y < 0 || cellPosi.x >= rootArea.width || cellPosi.y >= rootArea.height) {
+            console.log(`Invalid cell selection: Table size (${rootArea.width}, ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`);
+            return null
         }
 
         return {
             ...cellPosi,
-            value: rootArea.areaCells[cellPosi.y][cellPosi.x],
+            value: rootArea.areaTbl[cellPosi.y][cellPosi.x],
         };
 
     };
@@ -406,7 +410,18 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
         return subArea;
     }
 
-    const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yOffset: number, width: number, height: number, index: MatchedIndex, type: 0 | 1 | 2 | 3, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: cellValueType[] }): AreaInfo | null => {
+    const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yOffset: number, width: number, height: number, index: MatchedIndex, type: 0 | 1 | 2, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }): AreaInfo | null => {
+
+        let x = currentArea.x + xOffset, y = currentArea.y + yOffset;
+
+        if (template.startCell.referenceAreaLayer !== "current") {
+            const cellInfo = getCellBySelect(template.startCell, currentArea, rootArea);
+            if (cellInfo === null) {
+                return null;
+            };
+            x = cellInfo.x;
+            y = cellInfo.y;
+        }
 
         const tmpArea: AreaInfo = {
             parent: currentArea,
@@ -416,17 +431,19 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
             yIndex: index.yIndex,
             xOffset,
             yOffset,
-            x: currentArea.x + xOffset,
-            y: currentArea.y + yOffset,
+            x,
+            y,
             width,
             height,
-            areaCells: getSubArea(currentArea.areaCells, xOffset, yOffset, width, height),
+            areaTbl: getSubArea(rootArea.areaTbl, x, y, width, height),
             children: []
         }
         for (let cstr of template.constraints) {
-            const { value } = getCellBySelect(cstr, tmpArea, rootArea);
-            // console.log(value, tmpArea);
-            if (!evaluateConstraint(value, cstr)) return null;
+            const cellInfo = getCellBySelect(cstr, tmpArea, rootArea);
+            if (cellInfo === null) {
+                return null;
+            }
+            if (!evaluateConstraint(cellInfo.value, cstr)) return null;
         }
         currentArea.children.push(tmpArea);
         if (type) {
@@ -435,41 +452,137 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
                 index.xIndex++;
             } else if (type === 2) {
                 index.yIndex++;
-            } else {
-
             }
         }
+
+        // if (template.startCell.referenceAreaLayer === 'root') {
+        //     console.log(xOffset, yOffset, width, height);
+        //     {
+        //         let { parent, children, ...rest } = currentArea;
+        //         console.log(rest);
+        //     }
+        //     console.log("-----------------");
+        //     {
+        //         let { parent, children, ...rest } = tmpArea;
+        //         console.log(rest);
+        //     }
+        // }
+
         transformArea(template, tmpArea, rootArea, tidyData);
         return tmpArea;
     };
 
 
-    const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: cellValueType[] }) => {
+    const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }) => {
 
-        const cellArray = currentArea.areaCells.flat();
+        const cellArray = currentArea.areaTbl.flat();
         if (template.transform) {
-            if (template.transform.context) {
+            const context = template.transform.context;
+            const ctxCols: (string | null)[] = []
+            const ctxCellsInfo: CellInfo[][] = [];
+            if (context) {
+                const ctxSelections: CellSelection[][] = [];
+                if (context.position === 'top') {
+                    currentArea.areaTbl.forEach((row, ri) => {
+                        row.forEach((cell, ci) => {
+                            ctxSelections.push([completeCellSelection({
+                                xOffset: ci,
+                                yOffset: ri + 1,
+                            })]);
+                        })
+                    })
+                } else if (context.position === 'bottom') {
+                    currentArea.areaTbl.forEach((row, ri) => {
+                        row.forEach((cell, ci) => {
+                            ctxSelections.push([completeCellSelection({
+                                xOffset: ci,
+                                yOffset: ri + 1,
+                            })]);
+                        })
+                    })
+                } else if (context.position === 'left') {
+                    currentArea.areaTbl.forEach((row, ri) => {
+                        row.forEach((cell, ci) => {
+                            ctxSelections.push([completeCellSelection({
+                                xOffset: ci - 1,
+                                yOffset: ri,
+                            })]);
+                        })
+                    })
+                } else if (context.position === 'right') {
+                    currentArea.areaTbl.forEach((row, ri) => {
+                        row.forEach((cell, ci) => {
+                            ctxSelections.push([completeCellSelection({
+                                xOffset: ci + 1,
+                                yOffset: ri,
+                            })]);
+                        })
+                    })
+                } else {
+                    const ctxPosiFn = context.position
+                    currentArea.areaTbl.forEach((row, ri) => {
+                        row.forEach((cell, ci) => {
+                            const customSelections = ctxPosiFn({
+                                xOffset: ci,
+                                yOffset: ri,
+                                value: cell
+                            }, currentArea, rootArea);
+                            ctxSelections.push(customSelections);
+                        })
+                    })
+                }
 
-            } else {
-                if (typeof template.transform.targetCols === 'object') {
-                    template.transform.targetCols.forEach((targetCol: string | null, index: number) => {
-                        // console.log(targetCol, cellArray[index], currentArea.areaCells, template);
-                        if (targetCol) {
-                            if (tidyData.hasOwnProperty(targetCol)) {
-                                tidyData[targetCol].push(cellArray[index]);
-                            } else {
-                                tidyData[targetCol] = [cellArray[index]];
+                if (ctxSelections.length > 0 && ctxSelections[0].length > 0) {
+                    ctxSelections.forEach((cellCtxs) => {
+                        const cellCtxsInfo: CellInfo[] = [];
+                        cellCtxs.forEach((selection) => {
+                            const cell = getCellBySelect(selection as AllParams<CellSelection>, currentArea, rootArea);
+                            if (cell === null) {
+                                return null;
                             }
-                        }
+                            cellCtxsInfo.push(cell);
+                        })
+                        ctxCellsInfo.push(cellCtxsInfo);
+                    });
+                } else {
+                    console.log('No context cells found');
+                }
+
+                if (context.targetCol === 'cellValue') {
+                    ctxCellsInfo.forEach((cellCtxsInfo) => {
+                        ctxCols.push(cellCtxsInfo[0].value.toString());
+                    })
+                } else {
+                    const customMapColbyCxt = context.targetCol
+                    ctxCellsInfo.forEach((ctxCells) => {
+                        ctxCols.push(customMapColbyCxt(ctxCells));
                     })
                 }
             }
+
+            let transformedCols: (string | null)[];
+            if (typeof template.transform.targetCols === 'object') {
+                transformedCols = template.transform.targetCols
+            } else if (template.transform.targetCols === 'context') {
+                transformedCols = ctxCols
+            } else {
+                transformedCols = template.transform.targetCols(currentArea.areaTbl);
+            }
+            transformedCols.forEach((targetCol, index) => {
+                if (targetCol) {
+                    if (tidyData.hasOwnProperty(targetCol)) {
+                        tidyData[targetCol].push(cellArray[index]);
+                    } else {
+                        tidyData[targetCol] = [cellArray[index]];
+                    }
+                }
+            })
         }
     }
 
 
     // Recursive function to process a template
-    const processTemplate = (template: AllParams<TableTidierTemplate>, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: cellValueType[] }) => {
+    const processTemplate = (template: AllParams<TableTidierTemplate>, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }) => {
 
         let startX = calculateOffset(template.startCell.xOffset, currentArea, rootArea);
         let startY = calculateOffset(template.startCell.yOffset, currentArea, rootArea);
@@ -484,9 +597,54 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
         const yDirection = template.traverse.yDirection;
         if (xDirection && yDirection) {
             // 从 startX, startY 开始遍历，直到 endX, endY，找到第一个符合所有约束的Area
+            let endX = currentArea.width - 1;
+            let endY = currentArea.height - 1;
+            if (xDirection === 'before') {
+                endX = startX
+                startX = 0;
+            } else if (xDirection === 'whole') {
+                startX = 0;
+            }
+            if (yDirection === 'before') {
+                endY = startY
+                startY = 0;
+            } else if (yDirection === 'whole') {
+                startY = 0;
+            }
+            let currentStartX = startX;
+            let currentEndX = startX + width - 1;
+            let currentStartY = startY;
+            let currentEndY = startY + height - 1;
+            // 先向x轴遍历，再向y轴遍历
+            while (currentEndY <= endY) {
+                const areaHeight = currentEndY - currentStartY + 1;
+                while (currentEndX <= endX) {
+                    const areaWidth = currentEndX - currentStartX + 1;
+                    // console.log(currentStartX, currentEndX, currentStartY, currentEndY, areaWidth, areaHeight);
+                    const tmpArea: AreaInfo | null = matchArea(template, currentStartX, currentStartY, areaWidth, areaHeight, index, 1, currentArea, rootArea, tidyData);
+                    if (tmpArea) {
+                        currentStartX += areaWidth
+                        currentEndX += areaWidth
+                    } else {
+                        currentEndX += 1
+                        if (template.size.width != null) currentStartX += 1
+                    }
+                }
+                currentStartX = startX;
+                currentEndX = startX + width - 1;
+                index.xIndex = 0;
+                index.yIndex += 1;
+                if (currentArea.children.length > 0) {
+                    currentStartY += areaHeight
+                    currentEndY += areaHeight
+                } else {
+                    currentStartY += 1
+                    if (template.size.height != null) currentStartY += 1
+                }
+            }
         } else if (xDirection && !yDirection) {
             // 从 startX 开始遍历，直到 endX ，找到第一个符合所有约束的Area
-            let endX = currentArea.width;
+            let endX = currentArea.width - 1;
             if (xDirection === 'before') {
                 endX = startX
                 startX = 0;
@@ -500,12 +658,27 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
                 const tmpArea: AreaInfo | null = matchArea(template, currentStartX, startY, areaWidth, height, index, 1, currentArea, rootArea, tidyData);
                 if (tmpArea) {
                     currentStartX += areaWidth
-                    currentEndX += areaWidth
+                    currentEndX = currentStartX + width - 1;
+                } else {
+                    if (template.size.width != null) {
+                        // 宽度固定
+                        currentStartX += 1
+                        currentEndX += 1
+                    } else {
+                        if (currentEndX === endX) {
+                            // 已经到了最后一行
+                            currentStartX += 1
+                            currentEndX = currentStartX
+                        } else {
+                            // 未到最后一行
+                            currentEndX += 1
+                        }
+                    }
                 }
             }
         } else if (!xDirection && yDirection) {
             // 从 startY 开始遍历，直到 endY, 找到第一个符合所有约束的Area
-            let endY = currentArea.height;
+            let endY = currentArea.height - 1;
             if (yDirection === 'before') {
                 endY = startY
                 startY = 0;
@@ -517,9 +690,26 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
             while (currentEndY <= endY) {
                 const areaHeight = currentEndY - currentStartY + 1;
                 const tmpArea: AreaInfo | null = matchArea(template, startX, currentStartY, width, areaHeight, index, 2, currentArea, rootArea, tidyData);
+                // console.log("before match", currentStartY, currentEndY, width, areaHeight, tmpArea === null);
                 if (tmpArea) {
                     currentStartY += areaHeight
-                    currentEndY += areaHeight
+                    currentEndY = currentStartY + height - 1;
+                } else {
+                    if (template.size.height != null) {
+                        // 高度固定
+                        currentStartY += 1
+                        currentEndY += 1
+                    } else {
+                        // 高度可变
+                        if (currentEndY === endY) {
+                            // 已经到了最后一行
+                            currentStartY += 1
+                            currentEndY = currentStartY
+                        } else {
+                            // 未到最后一行
+                            currentEndY += 1
+                        }
+                    }
                 }
             }
         } else {
@@ -549,11 +739,11 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
         y: 0,
         width: table[0].length,
         height: table.length,
-        areaCells: table,
+        areaTbl: table,
         children: []
     };
 
-    let tidyData: { [key: string]: cellValueType[] } = {}
+    let tidyData: { [key: string]: CellValueType[] } = {}
 
     processTemplate(specWithDefaults, { templateIndex: 0, xIndex: 0, yIndex: 0 }, rootArea, rootArea, tidyData);
 
@@ -561,8 +751,8 @@ function transformTable(table: Table2D, spec: TableTidierTemplate) {
 }
 
 
-// Example usage
-const messyTable: Table2D = [
+
+const case1_mt: Table2D = [
     ["Rank", "Name", "Age"],
     [1, "Bob", 16],
     ["", "Score", 92],
@@ -574,7 +764,7 @@ const messyTable: Table2D = [
     ["", "Score", 86],
 ];
 
-const spec: TableTidierTemplate = {
+const case1_spec: TableTidierTemplate = {
     startCell: { xOffset: 0, yOffset: 1 },
     size: { width: 'toParentX', height: 2 },
     constraints: [{ xOffset: 0, yOffset: 0, valueCstr: ValueType.Number }],
@@ -592,10 +782,274 @@ const spec: TableTidierTemplate = {
         }
     ]
 };
+const case2_mt: Table2D = [
+    ["Unsupervised DA", "", "SOTA (image-based)", ""],
+    ["baseline", "93.78", "DeepFace", "91.4"],
+    ["PCA", "93.56", "FaceNet", "95.12"],
+    ["CORAL", "94.5", "CenterFace", "94.9"],
+    ["Ours (F)", "95.38", "CNN+AvePool", "95.2"]
+];
 
-const { rootArea, tidyData } = transformTable(messyTable, spec);
+const case2_spec: TableTidierTemplate = {
+    startCell: {
+        xOffset: 0,
+        yOffset: 1,
+    },
+    size: {
+        width: 2,
+        height: 1,
+    },
+    traverse: {
+        xDirection: "after",
+        yDirection: "after",
+    },
+    transform: {
+        targetCols: ["Method", "Accuracy"],
+    },
+    children: [
+        {
+            startCell: {
+                referenceAreaLayer: "root",
+                xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
+                yOffset: 0,
+            },
+            transform: {
+                targetCols: ["Category"],
+            },
+        },
+    ],
+};
+
+const case3_mt: Table2D = [
+    ["OnePlus 2", "$330", "", "", "", "", ""],
+    ["Release Date", "Aug 2015", "", "", "", "", ""],
+    [
+        "Dimensions",
+        "Height",
+        "151.8 mm",
+        "Width",
+        "74.9 mm",
+        "Depth",
+        "9.85 mm"
+    ],
+    ["Weight", "175 g", "", "", "", "", ""],
+    ["Camera", "5", "13", "", "", "", ""],
+    ["Battery", "3300 mAh LiPO", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["test_phone", "$379", "", "", "", "", ""],
+    ["Release Date", "Nov 2015", "", "", "", "", ""],
+    ["Dimensions", "Height", "72.6 mm", "Width", "72.6 mm", "Depth", "7.9 mm"],
+    ["Weight", "136 g", "", "", "", "", ""],
+    ["Camera", "6", "6", "", "", "", ""],
+    ["Battery", "2700 mAh LiPO", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Motorola X PURE", "$400", "", "", "", "", ""],
+    ["Release Date", "Sept 2015", "", "", "", "", ""],
+    [
+        "Dimensions",
+        "Width",
+        "76.2 mm",
+        "Height",
+        "153.9 mm",
+        "Depth",
+        "6.1 to 11.06 mm"
+    ],
+    ["Weight", "179 g", "", "", "", "", ""],
+    ["Camera", "5", "21", "", "", "", ""],
+    ["Battery", "3000 mAh", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Samsung Galaxy S6", "$580", "", "", "", "", ""],
+    ["Announced Date", "2015 Apr", "", "", "", "", ""],
+    ["Dimensions", "H", "143.4 mm", "W", "70.5 mm", "D", "6.8 mm"],
+    ["Weight", "138 g", "", "", "", "", ""],
+    ["Camera", "16", "5", "", "", "", ""],
+    ["Battery", "2550 mAh", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Samsung Galaxy Note 5", "$720", "", "", "", "", ""],
+    ["Announced Date", "2015 Aug", "", "", "", "", ""],
+    ["Dimensions", "W", "76.1 mm", "H", "153.2 mm", "D", "7.6 mm"],
+    ["Weight", "171 g", "", "", "", "", ""],
+    ["Camera", "16", "5", "", "", "", ""],
+    ["Battery", "3000 mAh LiPO", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Apple iPhone 6s", "$650", "", "", "", "", ""],
+    ["Release Date", "Sept 2015", "", "", "", "", ""],
+    ["Dimensions", "Height", "138.3 mm", "Width", "67.1 mm", "Depth", "7.1 mm"],
+    ["Weight", "143 g", "", "", "", "", ""],
+    ["Camera", "5", "12", "", "", "", ""],
+    ["Battery", "1715 mAh LiPO", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""]
+];
+
+const case3_spec: TableTidierTemplate = {
+    startCell: {
+        xOffset: 0,
+        yOffset: 0,
+    },
+    size: {
+        width: 7,
+        height: null, // 6
+    },
+    constraints: [
+        {
+            xOffset: 1,
+            yOffset: 0,
+            valueCstr: (value) => {
+                if (typeof value === "string") return value.startsWith("$");
+                return false;
+            },
+        },
+        {
+            referenceAreaPosi: "bottomLeft",
+            xOffset: 0,
+            yOffset: 1,
+            valueCstr: ValueType.None,
+        },
+    ],
+    traverse: {
+        yDirection: "after",
+    },
+    children: [
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 0,
+            },
+            size: {
+                width: 2,
+                height: 1,
+            },
+            transform: {
+                targetCols: ["Phone", "Price"],
+            },
+        },
+        {
+            startCell: {
+                xOffset: 1,
+                yOffset: 1,
+            },
+            constraints: [
+                {
+                    xOffset: -1,
+                    yOffset: 0,
+                    valueCstr: ValueType.String,
+                },
+                {
+                    xOffset: 1,
+                    yOffset: 0,
+                    valueCstr: ValueType.None,
+                },
+            ],
+            traverse: {
+                yDirection: "after",
+            },
+            transform: {
+                context: {
+                    position: "left",
+                    targetCol: (ctxCells) => {
+                        if (ctxCells[0].value === "Announced Date") return "Release Date";
+                        return ctxCells[0].value as string;
+                    },
+                },
+                targetCols: "context",
+            },
+        },
+        {
+            startCell: {
+                xOffset: 1,
+                yOffset: 2,
+            },
+            size: {
+                width: 6,
+                height: 1,
+            },
+            constraints: [
+                {
+                    xOffset: -1,
+                    yOffset: 0,
+                    valueCstr: "Dimensions",
+                },
+            ],
+            traverse: {
+                yDirection: "whole",
+            },
+            children: [
+                {
+                    startCell: {
+                        xOffset: 1,
+                        yOffset: 0,
+                    },
+                    constraints: [
+                        {
+                            xOffset: 0,
+                            yOffset: 0,
+                            valueCstr: (value) => {
+                                if (typeof value === "string") return value.endsWith("mm");
+                                return false;
+                            },
+                        },
+                    ],
+                    traverse: {
+                        xDirection: "after",
+                    },
+                    transform: {
+                        context: {
+                            position: "left",
+                            targetCol: (contextValue) => {
+                                if (typeof contextValue != "string") return null;
+                                if (["Height", "H"].includes(contextValue)) return "Height";
+                                if (["Width", "W"].includes(contextValue)) return "Width";
+                                if (["Depth", "D"].includes(contextValue)) return "Depth";
+                                return null;
+                            },
+                        },
+                        targetCols: "context",
+                    },
+                }
+            ],
+        },
+        {
+            startCell: {
+                xOffset: 1,
+                yOffset: 4,
+            },
+            size: {
+                width: 2,
+                height: 1,
+            },
+            constraints: [
+                {
+                    xOffset: -1,
+                    yOffset: 0,
+                    valueCstr: "Camera",
+                },
+            ],
+            traverse: {
+                yDirection: "whole",
+            },
+            transform: {
+                targetCols: (currentAreaTbl) => {
+                    // console.log(currentAreaTbl[0].map(Number));
+                    return sortWithCorrespondingArray(
+                        currentAreaTbl[0].map(Number),
+                        ["Front Camera", "Rear Camera"],
+                        "asc"
+                    );
+                },
+            },
+        },
+    ],
+};
+
+
+const { rootArea, tidyData } = transformTable(case3_mt, case3_spec);
 // console.log(serialize(rootArea));
 console.log(tidyData);
+
+// @ts-ignore
+import * as fs from 'fs';
+fs.writeFileSync('rootArea-case3.json', serialize(rootArea), 'utf-8');
+
 
 
 function serialize(obj: any): string {
@@ -610,9 +1064,5 @@ function serialize(obj: any): string {
             seen.add(value);
         }
         return value;
-    });
+    }, 2);
 }
-
-// @ts-ignore
-import * as fs from 'fs';
-fs.writeFileSync('rootArea.json', serialize(rootArea), 'utf-8');
