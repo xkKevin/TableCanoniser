@@ -1,7 +1,8 @@
 {
   "parent": null,
   "areaLayer": 0,
-  "templateIndex": 0,
+  "templateRef": [],
+  "instanceIndex": 0,
   "xIndex": 0,
   "yIndex": 0,
   "xOffset": 0,
@@ -46,7 +47,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 0,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 0,
       "xIndex": 0,
       "yIndex": 0,
       "xOffset": 0,
@@ -65,11 +69,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
           "xOffset": 0,
-          "yOffset": 0,
+          "yOffset": -1,
           "x": 0,
           "y": 0,
           "width": 1,
@@ -86,7 +94,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 1,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 1,
       "xIndex": 1,
       "yIndex": 0,
       "xOffset": 2,
@@ -105,11 +116,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
-          "xOffset": 2,
-          "yOffset": 0,
+          "xOffset": 0,
+          "yOffset": -1,
           "x": 2,
           "y": 0,
           "width": 1,
@@ -126,7 +141,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 2,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 2,
       "xIndex": 0,
       "yIndex": 1,
       "xOffset": 0,
@@ -145,11 +163,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
           "xOffset": 0,
-          "yOffset": 0,
+          "yOffset": -2,
           "x": 0,
           "y": 0,
           "width": 1,
@@ -166,7 +188,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 3,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 3,
       "xIndex": 1,
       "yIndex": 1,
       "xOffset": 2,
@@ -185,11 +210,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
-          "xOffset": 2,
-          "yOffset": 0,
+          "xOffset": 0,
+          "yOffset": -2,
           "x": 2,
           "y": 0,
           "width": 1,
@@ -206,7 +235,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 4,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 4,
       "xIndex": 0,
       "yIndex": 2,
       "xOffset": 0,
@@ -225,11 +257,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
           "xOffset": 0,
-          "yOffset": 0,
+          "yOffset": -3,
           "x": 0,
           "y": 0,
           "width": 1,
@@ -246,7 +282,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 5,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 5,
       "xIndex": 1,
       "yIndex": 2,
       "xOffset": 2,
@@ -265,11 +304,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
-          "xOffset": 2,
-          "yOffset": 0,
+          "xOffset": 0,
+          "yOffset": -3,
           "x": 2,
           "y": 0,
           "width": 1,
@@ -286,7 +329,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 6,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 6,
       "xIndex": 0,
       "yIndex": 3,
       "xOffset": 0,
@@ -305,11 +351,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
           "xOffset": 0,
-          "yOffset": 0,
+          "yOffset": -4,
           "x": 0,
           "y": 0,
           "width": 1,
@@ -326,7 +376,10 @@
     {
       "parent": "[Circular reference: parent]",
       "areaLayer": 1,
-      "templateIndex": 7,
+      "templateRef": [
+        0
+      ],
+      "instanceIndex": 7,
       "xIndex": 1,
       "yIndex": 3,
       "xOffset": 2,
@@ -345,11 +398,15 @@
         {
           "parent": "[Circular reference: parent]",
           "areaLayer": 2,
-          "templateIndex": 0,
+          "templateRef": [
+            0,
+            0
+          ],
+          "instanceIndex": 0,
           "xIndex": 0,
           "yIndex": 0,
-          "xOffset": 2,
-          "yOffset": 0,
+          "xOffset": 0,
+          "yOffset": -4,
           "x": 2,
           "y": 0,
           "width": 1,
