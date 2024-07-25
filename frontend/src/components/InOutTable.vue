@@ -12,7 +12,8 @@
     <div class="view-content">
       <div id="input-tbl">
         <hot-table ref="inputTbl" :data="caseData.input_tbl" :rowHeaders="true" :colHeaders="true"
-          :manualColumnResize="true" :renderer="renderTblCell" licenseKey="non-commercial-and-evaluation"></hot-table>
+          :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true"
+          licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
@@ -138,10 +139,11 @@ async function handleCaseChange(value: string) {
   // tableStore.currentCase = value;
   // caseData = tblCases[currentCase.value];
   await tableStore.loadCaseData(value);
-  caseData = tableStore.caseData;
-  output_col.value = caseData.output_col;
-  inHotInst.updateData(caseData.input_tbl);
-  outHotInst.updateData(caseData.output_tbl);
+  inHotInst.updateData(tableStore.input_tbl.tbl);
+  // outHotInst.updateData(tableStore.output_tbl.tbl);
+  // output_col.value = caseData.output_col;
+
+  // caseData.output_tbl && outHotInst.updateData(caseData.output_tbl);
 }
 </script>
 

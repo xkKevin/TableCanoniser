@@ -1,6 +1,15 @@
 import { defineStore } from 'pinia'
 import Handsontable from "handsontable";
 import * as d3 from 'd3';
+import { shallowRef } from 'vue';
+
+import { Table2D, TableTidierTemplate, ValueType, CellValueType } from "@/grammar/grammar"
+import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
+
+import { message } from 'ant-design-vue';
+
+import * as monaco from "monaco-editor";
+import * as ts from "typescript";
 
 // import caseData from "../../public/cases.json";
 // import case1Data from "../../public/case1/data.json";
@@ -62,15 +71,26 @@ export const useTableStore = defineStore('table', {
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
-      mapping_spec: '',
-      transform_script: '',
+      editor: {
+        mapping_spec: {
+          code: '',
+          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+        },
+        transform_script: {
+          code: '',
+          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+        }
+      },
       input_tbl: {
         instance: {} as Handsontable,
-        cells: [] as [number, number][],
+        cells: [] as [number, number][],  // highlighted cells
+        tbl: shallowRef<Table2D>([]),
       },
       output_tbl: {
         instance: {} as Handsontable,
-        cells: [] as [number, number][],
+        cells: [] as [number, number][], // highlighted cells
+        tbl: shallowRef<Table2D>([]),
+        cols: shallowRef<string[]>([]),
       },
     }
   },
@@ -94,21 +114,26 @@ export const useTableStore = defineStore('table', {
           spec_res.ok ? spec_res.text() : Promise.resolve(null),
           script_res.ok ? script_res.text() : Promise.resolve(null)
         ]);
+        this.output_tbl.tbl = [];
+        this.output_tbl.cols = [];
+        this.output_tbl.instance.updateData(this.output_tbl.tbl);
+        this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
 
         if (dataText !== null) {
           this.caseData = JSON.parse(dataText);
+          this.input_tbl.tbl = this.caseData.input_tbl;
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
 
         if (specText !== null) {
-          this.mapping_spec = specText;
+          this.editor.mapping_spec.code = specText;
         } else {
           prompt.push(`Failed to load spec from ${caseN}`);
         }
 
         if (scriptText !== null) {
-          this.transform_script = scriptText;
+          this.editor.transform_script.code = scriptText;
         } else {
           prompt.push(`Failed to load script from ${caseN}`);
         }
@@ -259,6 +284,59 @@ export const useTableStore = defineStore('table', {
         }
       }
       return topLeft;
+    },
+
+    transformTablebyCode() {
+      let specification: TableTidierTemplate;
+      try {
+        let code = this.editor.mapping_spec.instance!.getValue() + '\nreturn option;';
+        const result = ts.transpileModule(code, {
+          compilerOptions: {
+            target: ts.ScriptTarget.ES2015,
+            module: ts.ModuleKind.CommonJS
+          }
+        })
+        // console.log(result.outputText);
+        // const specification: TableTidierTemplate = eval(code);
+        const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
+        specification = evalFunction(ValueType, sortWithCorrespondingArray);
+      } catch (e) {
+        message.error({
+          content: `Failed to parse the specification:\n ${e}`,
+          style: { whiteSpace: 'pre-line' },
+        });
+      }
+      try {
+        // console.log(this.input_tbl.tbl);
+        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specification!);
+        // console.log(tidyData);
+        // 将tidyData转换为output_tbl.tbl，注意数据格式
+        this.convertDictToArray(tidyData);
+        // console.log(this.output_tbl.tbl, this.output_tbl.cols);
+        this.output_tbl.instance.updateData(this.output_tbl.tbl);
+        this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
+      } catch (e) {
+        message.error({
+          content: `Failed to transform the table based on the specification:\n ${e}`,
+          style: { whiteSpace: 'pre-line' },
+        });
+      }
+    },
+    convertDictToArray(dictTbl: { [key: string]: CellValueType[] }) {
+      // Get the headers from the keys of the dictionary
+      this.output_tbl.cols = Object.keys(dictTbl);
+
+      // Determine the number of rows (assuming all columns have the same length)
+      const numRows = dictTbl[this.output_tbl.cols[0]].length;
+
+      // Initialize the result array with the headers as the first row
+      this.output_tbl.tbl = []
+
+      // Create each row based on the dictionary values
+      for (let i = 0; i < numRows; i++) {
+        const row = this.output_tbl.cols.map(header => dictTbl[header][i]);
+        this.output_tbl.tbl.push(row);
+      }
     }
 
   },

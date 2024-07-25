@@ -1,10 +1,10 @@
-const case1 = {
+const option: TableTidierTemplate = {
   startCell: {
     xOffset: 0,
-    yOffset: 0,
+    yOffset: 1,
   },
   size: {
-    width: 4,
+    width: "toParentX",
     height: 5,
   },
   constraints: [
@@ -33,8 +33,8 @@ const case1 = {
     },
     {
       startCell: {
-        xOffset: 2,
-        yOffset: 1,
+        xOffset: 1,
+        yOffset: 2,
       },
       constraints: [
         {
@@ -59,6 +59,7 @@ const case1 = {
         },
         targetCols: "context",
       },
+      fill: "",
     },
   ],
 };

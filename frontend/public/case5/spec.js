@@ -1,11 +1,11 @@
-const case5 = {
+const option: TableTidierTemplate = {
   startCell: {
     xOffset: 0,
     yOffset: 0,
   },
   size: {
     width: "toParentX", // 12,
-    height: undefined,
+    height: null,
   },
   constraints: [
     {
@@ -26,6 +26,7 @@ const case5 = {
   traverse: {
     yDirection: "after",
   },
+  fill: "forward",
   children: [
     {
       startCell: {
@@ -47,19 +48,22 @@ const case5 = {
       size: {
         width: "toParentX",
       },
+      traverse: {
+        yDirection: "after",
+      },
       transform: {
         context: {
-          position: (currentAreaInfo) => {
-            return currentAreaInfo.areaCells.map((ci) => {
-              let xOffset = ci.xOffset,
-                yOffset = 7;
-              if (ci.xOffset == 5) yOffset = 6;
-              return {
+          position: (cell) => {
+            let xOffset = cell.xOffset,
+              yOffset = 7;
+            if (cell.xOffset == 4) yOffset = 6;
+            return [
+              {
                 xOffset,
                 yOffset,
                 referenceAreaLayer: "parent",
-              };
-            });
+              },
+            ];
           },
           targetCol: "cellValue",
         },

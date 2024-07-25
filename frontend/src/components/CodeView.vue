@@ -33,7 +33,7 @@ const tableStore = useTableStore();
 
 const editorDefaultOptions = {
     value: '',
-    language: codeType === "mapping_spec" ? 'javascript' : 'python',
+    language: codeType === "mapping_spec" ? 'typescript' : 'python',
     theme: 'vs',
     fontSize: 14,
     glyphMargin: false,
@@ -62,7 +62,7 @@ const initEditor = () => {
     }
     const editorOptions = {
         ...editorDefaultOptions,
-        value: tableStore[codeType],
+        value: tableStore.editor[codeType].code,
     };
     editor = monaco.editor.create(editorWrapper.value!, editorOptions as monaco.editor.IEditorConstructionOptions);  // ! means that editorWrapper.value is not null
 };
@@ -71,7 +71,7 @@ watch(() => tableStore.currentCase, (newVal) => {
     // mappingSpec = (await tableStore.loadCaseSpec(newVal)).spec;
     // mappingSpec = tableStore.mapping_spec;
     // initEditor();
-    editor?.setValue(tableStore[codeType]);  // update editor content; ? means if editor is not null then call setValue, else do nothing
+    editor?.setValue(tableStore.editor[codeType].code);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
 import { debounce } from 'lodash';
@@ -89,11 +89,46 @@ const resizeObserver = new ResizeObserver(() => {
     handleResize();
 });
 
+
+if (codeType === "mapping_spec") {
+
+    const libUri = "ts:grammar.ts";
+    // Check if model already exists
+    const existingModel = monaco.editor.getModels().find(model => model.uri.toString() === libUri);
+
+    if (!existingModel) {
+        fetch('/grammar.ts').then((response) => {
+            response.text().then((tsContent) => {
+
+                // validation settings
+                monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                    noSemanticValidation: true,
+                    noSyntaxValidation: false,
+                });
+
+                // compiler options
+                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                    target: monaco.languages.typescript.ScriptTarget.ES2015,
+                    allowNonTsExtensions: true,
+                });
+                monaco.languages.typescript.javascriptDefaults.addExtraLib(tsContent, libUri);
+
+                // When resolving definitions and references, the editor will try to use created models.
+                // Creating a model for the library allows "peek definition/references" commands to work with the library.
+                monaco.editor.createModel(tsContent, "typescript", monaco.Uri.parse(libUri));
+            });
+        });
+    }
+
+
+}
+
 onMounted(() => {
-    if (editorWrapper.value) {
-        initEditor();
-        // 可以精确地监听元素大小变化，避免了全局 resize 事件可能带来的性能问题，尤其是当页面上有多个需要监听大小变化的元素时。
-        resizeObserver.observe(editorWrapper.value);
+    initEditor();
+    // 可以精确地监听元素大小变化，避免了全局 resize 事件可能带来的性能问题，尤其是当页面上有多个需要监听大小变化的元素时。
+    resizeObserver.observe(editorWrapper.value!);
+    if (editor) {
+        tableStore.editor[codeType].instance = editor;
     }
 });
 

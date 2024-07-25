@@ -1,7 +1,7 @@
 <template>
   <div id="panel">
     <div class="system-name">TableTidier</div>
-    <ChatBot />
+    <!-- <ChatBot /> -->
     <div class="main-views">
       <!-- Column 1 -->
       <div class="column left">
@@ -20,7 +20,12 @@
       <!-- Column 3 -->
       <div class="column right">
         <div class="view">
-          <h2 class="view-title">Code Panel</h2>
+          <div class="view-title">
+            <span>Code Panel</span>
+            <span style="float: right; margin-right: 50px">
+              <a-button size="small" :loading="loading" @click="transformTablebyCode">Run</a-button>
+            </span>
+          </div>
           <div class="view-content">
             <a-tabs v-model:activeKey="codePanel" type="card">
               <a-tab-pane key="1">
@@ -57,7 +62,18 @@ import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
 import ChatBot from "@/components/ChatBot.vue";
 
-let codePanel = ref("1");
+import { useTableStore } from "@/store/table";
+const tableStore = useTableStore();
+
+const codePanel = ref("1");
+const loading = ref<boolean>(false);
+
+function transformTablebyCode() {
+  loading.value = true;
+  tableStore.transformTablebyCode();
+  loading.value = false;
+}
+
 </script>
 
 <style lang="less">

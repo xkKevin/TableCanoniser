@@ -2,7 +2,7 @@ import { Table2D, TableTidierTemplate, ValueType } from "./grammar";
 import { transformTable, sortWithCorrespondingArray, serialize } from "./handleSpec";
 
 
-const case1_mt: Table2D = [
+const example1_mt: Table2D = [
     ["Rank", "Name", "Age"],
     [1, "Bob", 16],
     ["", "Score", 92],
@@ -14,7 +14,7 @@ const case1_mt: Table2D = [
     ["", "Score", 86],
 ];
 
-const case1_spec: TableTidierTemplate = {
+const example1_spec: TableTidierTemplate = {
     startCell: { xOffset: 0, yOffset: 1 },
     size: { width: 'toParentX', height: 2 },
     constraints: [{ xOffset: 0, yOffset: 0, valueCstr: ValueType.Number }],
@@ -32,6 +32,114 @@ const case1_spec: TableTidierTemplate = {
         }
     ]
 };
+
+const case1_mt: Table2D = [
+    ["Rank", "Name", "Location", "Total Score"],
+    ["1", "Tsinghua", "Beijing", "992.6"],
+    ["", "Level", "Resources", "Education"],
+    ["", "36.1", "50.0", "324.2"],
+    ["", "Research", "Elite", "Global"],
+    ["", "104.9", "88.4", "92.1"],
+    ["2", "Peking", "Beijing", "898.6"],
+    ["", "Resources", "Level", "Education"],
+    ["", "34.9", "30.5", "308.3"],
+    ["", "Research", "Elite", "Global"],
+    ["", "101.8", "92.4", "71.4"],
+    ["3", "Zhejiang", "Zhejiang", "793.8"],
+    ["", "Level", "Resources", "Education"],
+    ["", "34.9", "28.4", "284.7"],
+    ["", "Research", "", "Global"],
+    ["", "92.6", "", "53.7"],
+    [
+        "",
+        "Notation",
+        "The above are the top three universities in the rankings",
+        ""
+    ],
+    ["4", "Shangjiao", "Shanghai", "776.3"],
+    ["", "Level", "Resources", "Education"],
+    ["", "35.6", "26.4", "267.2"],
+    ["", "Research", "Elite", "Global"],
+    ["", "106.5", "64.6", "39.6"],
+    ["5", "Fudan", "Shanghai", "697.0"],
+    ["", "Level", "Resources", "Education"],
+    ["", "36.6", "21.3", "252.6"],
+    ["", "Research", "Elite", "Global"],
+    ["", "79.3", "62.6", "44.1"],
+    ["6", "Nanjing", "Jiangsu", "656.1"],
+    ["", "Level", "Education", "Resources"],
+    ["", "37.1", "266.6", "9.2"],
+    ["", "Research", "Elite", "Global"],
+    ["", "70.4", "58.3", "29.2"]
+];
+
+
+const case1_spec: TableTidierTemplate = {
+    startCell: {
+        xOffset: 0,
+        yOffset: 1,
+    },
+    size: {
+        width: "toParentX",
+        height: 5,
+    },
+    constraints: [
+        {
+            xOffset: 0,
+            yOffset: 0,
+            valueCstr: ValueType.Number,
+        },
+    ],
+    traverse: {
+        yDirection: "after",
+    },
+    children: [
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 0,
+            },
+            size: {
+                width: 4,
+                height: 1,
+            },
+            transform: {
+                targetCols: ["Rank", "Name", "Location", "Total Score"],
+            },
+        },
+        {
+            startCell: {
+                xOffset: 1,
+                yOffset: 2,
+            },
+            constraints: [
+                {
+                    xOffset: 0,
+                    yOffset: 0,
+                    valueCstr: ValueType.Number,
+                },
+                {
+                    xOffset: 0,
+                    yOffset: -1,
+                    valueCstr: ValueType.String,
+                },
+            ],
+            traverse: {
+                xDirection: "after",
+                yDirection: "after",
+            },
+            transform: {
+                context: {
+                    position: "top",
+                    targetCol: "cellValue",
+                },
+                targetCols: "context",
+            },
+            fill: "",
+        },
+    ],
+};
+
 
 const case2_mt: Table2D = [
     ["Unsupervised DA", "", "SOTA (image-based)", ""],
@@ -400,13 +508,13 @@ const case5_spec: TableTidierTemplate = {
     ],
 };
 
-const { rootArea, tidyData } = transformTable(case5_mt, case5_spec);
+const { rootArea, tidyData } = transformTable(case1_mt, case1_spec);
 // // console.log(serialize(rootArea));
 console.log(tidyData);
 
 // @ts-ignore
 import * as fs from 'fs';
-fs.writeFileSync('rootArea-case5.json', serialize(rootArea), 'utf-8');
+fs.writeFileSync('rootArea-case1.json', serialize(rootArea), 'utf-8');
 
 
 

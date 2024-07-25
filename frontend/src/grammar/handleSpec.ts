@@ -40,10 +40,10 @@ const evaluateConstraint = (cellValue: CellValueType, constraint: CellConstraint
         return constraint.valueCstr(cellValue);
     }
     if (constraint.valueCstr === ValueType.String) {
-        return typeof cellValue === 'string';
+        return typeof cellValue === 'string' && cellValue !== '' && isNaN(Number(cellValue));
     }
     if (constraint.valueCstr === ValueType.Number) {
-        return typeof cellValue === 'number';
+        return typeof cellValue === 'number' || (typeof cellValue === 'string' && cellValue !== '' && !isNaN(Number(cellValue)));
     }
     if (constraint.valueCstr === ValueType.None) {
         return cellValue === null || cellValue === '';
@@ -88,8 +88,7 @@ const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo
 
     // 判断是否越界
     if (cellPosi.x < 0 || cellPosi.y < 0 || cellPosi.x >= rootArea.width || cellPosi.y >= rootArea.height) {
-        console.log(`Invalid cell selection: Table size (${rootArea.width}, ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`);
-        return null
+        throw new Error(`Invalid cell selection:\n Table size (${rootArea.width}, ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`);
     }
 
     return {
@@ -254,7 +253,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                     row.forEach((cell, ci) => {
                         ctxSelections.push([completeCellSelection({
                             xOffset: ci,
-                            yOffset: ri + 1,
+                            yOffset: ri - 1,
                         })]);
                     })
                 })
@@ -421,7 +420,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 export function transformTable(table: Table2D, spec: TableTidierTemplate) {
 
     const specWithDefaults = completeSpecification(spec);
-    console.log(JSON.stringify(specWithDefaults, null, 2));
+    // console.log(JSON.stringify(specWithDefaults, null, 2));
 
     // Create initial AreaInfo for the root
     const rootArea: AreaInfo = {

@@ -1,7 +1,7 @@
-const case2_1 = {
+const option: TableTidierTemplate = {
   startCell: {
-    xOffset: 1,
-    yOffset: 0,
+    xOffset: 0,
+    yOffset: 1,
   },
   size: {
     width: 2,
@@ -18,7 +18,7 @@ const case2_1 = {
     {
       startCell: {
         referenceAreaLayer: "root",
-        xOffset: (currentAreaInfo) => currentAreaInfo.xIndex * 2,
+        xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
         yOffset: 0,
       },
       transform: {
@@ -28,7 +28,7 @@ const case2_1 = {
   ],
 };
 
-const case2_2 = {
+const case2_2: TableTidierTemplate = {
   startCell: {
     xOffset: 0,
     yOffset: 0,
