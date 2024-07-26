@@ -122,14 +122,18 @@ const getSubArea = (table: Table2D, x: number, y: number, width: number, height:
 }
 
 // 如果tidyData中的列长短不一样，则使用 template.fill 填充所有短的列，使每一列都有相同的长度
-const fillColumns = (tidyData: { [key: string]: CellValueType[] }, fill: CellValueType | 'forward' | null) => {
+const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueType | 'forward' | null) => {
     if (fill === null) return;
     // 获取所有列的最大长度
     const maxLength = Math.max(...Object.values(tidyData).map(column => column.length));
     // 对每一列进行填充处理
     for (const key in tidyData) {
         const column = tidyData[key];
-        const fillValue = fill === 'forward' ? column[column.length - 1] : fill;
+        const fillValue = fill === 'forward' ? column[column.length - 1] : {
+            x: -1,
+            y: -1,
+            value: fill
+        } as CellInfo;
 
         // 如果列长度小于最大长度，则进行填充
         while (column.length < maxLength) {
@@ -138,7 +142,7 @@ const fillColumns = (tidyData: { [key: string]: CellValueType[] }, fill: CellVal
     }
 }
 
-const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }) => {
+const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
 
     let currentStartX = startX;
     let currentEndX = startX + width - 1;
@@ -196,7 +200,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
 }
 
 
-const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yOffset: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }): AreaInfo | null => {
+const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yOffset: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }): AreaInfo | null => {
 
     let x = currentArea.x + xOffset, y = currentArea.y + yOffset;
 
@@ -239,7 +243,7 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
 };
 
 
-const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }) => {
+const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
 
     const cellArray = currentArea.areaTbl.flat();
     if (template.transform) {
@@ -337,10 +341,15 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
         }
         transformedCols.forEach((targetCol, index) => {
             if (targetCol) {
+                const cellInfo: CellInfo = {
+                    x: currentArea.x + index % currentArea.width,
+                    y: currentArea.y + Math.floor(index / currentArea.width),
+                    value: cellArray[index],
+                };
                 if (tidyData.hasOwnProperty(targetCol)) {
-                    tidyData[targetCol].push(cellArray[index]);
+                    tidyData[targetCol].push(cellInfo);
                 } else {
-                    tidyData[targetCol] = [cellArray[index]];
+                    tidyData[targetCol] = [cellInfo];
                 }
             }
         })
@@ -349,7 +358,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
 
 
 // Recursive function to process a template
-const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellValueType[] }, templateIndex: number = 0) => {
+const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, templateIndex: number = 0) => {
 
     const index: MatchedIndex = {
         templateRef: [...currentArea.templateRef, templateIndex],
@@ -417,6 +426,16 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
     }
 }
 
+interface TidyResult {
+    tidyTbl: { [key: string]: CellValueType[] },
+    in2out: { [key: string]: string[] },
+    out2in: {
+        cells: { [key: string]: string },
+        cols: string[][],
+        rows: string[][]
+    }
+}
+
 export function transformTable(table: Table2D, spec: TableTidierTemplate) {
 
     const specWithDefaults = completeSpecification(spec);
@@ -440,7 +459,17 @@ export function transformTable(table: Table2D, spec: TableTidierTemplate) {
         children: []
     };
 
-    let tidyData: { [key: string]: CellValueType[] } = {}
+    const tidyresul: TidyResult = {
+        tidyTbl: {},
+        in2out: {},
+        out2in: {
+            cells: {},
+            cols: [],
+            rows: []
+        }
+    };
+
+    const tidyData: { [key: string]: CellInfo[] } = {}
 
     processTemplate(specWithDefaults, rootArea, rootArea, tidyData);
 

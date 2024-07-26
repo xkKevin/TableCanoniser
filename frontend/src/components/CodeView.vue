@@ -11,7 +11,7 @@ export default defineComponent({
 
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useTableStore } from "@/store/table";
 
 
@@ -92,6 +92,8 @@ const resizeObserver = new ResizeObserver(() => {
 
 if (codeType === "mapping_spec") {
 
+    // https://microsoft.github.io/monaco-editor/playground.html?source=v0.50.0#example-extending-language-services-configure-javascript-defaults
+
     const libUri = "ts:grammar.ts";
     // Check if model already exists
     const existingModel = monaco.editor.getModels().find(model => model.uri.toString() === libUri);
@@ -119,8 +121,6 @@ if (codeType === "mapping_spec") {
             });
         });
     }
-
-
 }
 
 onMounted(() => {
@@ -129,6 +129,13 @@ onMounted(() => {
     resizeObserver.observe(editorWrapper.value!);
     if (editor) {
         tableStore.editor[codeType].instance = editor;
+    }
+});
+
+onUnmounted(() => {
+    // 没有这段代码会导致Code Panel 中的const option 重复被声明
+    if (editor) {
+        editor.dispose();
     }
 });
 

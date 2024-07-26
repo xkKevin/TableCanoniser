@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellValueType } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate, ValueType, CellInfo } from "@/grammar/grammar"
 import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 
 import { message } from 'ant-design-vue';
@@ -85,12 +85,22 @@ export const useTableStore = defineStore('table', {
         instance: {} as Handsontable,
         cells: [] as [number, number][],  // highlighted cells
         tbl: shallowRef<Table2D>([]),
+        in2out: shallowRef<{ [key: string]: string[] }>({}),
       },
       output_tbl: {
         instance: {} as Handsontable,
         cells: [] as [number, number][], // highlighted cells
         tbl: shallowRef<Table2D>([]),
         cols: shallowRef<string[]>([]),
+        out2in: shallowRef<{
+          cells: { [key: string]: string },
+          cols: string[][],
+          rows: string[][]
+        }>({
+          cells: {},
+          cols: [],
+          rows: [],
+        }),
       },
     }
   },
@@ -197,8 +207,8 @@ export const useTableStore = defineStore('table', {
       const caseData = this.caseData;
       let cells: TblCell[] = [];
       if (cell.row < 0) {
-        if (caseData.out2in.cols[cell.col]) {
-          caseData.out2in.cols[cell.col].forEach((posi) => {
+        if (this.output_tbl.out2in.cols[cell.col]) {
+          this.output_tbl.out2in.cols[cell.col].forEach((posi) => {
             if (posi.startsWith("[") && posi.endsWith("]")) {
               let pi_n = JSON.parse(posi) as [number, number];
               cells.push({
@@ -210,7 +220,7 @@ export const useTableStore = defineStore('table', {
           });
         }
       } else if (cell.col < 0) {
-        caseData.out2in.rows[cell.row].forEach((posi) => {
+        this.output_tbl.out2in.rows[cell.row].forEach((posi) => {
           if (posi.startsWith("[") && posi.endsWith("]")) {
             let pi_n = JSON.parse(posi) as [number, number];
             cells.push({
@@ -222,9 +232,15 @@ export const useTableStore = defineStore('table', {
         });
       } else {
         let output_posi = `[${cell.row},${cell.col}]`;
-        let posi = caseData.out2in.cells[output_posi];
+        let posi = this.output_tbl.out2in.cells[output_posi];
         if (posi.startsWith("[") && posi.endsWith("]")) {
           let pi_n = JSON.parse(posi) as [number, number];
+          cells.push({
+            row: pi_n[0],
+            col: pi_n[1],
+            className: "posi-mapping",
+          });
+          /*
           if (caseData.ambiguous_posi && output_posi in caseData.ambiguous_posi) {
             caseData.ambiguous_posi[output_posi].forEach((in_posi) => {
               cells.push({
@@ -244,7 +260,7 @@ export const useTableStore = defineStore('table', {
               col: pi_n[1],
               className: "posi-mapping",
             });
-          }
+          }*/
         }
       }
       return cells;
@@ -252,7 +268,8 @@ export const useTableStore = defineStore('table', {
 
     in2out_mapping(cell: TblCell) {
       let cells: TblCell[] = [];
-      let posi = this.caseData.in2out[`[${cell.row},${cell.col}]`];
+      // let posi = this.caseData.in2out[`[${cell.row},${cell.col}]`];
+      let posi = this.input_tbl.in2out[`[${cell.row},${cell.col}]`];
       if (posi) {
         posi.forEach((pi) => {
           let pi_n = JSON.parse(pi) as [number, number];
@@ -312,6 +329,7 @@ export const useTableStore = defineStore('table', {
         // console.log(tidyData);
         // 将tidyData转换为output_tbl.tbl，注意数据格式
         this.convertDictToArray(tidyData);
+        this.derivePosiMapping(tidyData);
         // console.log(this.output_tbl.tbl, this.output_tbl.cols);
         this.output_tbl.instance.updateData(this.output_tbl.tbl);
         this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
@@ -322,7 +340,7 @@ export const useTableStore = defineStore('table', {
         });
       }
     },
-    convertDictToArray(dictTbl: { [key: string]: CellValueType[] }) {
+    convertDictToArray(dictTbl: { [key: string]: CellInfo[] }) {
       // Get the headers from the keys of the dictionary
       this.output_tbl.cols = Object.keys(dictTbl);
 
@@ -335,8 +353,51 @@ export const useTableStore = defineStore('table', {
       // Create each row based on the dictionary values
       for (let i = 0; i < numRows; i++) {
         const row = this.output_tbl.cols.map(header => dictTbl[header][i]);
-        this.output_tbl.tbl.push(row);
+        this.output_tbl.tbl.push(row.map(cell => cell.value));
       }
+    },
+
+    derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
+
+      // Initialize in2out and out2in mappings
+      this.input_tbl.in2out = {};
+      this.output_tbl.out2in = { cells: {}, cols: [], rows: [] };
+
+      const cols = Object.keys(outTbl);
+      this.output_tbl.cols = cols;
+      const numRows = outTbl[cols[0]].length;
+
+      // Create the out2in mapping
+      for (let i = 0; i < numRows; i++) {
+        const row = [];
+        this.output_tbl.out2in.rows.push([]);
+        for (let j = 0; j < cols.length; j++) {
+          const col = cols[j];
+          const cell = outTbl[col][i];
+          row.push(cell.value);
+          let inPosi = `[${cell.y},${cell.x}]`;
+          const outPosi = `[${i},${j}]`;
+          console.log(inPosi, outPosi);
+          if (cell.x < 0 || cell.y < 0) {
+            inPosi = '';
+          } else {
+            if (this.input_tbl.in2out.hasOwnProperty(inPosi)) {
+              this.input_tbl.in2out[inPosi].push(outPosi);
+            } else {
+              this.input_tbl.in2out[inPosi] = [outPosi];
+            }
+          }
+          this.output_tbl.out2in.cells[outPosi] = inPosi;
+          this.output_tbl.out2in.rows[i].push(inPosi);
+          if (this.output_tbl.out2in.cols.length <= j) {
+            this.output_tbl.out2in.cols.push([inPosi]);
+          } else {
+            this.output_tbl.out2in.cols[j].push(inPosi);
+          }
+        }
+      }
+      console.log(outTbl);
+      console.log(this.output_tbl.out2in, this.input_tbl.in2out);
     }
 
   },
