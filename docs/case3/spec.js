@@ -112,7 +112,8 @@ const option: TableTidierTemplate = {
                   transform: {
                       context: {
                           position: "left",
-                          targetCol: (contextValue) => {
+                          targetCol: (ctxCells) => {
+                              const contextValue = ctxCells[0].value;
                               if (typeof contextValue != "string") return null;
                               if (["Height", "H"].includes(contextValue)) return "Height";
                               if (["Width", "W"].includes(contextValue)) return "Width";
