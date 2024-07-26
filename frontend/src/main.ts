@@ -12,4 +12,6 @@ import { Select, Upload, Button, Tabs, Tooltip, Popover, Input, Modal } from "an
 app.use(pinia).use(Select).use(Tabs).use(Button).use(Upload)
     .use(Tooltip).use(Popover).use(Input).use(Modal)
 
+// app.config.globalProperties.$basePath = process.env.BASE_URL;
+
 app.mount('#app')

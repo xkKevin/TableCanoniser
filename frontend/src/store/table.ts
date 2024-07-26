@@ -108,7 +108,7 @@ export const useTableStore = defineStore('table', {
   actions: {
     async loadCaseData(caseN: string) {
       let prompt: string[] = [];
-      let case_path = `/${caseN}/`;
+      let case_path = `./${caseN}/`;
       // const begin = Date.now();
       try {
         // Parallel processing of all fetch requests ==> faster: 0.678s vs 0.275s

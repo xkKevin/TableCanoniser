@@ -11,7 +11,7 @@ export default defineComponent({
 
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch, getCurrentInstance } from "vue";
 import { useTableStore } from "@/store/table";
 
 
@@ -99,7 +99,7 @@ if (codeType === "mapping_spec") {
     const existingModel = monaco.editor.getModels().find(model => model.uri.toString() === libUri);
 
     if (!existingModel) {
-        fetch('/grammar.ts').then((response) => {
+        fetch('./grammar.ts').then((response) => {
             response.text().then((tsContent) => {
 
                 // validation settings
