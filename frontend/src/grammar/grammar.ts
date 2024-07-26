@@ -204,7 +204,7 @@ interface TableTidierTemplate {
 
 /********************************************************************************/
 
-// Ensure all parameters are defined
+// Ensure all properties are defined
 type NonUndefined<T> = T extends undefined ? never : T;
 type AllParams<T> = {
     [K in keyof T]-?: NonUndefined<T[K]> extends object ? AllParams<NonUndefined<T[K]>> : NonUndefined<T[K]>;

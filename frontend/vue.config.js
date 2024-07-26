@@ -4,6 +4,7 @@ const webpack = require("webpack");
 
 module.exports = defineConfig({
   transpileDependencies: true,
+  outputDir: "../docs",
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin(),
