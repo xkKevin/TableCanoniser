@@ -176,9 +176,14 @@ onMounted(() => {
     }
 });
 
-watch(() => tableStore.currentCase, (newVal) => {
-    drawGrid(tableStore.caseData.input_tbl.length, tableStore.caseData.input_tbl[0].length);
+// watch(() => tableStore.currentCase, (newVal) => {
+//     drawGrid(tableStore.caseData.input_tbl.length, tableStore.caseData.input_tbl[0].length);
+// });
+
+watch(() => tableStore.input_tbl.tbl, (newVal) => {
+    drawGrid(newVal.length, newVal[0].length);
 });
+
 </script>
 
 <style lang="less">

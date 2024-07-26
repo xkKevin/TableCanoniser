@@ -7,8 +7,8 @@
           <a-space>
             <a-select ref="select" :value="currentCase" :options="caseOption" size="small"
               @change="handleCaseChange"></a-select>
-            <a-upload :max-count="1" accept=".csv, .txt, .xls, .xlsx" :customRequest="handleUpload"
-              @remove="handleRemove">
+            <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
+              :customRequest="handleUpload" @remove="handleRemove">
               <a-button size="small">
                 <v-icon name="bi-upload" scale="0.85" />
                 <span>Upload</span>
@@ -108,6 +108,7 @@ function renderTblCell(instance: Handsontable,
 //   }
 // };
 
+const fileList = ref([]);
 // const fileList = ref<UploadProps['fileList']>([{
 //     uid: '1',
 //     name: 'xxx.png',
@@ -163,7 +164,7 @@ const handleUpload = (request: any) => {
   }
 };
 
-const handleRemove = (e: any) => {
+const handleRemove = () => {
   tableStore.initTblInfo()
 };
 
@@ -267,7 +268,9 @@ function handleCaseChange(value: string) {
   currentCase.value = value;
   // tableStore.currentCase = value;
   // caseData = tblCases[currentCase.value];
+  fileList.value = [];
   tableStore.loadCaseData(value);
+  // handleRemove();
   // inHotInst.updateData(tableStore.input_tbl.tbl);
   // outHotInst.updateData(tableStore.output_tbl.tbl);
   // output_col.value = caseData.output_col;

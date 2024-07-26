@@ -1,6 +1,6 @@
 import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeSpecification, completeCellSelection } from "./grammar";
 
-import { CustomError } from "@/types";
+import { CustomError } from "../types";
 
 export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
     // 创建一个数组包含元素及其对应的索引
@@ -158,7 +158,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
             const areaWidth = currentEndX - currentStartX + 1;
             tmpArea = matchArea(template, currentStartX, currentStartY, areaWidth, areaHeight, index, currentArea, rootArea, tidyData);
             // if (currentArea.templateRef.length === 0)
-            //     console.log("after match", currentStartX, currentStartY, areaWidth, areaHeight, tmpArea != null);
+            // console.log("after match", currentStartX, currentStartY, areaWidth, areaHeight, tmpArea != null);
             if (tmpArea === null) {
                 // 如果没有找到，则移动到下一列
                 currentEndX += 1
@@ -197,8 +197,8 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
         }
         currentStartX = startX;
         currentEndX = startX + width - 1;
-
     }
+    // console.log("match over");
 }
 
 
@@ -420,12 +420,37 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
     traverseArea(template, startX, startY, endX, endY, width, height, index, currentArea, rootArea, tidyData);
 
-    for (let areaChild of currentArea.children) {
-        template.children.forEach((templateChild, ti) => {
-            processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
-        });
-        fillColumns(tidyData, template.fill);
+    if (template.children.length > 0 && currentArea.children.length > 0) {
+        if (template.transform === null) {
+            // 父区域没有 transform
+            for (let areaChild of currentArea.children) {
+                template.children.forEach((templateChild, ti) => {
+                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
+                });
+                // fillColumns(tidyData, template.fill);
+                if (template.fill === null && template.children.length > 1) {
+                    fillColumns(tidyData, "");
+                } else {
+                    fillColumns(tidyData, template.fill);
+                }
+            }
+        } else {
+            // 父区域有 transform
+            for (let templateChild of template.children) {
+                currentArea.children.forEach((areaChild, ti) => {
+                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
+                });
+                // fillColumns(tidyData, template.fill);
+                if (template.fill === null) {
+                    fillColumns(tidyData, "");
+                } else {
+                    fillColumns(tidyData, template.fill);
+                }
+            }
+        }
     }
+
+
 }
 
 interface TidyResult {

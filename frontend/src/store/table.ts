@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellInfo } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType } from "@/grammar/grammar"
 import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 
 import { CustomError } from "@/types";
@@ -321,6 +321,13 @@ export const useTableStore = defineStore('table', {
         // console.log(this.input_tbl.tbl);
         const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specification!);
         // console.log(tidyData);
+        if (Object.keys(tidyData).length === 0) {
+          message.warning({
+            content: 'The output table is empty based on the specification.',
+            style: { whiteSpace: 'pre-line' },
+          });
+          return;
+        }
         // 将tidyData转换为output_tbl.tbl，注意数据格式
         this.derivePosiMapping(tidyData);
         // console.log(this.output_tbl.tbl, this.output_tbl.cols);
@@ -342,20 +349,24 @@ export const useTableStore = defineStore('table', {
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
-
       this.initTblInfo(false);
-
       const cols = Object.keys(outTbl);
       this.output_tbl.cols = cols;
-      const numRows = outTbl[cols[0]].length;
+      // const numRows = outTbl[cols[0]].length;
+      const numRows = Math.max(...cols.map(col => outTbl[col].length));
 
       // Create the out2in mapping
       for (let i = 0; i < numRows; i++) {
-        const row = [];
+        const row: CellValueType[] = [];
         this.output_tbl.out2in.rows.push([]);
         for (let j = 0; j < cols.length; j++) {
           const col = cols[j];
-          const cell = outTbl[col][i];
+          let cell: CellInfo;
+          if (outTbl[col].length <= i) {
+            cell = { x: -1, y: -1, value: undefined };
+          } else {
+            cell = outTbl[col][i];
+          }
           row.push(cell.value);
           let inPosi = `[${cell.y},${cell.x}]`;
           const outPosi = `[${i},${j}]`;
@@ -386,10 +397,11 @@ export const useTableStore = defineStore('table', {
     initTblInfo(inputFlag = true) {
       if (inputFlag) {
         this.input_tbl.tbl = []
-        this.input_tbl.cells = [];
-        this.input_tbl.in2out = {};
         this.input_tbl.instance.updateData(this.input_tbl.tbl);
       }
+
+      this.input_tbl.cells = [];
+      this.input_tbl.in2out = {};
 
       this.output_tbl.tbl = [];
       this.output_tbl.cols = [];

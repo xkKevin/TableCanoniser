@@ -179,6 +179,97 @@ const case2_spec: TableTidierTemplate = {
     ],
 };
 
+const case2_2_spec: TableTidierTemplate = {
+    startCell: {
+        xOffset: 0,
+        yOffset: 0,
+    },
+    size: {
+        width: 2,
+        height: "toParentY", // 5,
+    },
+    traverse: {
+        xDirection: "after",
+    },
+    children: [
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 1,
+            },
+            size: {
+                width: 2,
+                height: 1,
+            },
+            traverse: {
+                yDirection: "after",
+            },
+            transform: {
+                targetCols: ["Method", "Accuracy"],
+            },
+        },
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 0,
+            },
+            transform: {
+                targetCols: ["Category"],
+            },
+        },
+    ],
+    // fill: "forward"
+};
+
+const case2_3_spec: TableTidierTemplate = {
+    startCell: {
+        xOffset: 0,
+        yOffset: 0,
+    },
+    size: {
+        width: 2,
+        height: "toParentY",
+    },
+    traverse: {
+        xDirection: "after",
+    },
+    constraints: [
+        {
+            referenceAreaPosi: "topRight",
+            valueCstr: ValueType.None
+        }
+    ],
+    children: [
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 1,
+            },
+            size: {
+                width: 2,
+                height: 1,
+            },
+            traverse: {
+                yDirection: "after",
+            },
+            transform: {
+                targetCols: ["Method", "Accuracy"],
+            },
+        },
+        {
+            startCell: {
+                xOffset: 0,
+                yOffset: 0,
+            },
+            transform: {
+                targetCols: ["Category"],
+            },
+        },
+    ],
+    // fill: "forward"
+};
+
+
 const case3_mt: Table2D = [
     ["OnePlus 2", "$330", "", "", "", "", ""],
     ["Release Date", "Aug 2015", "", "", "", "", ""],
@@ -509,13 +600,13 @@ const case5_spec: TableTidierTemplate = {
     ],
 };
 
-const { rootArea, tidyData } = transformTable(case1_mt, case1_spec);
+const { rootArea, tidyData } = transformTable(case2_mt, case2_3_spec);
 // // console.log(serialize(rootArea));
 console.log(tidyData);
 
 // @ts-ignore
 import * as fs from 'fs';
-fs.writeFileSync('rootArea-case1.json', serialize(rootArea), 'utf-8');
+fs.writeFileSync('rootArea-case2.json', serialize(rootArea), 'utf-8');
 
 
 

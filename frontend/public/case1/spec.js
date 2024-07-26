@@ -59,7 +59,7 @@ const option: TableTidierTemplate = {
         },
         targetCols: "context",
       },
-      fill: "",
+      // fill: "",
     },
   ],
 };
