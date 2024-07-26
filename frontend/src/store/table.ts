@@ -6,6 +6,8 @@ import { shallowRef } from 'vue';
 import { Table2D, TableTidierTemplate, ValueType, CellInfo } from "@/grammar/grammar"
 import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 
+import { CustomError } from "@/types";
+
 import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
@@ -124,14 +126,13 @@ export const useTableStore = defineStore('table', {
           spec_res.ok ? spec_res.text() : Promise.resolve(null),
           script_res.ok ? script_res.text() : Promise.resolve(null)
         ]);
-        this.output_tbl.tbl = [];
-        this.output_tbl.cols = [];
-        this.output_tbl.instance.updateData(this.output_tbl.tbl);
-        this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
+
+        this.initTblInfo();
 
         if (dataText !== null) {
           this.caseData = JSON.parse(dataText);
           this.input_tbl.tbl = this.caseData.input_tbl;
+          this.input_tbl.instance.updateData(this.input_tbl.tbl);
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
@@ -304,7 +305,6 @@ export const useTableStore = defineStore('table', {
     },
 
     transformTablebyCode() {
-      let specification: TableTidierTemplate;
       try {
         let code = this.editor.mapping_spec.instance!.getValue() + '\nreturn option;';
         const result = ts.transpileModule(code, {
@@ -316,52 +316,34 @@ export const useTableStore = defineStore('table', {
         // console.log(result.outputText);
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
-        specification = evalFunction(ValueType, sortWithCorrespondingArray);
-      } catch (e) {
-        message.error({
-          content: `Failed to parse the specification:\n ${e}`,
-          style: { whiteSpace: 'pre-line' },
-        });
-      }
-      try {
+        const specification: TableTidierTemplate = evalFunction(ValueType, sortWithCorrespondingArray);
+
         // console.log(this.input_tbl.tbl);
         const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specification!);
         // console.log(tidyData);
         // 将tidyData转换为output_tbl.tbl，注意数据格式
-        this.convertDictToArray(tidyData);
         this.derivePosiMapping(tidyData);
         // console.log(this.output_tbl.tbl, this.output_tbl.cols);
         this.output_tbl.instance.updateData(this.output_tbl.tbl);
         this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
       } catch (e) {
+        let messageContent;
+        console.log(e);
+        if (e instanceof CustomError) {
+          messageContent = `Failed to transform the table based on the specification:\n ${e}`
+        } else {
+          messageContent = `Failed to parse the specification:\n ${e}`
+        }
         message.error({
-          content: `Failed to transform the table based on the specification:\n ${e}`,
+          content: messageContent,
           style: { whiteSpace: 'pre-line' },
         });
-      }
-    },
-    convertDictToArray(dictTbl: { [key: string]: CellInfo[] }) {
-      // Get the headers from the keys of the dictionary
-      this.output_tbl.cols = Object.keys(dictTbl);
-
-      // Determine the number of rows (assuming all columns have the same length)
-      const numRows = dictTbl[this.output_tbl.cols[0]].length;
-
-      // Initialize the result array with the headers as the first row
-      this.output_tbl.tbl = []
-
-      // Create each row based on the dictionary values
-      for (let i = 0; i < numRows; i++) {
-        const row = this.output_tbl.cols.map(header => dictTbl[header][i]);
-        this.output_tbl.tbl.push(row.map(cell => cell.value));
       }
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
 
-      // Initialize in2out and out2in mappings
-      this.input_tbl.in2out = {};
-      this.output_tbl.out2in = { cells: {}, cols: [], rows: [] };
+      this.initTblInfo(false);
 
       const cols = Object.keys(outTbl);
       this.output_tbl.cols = cols;
@@ -377,7 +359,7 @@ export const useTableStore = defineStore('table', {
           row.push(cell.value);
           let inPosi = `[${cell.y},${cell.x}]`;
           const outPosi = `[${i},${j}]`;
-          console.log(inPosi, outPosi);
+          // console.log(inPosi, outPosi);
           if (cell.x < 0 || cell.y < 0) {
             inPosi = '';
           } else {
@@ -395,10 +377,27 @@ export const useTableStore = defineStore('table', {
             this.output_tbl.out2in.cols[j].push(inPosi);
           }
         }
+        this.output_tbl.tbl.push(row);
       }
-      console.log(outTbl);
-      console.log(this.output_tbl.out2in, this.input_tbl.in2out);
-    }
+      // console.log(outTbl);
+      // console.log(this.output_tbl.out2in, this.input_tbl.in2out);
+    },
+
+    initTblInfo(inputFlag = true) {
+      if (inputFlag) {
+        this.input_tbl.tbl = []
+        this.input_tbl.cells = [];
+        this.input_tbl.in2out = {};
+        this.input_tbl.instance.updateData(this.input_tbl.tbl);
+      }
+
+      this.output_tbl.tbl = [];
+      this.output_tbl.cols = [];
+      this.output_tbl.cells = [];
+      this.output_tbl.out2in = { cells: {}, cols: [], rows: [] };
+      this.output_tbl.instance.updateData(this.output_tbl.tbl);
+      this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
+    },
 
   },
   // computed

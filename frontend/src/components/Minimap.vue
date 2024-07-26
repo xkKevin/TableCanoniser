@@ -2,7 +2,10 @@
     <div class="view">
         <div class="view-title">
             <span>Mapping Minimap</span>
-            <a-button size="small" style="float: right; margin-right: 20px" @click="resetZoom">Reset</a-button>
+            <a-button size="small" style="float: right; margin-right: 20px" @click="resetZoom">
+                <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
+                <span>Reset</span>
+            </a-button>
         </div>
         <div class="view-content">
             <div ref="container" class="grid-container"></div>

@@ -1,6 +1,6 @@
 // The Declarative Grammar v0.3.1
 
-type CellValueType = string | number;
+type CellValueType = string | number | undefined;
 
 enum ValueType {
     String = 'TableTidier.String',

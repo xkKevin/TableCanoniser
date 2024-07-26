@@ -1,5 +1,7 @@
 import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeSpecification, completeCellSelection } from "./grammar";
 
+import { CustomError } from "@/types";
+
 export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
     // 创建一个数组包含元素及其对应的索引
     let indexedArray = A.map((value, index) => ({ value, index }));
@@ -88,7 +90,7 @@ const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo
 
     // 判断是否越界
     if (cellPosi.x < 0 || cellPosi.y < 0 || cellPosi.x >= rootArea.width || cellPosi.y >= rootArea.height) {
-        throw new Error(`Invalid cell selection:\n Table size (${rootArea.width}, ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`);
+        throw new CustomError(`Invalid cell selection:\n Table size is (width: ${rootArea.width}, height: ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`, 'OutOfBoundsError');
     }
 
     return {
@@ -321,7 +323,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
 
             if (context.targetCol === 'cellValue') {
                 ctxCellsInfo.forEach((cellCtxsInfo) => {
-                    ctxCols.push(cellCtxsInfo[0].value.toString());
+                    ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
                 })
             } else {
                 const customMapColbyCxt = context.targetCol

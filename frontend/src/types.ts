@@ -3,6 +3,15 @@ export interface ChatMessage {
     content: string
 }
 
+export class CustomError extends Error {
+    constructor(message: string, name: string = "CustomError") {
+        super(message);
+        this.name = name;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+
+
 // The Declarative Grammar v0.2
 
 /**
@@ -55,7 +64,7 @@ type AreaCellInfo = {
     value: string // string | number | null
 }
 
-export interface TableTidierMapping {
+interface TableTidierMapping {
     startCell?: CellInfo,
     endCell?: CellInfo,
     // if context is not null, means involving value-based selection
@@ -71,7 +80,7 @@ export interface TableTidierMapping {
 
 type cellValueType = string | number;
 
-export enum ValueType {
+enum ValueType {
     String,
     Number,
     None
@@ -188,7 +197,7 @@ interface ContextTransform {
 
 
 // The main template for defining the transformation rules
-export interface TableTidierTemplate {
+interface TableTidierTemplate {
     startCell: CellSelection;  // The starting cell for the selection
     size?: {
         width?: number | 'toParentX' | undefined;  // The width of the selection area, 'toParentX' means the distance from the startCell to the parent's x-axis end; undefined means no width constraint, default is 1
@@ -212,7 +221,7 @@ export interface TableTidierTemplate {
 
 type Pair = { value: number, originalIndex: number, correspondingValue: string };
 
-export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
+function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
     // Create a combined array of objects
     let combined: Pair[] = A.map((value, index) => ({
         value: value,
@@ -237,22 +246,3 @@ export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'as
 
     return sortedB;
 }
-
-
-
-// interface aa {
-//     a: string,
-//     b: number
-// }
-
-// // type bb = aa & {c: 12 | 22}
-// interface bb extends aa {
-//     c: 12 | 22
-// }
-
-
-// let xy: bb = {
-//     a: '12',
-//     b: 1,
-//     c: 22
-// }

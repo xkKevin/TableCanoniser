@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "TableTidier",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -16,13 +16,16 @@
     "handsontable": "^14.4.0",
     "monaco-editor": "^0.50.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
+    "oh-vue-icons": "^1.0.0-rc3",
     "pinia": "^2.1.7",
-    "vue": "^3.2.13"
+    "vue": "^3.2.13",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/plugin-transform-class-static-block": "^7.24.7",
     "@types/d3": "^7.4.3",
     "@types/lodash": "^4.17.6",
+    "@types/papaparse": "^5.3.14",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",

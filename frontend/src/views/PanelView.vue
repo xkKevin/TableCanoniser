@@ -22,8 +22,11 @@
         <div class="view">
           <div class="view-title">
             <span>Code Panel</span>
-            <span style="float: right; margin-right: 50px">
-              <a-button size="small" :loading="loading" @click="transformTablebyCode">Run</a-button>
+            <span style="float: right; margin-right: 30px">
+              <a-button size="small" :loading="loading" @click="transformTablebyCode">
+                <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
+                <span>Run</span>
+              </a-button>
             </span>
           </div>
           <div class="view-content">
@@ -60,7 +63,7 @@ import { ref } from "vue";
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
-import ChatBot from "@/components/ChatBot.vue";
+// import ChatBot from "@/components/ChatBot.vue";
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -109,6 +112,11 @@ function transformTablebyCode() {
   width: calc(100vw - 15px);
   padding: 1px;
   box-sizing: border-box;
+
+  // 这是用来让图标和文字有一定间距
+  svg.ov-icon+span {
+    margin-left: 5px;
+  }
 
   .column {
     height: calc(100vh - 54px);

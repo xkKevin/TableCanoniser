@@ -2,10 +2,19 @@
   <div class="view">
     <div class="view-title">
       <span class="head-text"> Input Table </span>
-      <span class="toolbar" style="float: right; margin-right: 50px">
+      <span class="toolbar" style="float: right; margin-right: 5px">
         <span class="controller">
-          <a-select ref="select" :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
-            @mouseenter="showDropdown" @mouseleave="hideDropdown"></a-select>
+          <a-space>
+            <a-select ref="select" :value="currentCase" :options="caseOption" size="small"
+              @change="handleCaseChange"></a-select>
+            <a-upload :max-count="1" accept=".csv, .txt, .xls, .xlsx" :customRequest="handleUpload"
+              @remove="handleRemove">
+              <a-button size="small">
+                <v-icon name="bi-upload" scale="0.85" />
+                <span>Upload</span>
+              </a-button>
+            </a-upload>
+          </a-space>
         </span>
       </span>
     </div>
@@ -18,7 +27,15 @@
     </div>
   </div>
   <div class="view">
-    <div class="view-title">Output Table</div>
+    <div class="view-title">
+      <span>Output Table</span>
+      <span style="float: right; margin-right: 30px">
+        <a-button size="small" @click="handleDownload">
+          <v-icon name="bi-download" scale="0.85"></v-icon>
+          <span>Download</span>
+        </a-button>
+      </span>
+    </div>
     <div class="view-content">
       <div id="output-tbl">
         <hot-table ref="outputTbl" :data="caseData.output_tbl" :rowHeaders="true" :colHeaders="output_col"
@@ -41,6 +58,12 @@ import "handsontable/dist/handsontable.full.css";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
 import { useTableStore, TblVisData } from "@/store/table";
+// import Papa from 'papaparse';  // parse csv data
+import * as XLSX from 'xlsx';  // parse excel data
+import { Table2D } from "@/grammar/grammar"
+import { message } from "ant-design-vue";
+
+// import { ArrowUpTrayIcon } from '@heroicons/vue/24/solid'
 
 // register Handsontable's modules
 registerAllModules();
@@ -76,6 +99,111 @@ function renderTblCell(instance: Handsontable,
   Handsontable.renderers.TextRenderer.apply(this, arguments);
   td.innerHTML = `<div class="truncated">${value}</div>`
 }
+
+// const handleUploadChange = (info: any) => {
+//   if (info.file.status === 'done') {
+//     message.success(`${info.file.name} file uploaded successfully`);
+//   } else if (info.file.status === 'error') {
+//     message.error(`${info.file.name} file upload failed.`);
+//   }
+// };
+
+// const fileList = ref<UploadProps['fileList']>([{
+//     uid: '1',
+//     name: 'xxx.png',
+//     status: 'done',
+//     response: 'Server Error 500', // custom error message to show
+//     url: 'http://www.baidu.com/xxx.png',
+//   },]);
+
+const handleUpload = (request: any) => {
+  // console.log(request.file);
+  // setTimeout(() => {
+  //   request.onSuccess("ok");
+  // }, 0);
+  try {
+    const reader = new FileReader();
+    // if (request.file.type === 'text/csv' || request.file.type === 'text/plain') {
+    //   reader.onload = (e) => {
+    //     console.log(e);
+    //     const data = e.target?.result;
+    //     parseCsvData(data as string);
+    //   }
+    //   reader.readAsText(request.file);
+    // } else if (request.file.type.endsWith('sheet') || request.file.type.endsWith('excel')) {
+
+    reader.onload = (e) => {
+      const arrayBuffer = e.target?.result;
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rawData: Table2D = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      // Determine the maximum number of columns
+      const maxColumns = Math.max(...rawData.map(row => row.length));
+
+      // Ensure all rows have the same number of columns
+      const tblData = rawData.map(row => {
+        while (row.length < maxColumns) {
+          row.push(undefined); // Fill missing cells with an empty string or a placeholder
+        }
+        return row;
+      });
+      tableStore.initTblInfo()
+      tableStore.input_tbl.tbl = tblData;
+      tableStore.input_tbl.instance.updateData(tblData);
+      request.onSuccess("ok");
+      // message.success(`${request.file.name} file uploaded successfully`);
+    };
+    reader.readAsArrayBuffer(request.file);
+  } catch (error) {
+    message.error({
+      content: `${request.file.name} file uploaded failed.\n${error}`,
+      style: { whiteSpace: 'pre-line' },
+    });
+  }
+};
+
+const handleRemove = (e: any) => {
+  tableStore.initTblInfo()
+};
+
+// const handlePreview = (file: any) => {
+//   console.log(file.name);
+// };
+
+// const parseCsvData = (csv: string) => {
+//   Papa.parse(csv, {
+//     complete: (results) => {
+//       console.log("parseCsvData", results.data);
+//     },
+//     header: false,
+//     skipEmptyLines: false
+//   });
+// };
+
+// 函数用于将二维数组转换为 CSV 格式
+function arrayToCSV(array: Table2D) {
+  return array.map(row => row.map(cell => `${cell === undefined ? '' : cell}`).join(',')).join('\n');
+}
+
+const handleDownload = () => {
+  if (tableStore.output_tbl.cols.length === 0) {
+    message.warning('The output table is empty.');
+    return;
+  }
+  const csv = arrayToCSV([tableStore.output_tbl.cols, ...tableStore.output_tbl.tbl]);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tidy table.csv'; // 下载文件的名称
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url); // 释放内存
+
+  message.success('The output table has been downloaded successfully.');
+};
 
 onMounted(() => {
 
@@ -128,18 +256,19 @@ onMounted(() => {
 
 });
 
-function showDropdown() {
-  //   isOpen = true;
-}
-function hideDropdown() {
-  //   isOpen = false;
-}
-async function handleCaseChange(value: string) {
+// function showDropdown() {
+//   //   isOpen = true;
+// }
+// function hideDropdown() {
+//   //   isOpen = false;
+// }
+
+function handleCaseChange(value: string) {
   currentCase.value = value;
   // tableStore.currentCase = value;
   // caseData = tblCases[currentCase.value];
-  await tableStore.loadCaseData(value);
-  inHotInst.updateData(tableStore.input_tbl.tbl);
+  tableStore.loadCaseData(value);
+  // inHotInst.updateData(tableStore.input_tbl.tbl);
   // outHotInst.updateData(tableStore.output_tbl.tbl);
   // output_col.value = caseData.output_col;
 
@@ -148,6 +277,31 @@ async function handleCaseChange(value: string) {
 </script>
 
 <style lang="less">
+.ant-upload-wrapper {
+  position: relative;
+
+  .ant-upload {
+    display: inline-block;
+    margin-right: 60px;
+  }
+
+  .ant-upload-list {
+    position: absolute;
+    top: -11px;
+    right: -2px;
+    cursor: pointer;
+  }
+
+  .ant-upload-list-item-name {
+    color: #1677ff;
+    padding: 0 0 0 2px !important;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .handsontable {
   .truncated {
     max-width: 140px;
