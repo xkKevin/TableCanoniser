@@ -4,6 +4,7 @@ const webpack = require("webpack");
 
 module.exports = defineConfig({
   transpileDependencies: true,
+  publicPath: "/TableTidier-Code/",
   outputDir: "../docs",
   configureWebpack: {
     plugins: [
