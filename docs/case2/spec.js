@@ -35,35 +35,12 @@ const case2_2: TableTidierTemplate = {
   },
   size: {
     width: 2,
-    height: undefined,
+    height: "toParentY", // 5,
   },
-  constraints: [
-    {
-      xOffset: 1,
-      yOffset: 0,
-      valueCstr: ValueType.None,
-    },
-    {
-      referenceAreaPosi: "bottomRight",
-      xOffset: 0,
-      yOffset: 1,
-      valueCstr: ValueType.None,
-    },
-  ],
   traverse: {
     xDirection: "after",
-    yDirection: "after",
   },
   children: [
-    {
-      startCell: {
-        xOffset: 0,
-        yOffset: 0,
-      },
-      transform: {
-        targetCols: ["Category"],
-      },
-    },
     {
       startCell: {
         xOffset: 0,
@@ -80,5 +57,15 @@ const case2_2: TableTidierTemplate = {
         targetCols: ["Method", "Accuracy"],
       },
     },
+    {
+      startCell: {
+        xOffset: 0,
+        yOffset: 0,
+      },
+      transform: {
+        targetCols: ["Category"],
+      },
+    },
   ],
+  // fill: "forward"
 };
