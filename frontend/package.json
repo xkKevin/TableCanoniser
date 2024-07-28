@@ -13,6 +13,7 @@
     "axios": "^1.7.2",
     "core-js": "^3.8.3",
     "d3": "^7.9.0",
+    "element-plus": "^2.7.8",
     "handsontable": "^14.4.0",
     "monaco-editor": "^0.50.0",
     "monaco-editor-webpack-plugin": "^7.1.0",

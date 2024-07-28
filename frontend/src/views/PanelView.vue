@@ -1,6 +1,34 @@
 <template>
   <div id="panel">
-    <div class="system-name">TableTidier</div>
+    <div class="system-name">
+      <span>TableTidier</span>
+      <span style="left: 20px; position: absolute;">
+        <!-- <el-button-group> -->
+        <el-button type="success" plain :disabled="!mode">Select Area</el-button>
+        <el-button type="success" plain :disabled="!mode">Add Constrs</el-button>
+        <!-- <el-button type="success" plain>Target Cols</el-button> -->
+        <span style="margin: 0 10px">
+          <el-dropdown @command="chooseTargetType" :trigger="mode ? 'hover' : 'click'">
+            <el-button type="success" plain :disabled="!mode">
+              Target Cols
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="1">Position Based</el-dropdown-item>
+                <el-dropdown-item command="2">Context Based</el-dropdown-item>
+                <el-dropdown-item command="3">Value Based</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </span>
+        <el-button type="success" plain :disabled="!mode">Add Childen</el-button>
+        <!-- </el-button-group> -->
+      </span>
+      <span style="right: 20px; position: absolute;">
+        <el-switch v-model="mode" style="--el-switch-on-color: #13ce66; --el-switch-off-color: #13ce66"
+          active-text="Specification Mode" inactive-text="Presentation Mode" @change="changeMode" />
+      </span>
+    </div>
     <!-- <ChatBot /> -->
     <div class="main-views">
       <!-- Column 1 -->
@@ -43,6 +71,14 @@
               <a-tab-pane key="2">
                 <template #tab>
                   <span>
+                    Mapping Config
+                  </span>
+                </template>
+                hh
+              </a-tab-pane>
+              <a-tab-pane key="3">
+                <template #tab>
+                  <span>
                     <!-- <android-outlined /> -->
                     Transformation Script
                   </span>
@@ -70,6 +106,16 @@ const tableStore = useTableStore();
 
 const codePanel = ref("1");
 const loading = ref<boolean>(false);
+
+const mode = ref(false);
+
+function chooseTargetType(a: any) { // 选择目标类型
+  console.log(a);
+}
+
+function changeMode() {
+  tableStore.specMode = mode.value;
+}
 
 function transformTablebyCode() {
   loading.value = true;
@@ -104,6 +150,16 @@ function transformTablebyCode() {
   color: white;
   /* System name text color */
   //   border-radius: 8px;
+  text-align: center;
+
+  .el-switch__label {
+    color: #fff;
+    // font-size: 30px;
+  }
+
+  .el-switch__label.is-active {
+    color: #7bed9f;
+  }
 }
 
 .main-views {

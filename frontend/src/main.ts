@@ -10,7 +10,7 @@ import { Select, Upload, Button, Tabs, Tooltip, Popover, Input, Modal, Space } f
 // import 'ant-design-vue/dist/reset.css';
 
 app.use(pinia).use(Select).use(Tabs).use(Button).use(Upload)
-    .use(Tooltip).use(Popover).use(Input).use(Modal).use(Space)
+    .use(Tooltip).use(Popover).use(Input).use(Modal).use(Space);
 
 // A Vue component for including inline SVG icons from different popular iconpacks easily.
 // https://oh-vue-icons.js.org/docs
@@ -22,4 +22,9 @@ addIcons(BiUpload, BiDownload, LaRocketSolid, BiArrowClockwise);
 // app.config.globalProperties.$basePath = process.env.BASE_URL;
 
 app.component("v-icon", OhVueIcon);
+
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+app.use(ElementPlus)
+
 app.mount('#app')

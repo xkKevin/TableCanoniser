@@ -233,6 +233,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     tblInst2.updateSettings({ cell: [] });
   });
   tblInst1.addHook("afterOnCellMouseUp", (event, coords, TD) => {
+    if (tableStore.specMode) return;
     const selected = tblInst1.getSelected() || [];
     // key 表示所选区域，value 表示所选区域所有单元格的坐标
     let selectedCoords: { [key: string]: [number, number][] } = {};

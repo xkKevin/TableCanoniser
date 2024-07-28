@@ -13,13 +13,6 @@ import { message } from 'ant-design-vue';
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
 
-// import caseData from "../../public/cases.json";
-// import case1Data from "../../public/case1/data.json";
-
-// type Posi = [number, number];
-
-// const caseList = ["case1", "case2", "case3"]
-
 export interface TblVisData {
   input_tbl: string[][];
   output_tbl: string[][];
@@ -69,7 +62,7 @@ export const useTableStore = defineStore('table', {
   // data
   state() {
     return {
-      // cases: caseData as { [key: string]: TblVisData },
+      specMode: false,
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
