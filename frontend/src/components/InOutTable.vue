@@ -206,6 +206,91 @@ const handleDownload = () => {
   message.success('The output table has been downloaded successfully.');
 };
 
+function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
+  let tblInst1: Handsontable, tblInst2: Handsontable;
+  const tbl2 = tbl === "input_tbl" ? "output_tbl" : "input_tbl";
+  if (tbl === "input_tbl") {
+    tblInst1 = inHotInst;
+    tblInst2 = outHotInst;
+  } else {
+    tblInst1 = outHotInst;
+    tblInst2 = inHotInst;
+  }
+  tblInst1.updateSettings({
+    outsideClickDeselects: (targetEle) => {
+      if (targetEle?.className === "wtHolder") {
+        return false;
+      } else {
+        tblInst2.updateSettings({ cell: [] });
+        if (tbl === "output_tbl") {
+          tableStore.highlightMinimapCells([])
+        }
+        return true;
+      }
+    },
+  });
+  tblInst1.addHook("afterOnCellMouseDown", () => {
+    tblInst2.updateSettings({ cell: [] });
+  });
+  tblInst1.addHook("afterOnCellMouseUp", (event, coords, TD) => {
+    const selected = tblInst1.getSelected() || [];
+    // key 表示所选区域，value 表示所选区域所有单元格的坐标
+    let selectedCoords: { [key: string]: [number, number][] } = {};
+    let hightedCells: { row: number, col: number, className: string }[] = [];
+    // 遍历选定区域
+    selected.forEach(range => {
+      let startRow = range[0];
+      let startCol = range[1];
+      let endRow = range[2];
+      let endCol = range[3];
+
+      if (startRow > endRow) {
+        [startRow, endRow] = [endRow, startRow];
+      }
+      if (startCol > endCol) {
+        [startCol, endCol] = [endCol, startCol];
+      }
+
+      selectedCoords[range.toString()] = [];
+      // 遍历行
+      for (let row = startRow; row <= endRow; row++) {
+        // 遍历列
+        for (let col = startCol; col <= endCol; col++) {
+          // 将坐标添加到数组中
+          selectedCoords[range.toString()].push([row, col]);
+          hightedCells.push({ row, col, className: "posi-mapping" });
+        }
+      }
+    });
+
+    // 打印所有坐标
+    // console.log(selectedCoords);
+
+    const cells = tableStore.in_out_mapping(selectedCoords, tbl);
+    tableStore.highlightTblCells(tbl2, cells);
+    // tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
+    if (tbl === "output_tbl") {
+      tableStore.highlightMinimapCells(cells);
+    } else {
+      tableStore.highlightMinimapCells(hightedCells);
+    }
+
+    /*
+    let data = [];
+    if (selected.length === 1) {
+      data = inHotInst.getData(...selected[0]);
+
+    } else {
+      for (let i = 0; i < selected.length; i += 1) {
+        data.push(inHotInst.getData(...selected[i]));
+      }
+    }
+    console.log(selected, data, coords);  // 打印所选区域的坐标及数据
+    */
+
+  });
+}
+
 onMounted(() => {
 
   const proxy = getCurrentInstance()?.proxy as ComponentPublicInstance;
@@ -215,44 +300,9 @@ onMounted(() => {
   tableStore.input_tbl.instance = inHotInst;
   tableStore.output_tbl.instance = outHotInst;
 
-  outHotInst.updateSettings({
-    outsideClickDeselects: (targetEle) => {
-      if (targetEle?.className === "wtHolder") {
-        return false;
-      } else {
-        inHotInst.updateSettings({ cell: [] });
-        tableStore.highlightMinimapCells([])
-        return true;
-      }
-    },
-  });
-  outHotInst.addHook("afterOnCellMouseDown", () => {
-    inHotInst.updateSettings({ cell: [] });
-  });
-  outHotInst.addHook("afterOnCellMouseUp", (event, coords, grid) => {
-    const cells = tableStore.out2in_mapping(coords);
-    tableStore.highlightTblCells("input_tbl", cells);
-    tableStore.highlightMinimapCells(cells);
-  });
+  initEventsForTbl("input_tbl");
+  initEventsForTbl("output_tbl");
 
-  inHotInst.updateSettings({
-    outsideClickDeselects: (targetEle) => {
-      if (targetEle?.className === "wtHolder") {
-        return false;
-      } else {
-        outHotInst.updateSettings({ cell: [] });
-        return true;
-      }
-    },
-  });
-  inHotInst.addHook("afterOnCellMouseDown", () => {
-    outHotInst.updateSettings({ cell: [] });
-  });
-  inHotInst.addHook("afterOnCellMouseUp", (event, coords, TD) => {
-    const cells = tableStore.in2out_mapping(coords);
-    tableStore.highlightTblCells("output_tbl", cells);
-    tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
-  });
   handleCaseChange(currentCase.value);
 
 });

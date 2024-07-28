@@ -94,15 +94,7 @@ export const useTableStore = defineStore('table', {
         cells: [] as [number, number][], // highlighted cells
         tbl: shallowRef<Table2D>([]),
         cols: shallowRef<string[]>([]),
-        out2in: shallowRef<{
-          cells: { [key: string]: string },
-          cols: string[][],
-          rows: string[][]
-        }>({
-          cells: {},
-          cols: [],
-          rows: [],
-        }),
+        out2in: shallowRef<{ [key: string]: string[] }>({}),
       },
     }
   },
@@ -204,77 +196,25 @@ export const useTableStore = defineStore('table', {
 
     },
 
-    out2in_mapping(cell: TblCell) {
-      const caseData = this.caseData;
-      let cells: TblCell[] = [];
-      if (cell.row < 0) {
-        if (this.output_tbl.out2in.cols[cell.col]) {
-          this.output_tbl.out2in.cols[cell.col].forEach((posi) => {
-            if (posi.startsWith("[") && posi.endsWith("]")) {
-              let pi_n = JSON.parse(posi) as [number, number];
-              cells.push({
-                row: pi_n[0],
-                col: pi_n[1],
-                className: "posi-mapping",
-              });
-            }
-          });
-        }
-      } else if (cell.col < 0) {
-        this.output_tbl.out2in.rows[cell.row].forEach((posi) => {
-          if (posi.startsWith("[") && posi.endsWith("]")) {
-            let pi_n = JSON.parse(posi) as [number, number];
-            cells.push({
-              row: pi_n[0],
-              col: pi_n[1],
-              className: "posi-mapping",
-            });
-          }
-        });
-      } else {
-        let output_posi = `[${cell.row},${cell.col}]`;
-        let posi = this.output_tbl.out2in.cells[output_posi];
-        if (posi.startsWith("[") && posi.endsWith("]")) {
-          let pi_n = JSON.parse(posi) as [number, number];
-          cells.push({
-            row: pi_n[0],
-            col: pi_n[1],
-            className: "posi-mapping",
-          });
-          /*
-          if (caseData.ambiguous_posi && output_posi in caseData.ambiguous_posi) {
-            caseData.ambiguous_posi[output_posi].forEach((in_posi) => {
-              cells.push({
-                row: in_posi[0],
-                col: in_posi[1],
-                className: "ambiguous-cell",
-              });
-            });
-            cells.push({
-              row: pi_n[0],
-              col: pi_n[1],
-              className: "determined-cell",
-            });
-          } else {
-            cells.push({
-              row: pi_n[0],
-              col: pi_n[1],
-              className: "posi-mapping",
-            });
-          }*/
-        }
+    in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl") {
+      const posi_mapping = type === "input_tbl" ? this.input_tbl.in2out : this.output_tbl.out2in;
+      if (Object.keys(posi_mapping).length === 0) {
+        return [];
       }
-      return cells;
-    },
-
-    in2out_mapping(cell: TblCell) {
       let cells: TblCell[] = [];
-      // let posi = this.caseData.in2out[`[${cell.row},${cell.col}]`];
-      let posi = this.input_tbl.in2out[`[${cell.row},${cell.col}]`];
+      let posi: string[] = [];
+      for (let range in selectedCoords) {
+        selectedCoords[range].forEach((pi) => {
+          posi = posi.concat(posi_mapping[`[${pi[0]},${pi[1]}]`]);
+        });
+      }
+      // console.log(posi, posi_mapping);
       if (posi) {
         posi.forEach((pi) => {
-          let pi_n = JSON.parse(pi) as [number, number];
-          cells.push({ row: pi_n[0], col: pi_n[1], className: "posi-mapping" });
+          if (pi && pi.startsWith("[") && pi.endsWith("]")) {
+            let pi_n = JSON.parse(pi) as [number, number];
+            cells.push({ row: pi_n[0], col: pi_n[1], className: "posi-mapping" });
+          }
         });
       }
       return cells;
@@ -355,10 +295,10 @@ export const useTableStore = defineStore('table', {
       // const numRows = outTbl[cols[0]].length;
       const numRows = Math.max(...cols.map(col => outTbl[col].length));
 
-      // Create the out2in mapping
+      // Create the in_out mapping
       for (let i = 0; i < numRows; i++) {
         const row: CellValueType[] = [];
-        this.output_tbl.out2in.rows.push([]);
+        // this.output_tbl.out2in.rows.push([]);
         for (let j = 0; j < cols.length; j++) {
           const col = cols[j];
           let cell: CellInfo;
@@ -380,18 +320,15 @@ export const useTableStore = defineStore('table', {
               this.input_tbl.in2out[inPosi] = [outPosi];
             }
           }
-          this.output_tbl.out2in.cells[outPosi] = inPosi;
-          this.output_tbl.out2in.rows[i].push(inPosi);
-          if (this.output_tbl.out2in.cols.length <= j) {
-            this.output_tbl.out2in.cols.push([inPosi]);
+
+          if (this.output_tbl.out2in.hasOwnProperty(outPosi)) {
+            this.output_tbl.out2in[outPosi].push(inPosi);
           } else {
-            this.output_tbl.out2in.cols[j].push(inPosi);
+            this.output_tbl.out2in[outPosi] = [inPosi];
           }
         }
         this.output_tbl.tbl.push(row);
       }
-      // console.log(outTbl);
-      // console.log(this.output_tbl.out2in, this.input_tbl.in2out);
     },
 
     initTblInfo(inputFlag = true) {
@@ -406,7 +343,7 @@ export const useTableStore = defineStore('table', {
       this.output_tbl.tbl = [];
       this.output_tbl.cols = [];
       this.output_tbl.cells = [];
-      this.output_tbl.out2in = { cells: {}, cols: [], rows: [] };
+      this.output_tbl.out2in = {};
       this.output_tbl.instance.updateData(this.output_tbl.tbl);
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
     },

@@ -23,8 +23,8 @@ MESSY_DATA = json.load(
 
 
 # openai chatGPT configuration--------------------------------------------------------------
-# api_key = "sk-proj-1VQ3WP8h1ZvSkOrG8qJaT3BlbkFJvd2S7qweIV904dYafmVC"
-api_key = "sk-proj-37sNgWLb66Dui8lQKhxqT3BlbkFJChZg74ToeB2jXHOflbK4"
+
+api_key = ""
 
 client = OpenAI(api_key=api_key)
 # client = OpenAI()
