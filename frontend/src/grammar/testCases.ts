@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, ValueType } from "./grammar";
+import { Table2D, TableTidierTemplate, ValueType, completeSpecification } from "./grammar";
 import { transformTable, sortWithCorrespondingArray, serialize } from "./handleSpec";
 
 
@@ -600,7 +600,7 @@ const case5_spec: TableTidierTemplate = {
     ],
 };
 
-const { rootArea, tidyData } = transformTable(case2_mt, case2_3_spec);
+const { rootArea, tidyData } = transformTable(case2_mt, completeSpecification(case2_3_spec));
 // // console.log(serialize(rootArea));
 console.log(tidyData);
 

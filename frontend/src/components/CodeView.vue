@@ -13,6 +13,7 @@ export default defineComponent({
 import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, ref, watch, getCurrentInstance } from "vue";
 import { useTableStore } from "@/store/table";
+import { message } from "ant-design-vue";
 
 
 const { codeType } = defineProps<{ codeType: "mapping_spec" | "transform_script" }>();
@@ -56,6 +57,9 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 
 // let mappingSpec: string = ""
 
+const regex = /\s+/g;
+const areStringEqual = (str1: string, str2: string) => (str1.replace(regex, '') === str2.replace(regex, ''));
+
 const initEditor = () => {
     if (editor) { // if editor is already initialized, dispose it first
         editor.dispose();
@@ -65,6 +69,22 @@ const initEditor = () => {
         value: tableStore.editor[codeType].code,
     };
     editor = monaco.editor.create(editorWrapper.value!, editorOptions as monaco.editor.IEditorConstructionOptions);  // ! means that editorWrapper.value is not null
+
+    editor.onDidBlurEditorText(async () => {
+        const markers = monaco.editor.getModelMarkers({})
+        if (markers.length > 0) {
+            const lineNo = markers[0].startLineNumber;
+            // const colNo = markers[0].startColumn;
+            // message.error(`Invalid syntax at Line ${lineNo}, Column ${colNo}: ${markers[0].message}`);
+            message.error(`Invalid syntax at Line ${lineNo}: ${markers[0].message}`);
+            return;
+        }
+
+        const value = editor!.getValue();
+        if (areStringEqual(tableStore.editor[codeType].code, value)) return; // 忽略换行还有空格之后比较字符串是否相等
+
+        tableStore.editor[codeType].code = value;
+    });
 };
 
 watch(() => tableStore.currentCase, (newVal) => {

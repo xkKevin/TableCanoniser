@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, completeSpecification } from "@/grammar/grammar"
 import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 
 import { CustomError } from "@/types";
@@ -66,7 +66,7 @@ export const useTableStore = defineStore('table', {
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
-      specification: shallowRef<TableTidierTemplate | null>(null),
+      specification: shallowRef<{ [key: string]: any }>({ "id": "root", "children": [] }),
       editor: {
         mapping_spec: {
           code: '',
@@ -238,9 +238,11 @@ export const useTableStore = defineStore('table', {
       return topLeft;
     },
 
-    transformTablebyCode() {
+    getSpec() {
       try {
-        let code = this.editor.mapping_spec.instance!.getValue() + '\nreturn option;';
+        let code = this.editor.mapping_spec.instance!.getValue();
+        if (code.trim() === "") return false;
+        code += '\nreturn option;';
         const result = ts.transpileModule(code, {
           compilerOptions: {
             target: ts.ScriptTarget.ES2015,
@@ -250,12 +252,27 @@ export const useTableStore = defineStore('table', {
         // console.log(result.outputText);
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
-        const specification: TableTidierTemplate = evalFunction(ValueType, sortWithCorrespondingArray);
+        const spec: TableTidierTemplate = evalFunction(ValueType, sortWithCorrespondingArray);
+        const specWithDefaults = completeSpecification(spec);
+        return specWithDefaults;
+      }
+      catch (e) {
+        const messageContent = `Failed to parse the specification:\n ${e}`;
+        message.error({
+          content: messageContent,
+          style: { whiteSpace: 'pre-line' },
+        });
+        return false
+      }
+    },
 
+    transformTablebyCode() {
+      try {
+        const specWithDefaults = this.getSpec();
+        if (specWithDefaults === false) return;
         // console.log(this.input_tbl.tbl);
-        const { rootArea, tidyData, specWithDefaults } = transformTable(this.input_tbl.tbl, specification!);
+        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specWithDefaults);
         // console.log(tidyData);
-        this.specification = specWithDefaults
         if (Object.keys(tidyData).length === 0) {
           message.warning({
             content: 'The output table is empty based on the specification.',
@@ -341,6 +358,8 @@ export const useTableStore = defineStore('table', {
       this.output_tbl.out2in = {};
       this.output_tbl.instance.updateData(this.output_tbl.tbl);
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
+
+      this.specification["children"] = [];
     },
 
   },

@@ -500,8 +500,8 @@ export class TreeChart {
     };
     this.layouts.treemap = d3.tree()
       .size([this.calculated.chartWidth, this.calculated.chartHeight]);
-    console.log("layout:", this.layouts.treemap);
-    console.log(this.calculated);
+    // console.log("layout:", this.layouts.treemap);
+    // console.log(this.calculated);
 
 
 
@@ -550,6 +550,7 @@ export class TreeChart {
       .attr('width', this.svgWidth)
       .attr('height', this.svgHeight)
       .attr('font-family', this.defaultFont)
+      .attr('viewBox', `${this.margins[0]} ${this.margins[1]} ${this.svgWidth} ${this.svgHeight}`)
       .call(zoomfunc.bind(this))
       .on('dblclick.zoom', null)  // 禁用双击缩放
       .attr('cursor', 'move');
@@ -573,15 +574,17 @@ export class TreeChart {
 
   private update(data: treeDrawingData) {
     const treeData = this.layouts.treemap(this.root);
-
     const linksData = treeData.descendants()
       .slice(1);
     const nodesData = treeData.descendants();
     if (this.orient === 'h') {
-      nodesData.forEach((d: treeDrawingData) => {
+      nodesData.forEach((d: treeDrawingData, index: number) => {
         const originalX = d.x;
         d.x = d.y;
         d.y = originalX;
+        if (index === 0) {
+          d.x = typeNodeStyle.nodeCircleRadius * 2;
+        }
       });
     }
     // 如果是水平视图，要等nodesData转变过后再解构，否则得到的是转变之前的位置，造成transition bug
@@ -593,15 +596,17 @@ export class TreeChart {
     const linksSelection = this.centerG.selectAll('path.link')
       .data(linksData, (d: treeDrawingData) => d.id);
 
+    const linkGen = d3.linkHorizontal();
+
     const linksEnter = linksSelection.enter()
       .insert('path', 'g')
       .attr('class', 'link')
       .attr('d', () => {
-        const o = {
-          x: x0,
-          y: y0,
+        const o: d3.DefaultLinkObject = {
+          source: [x0, y0],
+          target: [x0, y0],
         };
-        return this.orient === 'h' ? hdiagonal(o, o) : diagonal(o, o);
+        return linkGen(o);
       });
 
     const linkUpdate = linksEnter.merge(linksSelection);
@@ -615,27 +620,21 @@ export class TreeChart {
     linkUpdate.transition()
       .duration(this.duration)
       .attr('d', (d: treeDrawingData) => {
-        /*
-        if (this.orient === 'h') {
-          // linksData.forEach((d: treeDrawingData) => {
-          //   d.y += d.data.shiftFromEndCenter;
-          // });
-          // 不直接修改linksData所指的位置，因为这个位置后续还会被Node使用
-          // 从儿子向父亲的link，需要在儿子节点的y轴考虑中间位置的shift，
-          // 需要在父亲节点的y轴（valueMultipleType）考虑当前父亲的shift
-          // 需要优化一下此处代码，尝试将shift信息放到d的下一层，而非data中
-          let offset = 0;
-          if (Object.keys(d.parent.data.shiftFromStartCenter).length > 0) {
-            offset = (d.parent.data.shiftFromStartCenter.get(d.data.parentType) || 0)
-          }
-          return hdiagonal(
-            { x: d.x, y: d.y + d.data.shiftFromEndCenter },
-            {
-              x: d.parent.x,
-              y: d.parent.y + offset,
-            },
-          );
-        }*/
+        let xshiftStart = typeNodeStyle.nodeWidth / 2;
+        const yshiftStart = 0;
+        const xshiftEnd = -typeNodeStyle.nodeWidth / 2;
+        const yshiftEnd = 0;
+
+        if (d.parent.id == "0") {
+          xshiftStart = typeNodeStyle.nodeCircleRadius
+        }
+
+        const o: d3.DefaultLinkObject = {
+          source: [d.parent.x + xshiftStart, d.parent.y + yshiftStart],
+          target: [d.x + xshiftEnd, d.y + yshiftEnd],
+        };
+        return linkGen(o);
+
         if (this.orient === 'h') {
           return hdiagonal(
             { x: d.x, y: d.y },
@@ -652,11 +651,11 @@ export class TreeChart {
       .transition()
       .duration(this.duration)
       .attr('d', () => {
-        const o = {
-          x,
-          y,
+        const o: d3.DefaultLinkObject = {
+          source: [x, y],
+          target: [x, y],
         };
-        return this.orient === 'h' ? hdiagonal(o, o) : diagonal(o, o);
+        return linkGen(o);
       })
       .remove();
 
@@ -706,9 +705,9 @@ export class TreeChart {
         current.patternify({ tag: 'circle', selector: `node-circle-${dataBindToThis.id}` });
         nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
           .attr('class', `node-circle-${dataBindToThis.id} type-node`)
-          .attr('r', ({ data: info }: treeDrawingData) => typeNodeStyle.nodeCircleRadius)
+          .attr('r', typeNodeStyle.nodeCircleRadius)
           .attr('fill', ({ data: info }: treeDrawingData) => typeNodeStyle.nodeCircleFillColor)
-          .attr('transform', ({ data: info }: treeDrawingData) => `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
+          .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
           .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
           .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         return;
@@ -830,7 +829,7 @@ export class TreeChart {
         console.log(filteredClass, lastdash, classfull, idx, childrenToToggle);
       });
 
-    console.log(data);
+    // console.log(data);
 
 
     nodeUpdate.select('.node-text')
@@ -842,7 +841,8 @@ export class TreeChart {
       .attr('y', () => nodeTextStyle.yAxisAdjust)
       .attr('cursor', 'pinter')
       .attr('pointer-events', 'none')
-      .text((d: any) => d.data.name || "sdfsdf");
+      .text((d: any) => d.data.name || d.id);
+    // .append("svg:title").text("(d: any) => d.data.id");
 
 
     /*
@@ -857,7 +857,7 @@ export class TreeChart {
         return edgeTextStyle.distFromEdge;
       })
       .attr('y', ({ data: info }: treeDrawingData) => (this.orient === 'h' ? -edgeTextStyle.distFromEdge + info.shiftFromEndCenter : -info.nodeHeight / 2 - 2));
-*/
+    */
     // ************************************exit 节点************************************
     const nodeExitTransition = nodesSelection.exit()
       .attr('opacity', 1)

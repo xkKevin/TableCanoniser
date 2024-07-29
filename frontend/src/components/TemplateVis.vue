@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
 import { flextree, FlextreeNode } from 'd3-flextree';
 import {
@@ -55,7 +55,7 @@ function drawTree2() {
 
 const drawTree = (data: any) => {
 
-    // console.log(data);
+    /*
     let data2 = [
         {
             "nodeId": 0,
@@ -645,7 +645,7 @@ const drawTree = (data: any) => {
             "dataTypeTextTruncated": "a2"
         }
     ]
-
+    */
 
     const chartInstance = new TreeChart([2, 1], '.tree-container', data, 1.0, 'h');
     chartInstance.render();
@@ -946,11 +946,23 @@ const resizeObserver = new ResizeObserver(() => {
     debouncedResize();
 });
 
+watch(() => tableStore.editor.mapping_spec.code, (newVal) => {
+    const specWithDefaults = tableStore.getSpec();
+    if (specWithDefaults === false) return;
+    tableStore.specification["children"] = [specWithDefaults];
+    drawTree(tableStore.specification);
+});
+
 onMounted(() => {
     if (treeContainer.value) {
         resizeObserver.observe(treeContainer.value);
     }
-    drawTree(data);
+    const specWithDefaults = tableStore.getSpec();
+    if (specWithDefaults != false) {
+        tableStore.specification["children"] = [specWithDefaults];
+        drawTree(tableStore.specification);
+    }
+
 });
 
 

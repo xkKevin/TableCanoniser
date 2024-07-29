@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeSpecification, completeCellSelection } from "./grammar";
+import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection } from "./grammar";
 
 import { CustomError } from "../types";
 
@@ -463,9 +463,9 @@ interface TidyResult {
     }
 }
 
-export function transformTable(table: Table2D, spec: TableTidierTemplate) {
+export function transformTable(table: Table2D, specWithDefaults: AllParams<TableTidierTemplate>) {
 
-    const specWithDefaults = completeSpecification(spec);
+    // const specWithDefaults = completeSpecification(spec);
     // console.log(JSON.stringify(specWithDefaults, null, 2));
 
     // Create initial AreaInfo for the root
@@ -500,5 +500,5 @@ export function transformTable(table: Table2D, spec: TableTidierTemplate) {
 
     processTemplate(specWithDefaults, rootArea, rootArea, tidyData);
 
-    return { rootArea, tidyData, specWithDefaults };
+    return { rootArea, tidyData };
 }
