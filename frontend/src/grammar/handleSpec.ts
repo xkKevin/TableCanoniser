@@ -500,5 +500,5 @@ export function transformTable(table: Table2D, spec: TableTidierTemplate) {
 
     processTemplate(specWithDefaults, rootArea, rootArea, tidyData);
 
-    return { rootArea, tidyData };
+    return { rootArea, tidyData, specWithDefaults };
 }

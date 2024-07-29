@@ -89,7 +89,7 @@ const drawGrid = (rows: number, cols: number) => {
         .attr('height', cellHeight)
         .attr('fill', '#f9f7ff')
         .attr('stroke', '#cccccc')
-        .on('mouseover', function () {
+        .on('mouseover', function (this: SVGRectElement) {
             d3.select(this).raise() // Bring the cell to the front 
                 // .attr('fill', '#ece9e6')
                 // .attr('stroke', '#4b8aff')
@@ -104,7 +104,7 @@ const drawGrid = (rows: number, cols: number) => {
                 // .attr('stroke', '#cccccc')
                 .attr('stroke-width', 1);
         })
-        .on('click', function (event, d) {
+        .on('click', function (event, d: TblCell) {
             // console.log(`Clicked on cell: (${d.row}, ${d.col})`);
             // const input_tbl_cell = d3.select('#input-tbl tbody').select(`tr:nth-child(${d.row + 1})`).select(`td:nth-child(${d.col + 2})`) as d3.Selection<HTMLElement, unknown, HTMLElement, any>;
 

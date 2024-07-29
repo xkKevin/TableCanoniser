@@ -38,10 +38,7 @@
 
       <!-- Column 2 -->
       <div class="column center">
-        <div class="view">
-          <h2 class="view-title">Mapping Template Visualization</h2>
-          <div class="view-content"></div>
-        </div>
+        <TemplateVis />
         <Minimap />
       </div>
 
@@ -99,6 +96,7 @@ import { ref } from "vue";
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
+import TemplateVis from "@/components/TemplateVis.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
 import { useTableStore } from "@/store/table";

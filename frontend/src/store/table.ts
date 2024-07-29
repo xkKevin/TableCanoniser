@@ -66,6 +66,7 @@ export const useTableStore = defineStore('table', {
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       caseData: {} as TblVisData, //case1Data as TblVisData,
+      specification: shallowRef<TableTidierTemplate | null>(null),
       editor: {
         mapping_spec: {
           code: '',
@@ -252,8 +253,9 @@ export const useTableStore = defineStore('table', {
         const specification: TableTidierTemplate = evalFunction(ValueType, sortWithCorrespondingArray);
 
         // console.log(this.input_tbl.tbl);
-        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specification!);
+        const { rootArea, tidyData, specWithDefaults } = transformTable(this.input_tbl.tbl, specification!);
         // console.log(tidyData);
+        this.specification = specWithDefaults
         if (Object.keys(tidyData).length === 0) {
           message.warning({
             content: 'The output table is empty based on the specification.',
