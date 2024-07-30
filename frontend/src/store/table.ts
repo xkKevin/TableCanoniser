@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import Handsontable from "handsontable";
 import * as d3 from 'd3';
-import { shallowRef } from 'vue';
+import { shallowRef, ref } from 'vue';
 
 import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, completeSpecification } from "@/grammar/grammar"
 import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
@@ -13,19 +13,19 @@ import { message } from 'ant-design-vue';
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
 
-export interface TblVisData {
-  input_tbl: string[][];
-  output_tbl: string[][];
-  output_col: string[];
-  in2out: { [key: string]: string[] }
-  out2in: {
-    cells: { [key: string]: string },
-    cols: string[][],
-    rows: string[][]
-  },
-  ambiguous_posi?: { [key: string]: number[][] },
-  [key: string]: any  // Index signature, allowing other fields
-}
+// export interface TblVisData {
+//   input_tbl: string[][];
+//   output_tbl: string[][];
+//   output_col: string[];
+//   in2out: { [key: string]: string[] }
+//   out2in: {
+//     cells: { [key: string]: string },
+//     cols: string[][],
+//     rows: string[][]
+//   },
+//   ambiguous_posi?: { [key: string]: number[][] },
+//   [key: string]: any  // Index signature, allowing other fields
+// }
 
 export interface TblCell {
   row: number;
@@ -65,7 +65,6 @@ export const useTableStore = defineStore('table', {
       specMode: false,
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
-      caseData: {} as TblVisData, //case1Data as TblVisData,
       specification: shallowRef<{ [key: string]: any }>({ "id": "root", "children": [] }),
       editor: {
         mapping_spec: {
@@ -90,6 +89,57 @@ export const useTableStore = defineStore('table', {
         cols: shallowRef<string[]>([]),
         out2in: shallowRef<{ [key: string]: string[] }>({}),
       },
+      tree: {
+        contextMenuVisible: false,
+        menuAllList: [{
+          key: "3",
+          label: "Add Sub-Template",
+          title: "Add Sub-Template",
+          // disabled: true
+          // icon: () => h(MailOutlined),
+        }],
+        menuList: [{
+          key: "0",
+          label: "Select Area",
+          title: "Select Area",
+          // icon: () => h(MailOutlined),
+        }, {
+          key: "1",
+          label: "Add Constraints",
+          title: "Add Constraints",
+          // icon: () => h(MailOutlined),
+          // disabled: true
+        }, {
+          key: "2",
+          label: "Target Cols",
+          title: "Target Cols",
+          children: [{
+            key: "2-0",
+            label: "Position Based",
+            title: "Position Based",
+          }, {
+            key: "2-1",
+            label: "Context Based",
+            title: "Context Based",
+          }, {
+            key: "2-2",
+            label: "Value Based",
+            title: "Value Based",
+          }],
+        }, {
+          key: "3",
+          label: "Add Sub-Template",
+          title: "Add Sub-Template",
+          // disabled: true
+          // icon: () => h(MailOutlined),
+        }, {
+          key: "4",
+          label: "Delete Template",
+          title: "Delete Template",
+          // disabled: true
+          // icon: () => h(MailOutlined),
+        }]
+      }
     }
   },
   // methods
@@ -116,8 +166,7 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo();
 
         if (dataText !== null) {
-          this.caseData = JSON.parse(dataText);
-          this.input_tbl.tbl = this.caseData.input_tbl;
+          this.input_tbl.tbl = JSON.parse(dataText).input_tbl;
           this.input_tbl.instance.updateData(this.input_tbl.tbl);
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
@@ -240,7 +289,8 @@ export const useTableStore = defineStore('table', {
 
     getSpec() {
       try {
-        let code = this.editor.mapping_spec.instance!.getValue();
+        // let code = this.editor.mapping_spec.instance!.getValue();
+        let code = this.editor.mapping_spec.code;
         if (code.trim() === "") return false;
         code += '\nreturn option;';
         const result = ts.transpileModule(code, {
@@ -361,7 +411,6 @@ export const useTableStore = defineStore('table', {
 
       this.specification["children"] = [];
     },
-
   },
   // computed
   getters: {}

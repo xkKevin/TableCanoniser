@@ -6,11 +6,11 @@ import { createPinia } from 'pinia'
 const pinia = createPinia()
 const app = createApp(App)
 
-import { Select, Upload, Button, Tabs, Tooltip, Popover, Input, Modal, Space } from "ant-design-vue";
+import { Select, Upload, Button, Tabs, Tooltip, Popover, Input, Modal, Space, Dropdown, Menu } from "ant-design-vue";
 // import 'ant-design-vue/dist/reset.css';
 
 app.use(pinia).use(Select).use(Tabs).use(Button).use(Upload)
-    .use(Tooltip).use(Popover).use(Input).use(Modal).use(Space);
+    .use(Tooltip).use(Popover).use(Input).use(Modal).use(Space).use(Dropdown).use(Menu);
 
 // A Vue component for including inline SVG icons from different popular iconpacks easily.
 // https://oh-vue-icons.js.org/docs
@@ -23,8 +23,11 @@ addIcons(BiUpload, BiDownload, LaRocketSolid, BiArrowClockwise);
 
 app.component("v-icon", OhVueIcon);
 
-import ElementPlus from 'element-plus'
+// import ElementPlus from 'element-plus'
+// app.use(ElementPlus)
+import { ElButton, ElDropdown, ElSwitch } from 'element-plus'
+app.use(ElButton).use(ElDropdown).use(ElSwitch)
+
 import 'element-plus/dist/index.css'
-app.use(ElementPlus)
 
 app.mount('#app')

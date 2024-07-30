@@ -20,9 +20,8 @@
     </div>
     <div class="view-content">
       <div id="input-tbl">
-        <hot-table ref="inputTbl" :data="caseData.input_tbl" :rowHeaders="true" :colHeaders="true"
-          :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true"
-          licenseKey="non-commercial-and-evaluation"></hot-table>
+        <hot-table ref="inputTbl" :data="input_tbl" :rowHeaders="true" :colHeaders="true" :manualColumnResize="true"
+          :renderer="renderTblCell" :contextMenu="true" licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
@@ -38,7 +37,7 @@
     </div>
     <div class="view-content">
       <div id="output-tbl">
-        <hot-table ref="outputTbl" :data="caseData.output_tbl" :rowHeaders="true" :colHeaders="output_col"
+        <hot-table ref="outputTbl" :data="output_tbl" :rowHeaders="true" :colHeaders="output_col"
           :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true"
           licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
@@ -57,7 +56,7 @@ import { HotTable } from "@handsontable/vue3";
 import "handsontable/dist/handsontable.full.css";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
-import { useTableStore, TblVisData } from "@/store/table";
+import { useTableStore } from "@/store/table";
 // import Papa from 'papaparse';  // parse csv data
 import * as XLSX from 'xlsx';  // parse excel data
 import { Table2D } from "@/grammar/grammar"
@@ -70,8 +69,10 @@ registerAllModules();
 
 const tableStore = useTableStore();
 // const tblCases: { [key: string]: TblVisData } = tableStore.cases;
-let caseData: TblVisData = tableStore.caseData;
-let output_col = ref(caseData.output_col);
+
+const output_col = ref(tableStore.output_tbl.cols);
+const output_tbl = ref(tableStore.output_tbl.tbl);
+const input_tbl = ref(tableStore.input_tbl.tbl);
 
 // let caseOption: Ref<{ value: string; label: string; }[]> = ref([]);
 let caseOption = ref<{ value: string; label: string }[]>([]);
@@ -305,7 +306,6 @@ onMounted(() => {
   initEventsForTbl("output_tbl");
 
   handleCaseChange(currentCase.value);
-
 });
 
 // function showDropdown() {

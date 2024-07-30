@@ -8,23 +8,30 @@
             </a-button>
         </div>
         <div class="view-content">
-            <div class="tree-container" ref="treeContainer"></div>
+            <a-dropdown :trigger="['contextmenu']" :open="contextMenuVisible" @openChange="contextMenuVisibleChange">
+                <template #overlay>
+                    <a-menu @click="closeContextMenu" :items="menuList">
+                    </a-menu>
+                </template>
+                <div class="tree-container" ref="treeContainer"></div>
+            </a-dropdown>
         </div>
     </div>
 
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
-import * as d3 from 'd3';
-import { flextree, FlextreeNode } from 'd3-flextree';
+import { computed, onMounted, ref, watch } from 'vue';
+// import * as d3 from 'd3';
+// import { flextree, FlextreeNode } from 'd3-flextree';
 import {
     TreeChart
 } from '@/tree/drawTree'
 
-import { useTableStore, TblCell } from "@/store/table";
+import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
 
+/*
 interface TreeNode {
     name: string;
     children?: TreeNode[];
@@ -46,6 +53,33 @@ const data: TreeNode = {
         }
     ]
 };
+*/
+
+// let menuList = [{
+//     item: "Select Area",
+// }, {
+//     item: "Add Constraints",
+// }, {
+//     item: "Target Cols",
+//     subItem: ["Position Based", "Context Based", "Value Based"]
+// }, {
+//     item: "Add Sub-Template",
+// }, {
+//     item: "Delete Template",
+// }];
+
+const menuList = computed(() => tableStore.tree.menuList);
+// const contextMenuVisible = tableStore.tree.contextMenuVisible;
+const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible);
+const contextMenuVisibleChange = (value: boolean) => {
+    // if (store.state.selectedNode.length === 0 && value === true) return;
+    // store.commit('setContextMenuVisibility', value);
+    tableStore.tree.contextMenuVisible = value;
+};
+const closeContextMenu = (e: any) => {
+    console.log("closeContextMenu", e, e.key);
+    tableStore.tree.contextMenuVisible = false;
+}
 
 const treeContainer = ref<HTMLDivElement | null>(null);
 
@@ -647,7 +681,7 @@ const drawTree = (data: any) => {
     ]
     */
 
-    const chartInstance = new TreeChart([2, 1], '.tree-container', data, 1.0, 'h');
+    const chartInstance = new TreeChart([2, 1], '.tree-container', data, tableStore, 1.0, 'h');
     chartInstance.render();
 
 
@@ -957,12 +991,7 @@ onMounted(() => {
     if (treeContainer.value) {
         resizeObserver.observe(treeContainer.value);
     }
-    const specWithDefaults = tableStore.getSpec();
-    if (specWithDefaults != false) {
-        tableStore.specification["children"] = [specWithDefaults];
-        drawTree(tableStore.specification);
-    }
-
+    drawTree(tableStore.specification);
 });
 
 

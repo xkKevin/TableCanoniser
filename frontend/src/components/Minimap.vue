@@ -162,8 +162,8 @@ const debouncedResize = debounce(() => {
     // requestAnimationFrame(() => {
     //     drawGrid();
     // });
-    if (!tableStore.caseData.input_tbl) return;
-    drawGrid(tableStore.caseData.input_tbl.length, tableStore.caseData.input_tbl[0].length);
+    if (!tableStore.input_tbl.tbl) return;
+    drawGrid(tableStore.input_tbl.tbl.length, tableStore.input_tbl.tbl[0].length);
 }, 100); // 调整延迟时间，单位为毫秒
 
 const resizeObserver = new ResizeObserver(() => {

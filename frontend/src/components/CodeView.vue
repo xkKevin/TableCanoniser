@@ -88,9 +88,6 @@ const initEditor = () => {
 };
 
 watch(() => tableStore.currentCase, (newVal) => {
-    // mappingSpec = (await tableStore.loadCaseSpec(newVal)).spec;
-    // mappingSpec = tableStore.mapping_spec;
-    // initEditor();
     editor?.setValue(tableStore.editor[codeType].code);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 

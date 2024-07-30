@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 import * as d3 from 'd3';
+// import { useTableStore } from '@/store/table';  // 不能在还没有激活pinia store前就使用，可以传参进来
 
 import {
   typeMapColor,
@@ -11,6 +12,8 @@ import {
   Point, TypeNode, RectDef, treeDrawingData, edgeType, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
+
+
 
 const getLetterWidth = (
   letter: string,
@@ -314,45 +317,30 @@ export function nodeDrawData(dataWithId: Array<TypeNode>, orient: 'h' | 'v') {
 
 export class TreeChart {
   svgWidth: number;
-
   svgHeight: number;
-
   margins: Array<number>;
-
   container: string;
-
   data: any;
-
   zoomLevel: number;
-
   depth: number;
-
   calculated: KV; // SVG画布相关的信息，如宽高、边距、对称中心
-
   layouts: any; // 用于存放layout配置
-
   realChart: any;
-
   previousTransform: any;
-
   centerG: any;
-
   centerX: number;
-
   root: any; // 树的根节点及其children
-
   allNodes: any; // 用于存放root数据输入layout配置中后生成的位置信息
-
   defaultFont: string;
-
   duration: number;
-
+  store: any;
   orient: 'h' | 'v';
 
   constructor(
     _margins: Array<number>,
     _container: string,
     _data: any,
+    _store: any,
     _zoomLevel = 1.0,
     _orient: 'h' | 'v' = 'h' as const,
   ) {
@@ -373,6 +361,7 @@ export class TreeChart {
     this.defaultFont = 'Helevtica';
     this.duration = 600;
     this.data = _data;
+    this.store = _store;
 
     this.zoomed.bind(this);
     this.setZoomFactor.bind(this);
@@ -438,6 +427,25 @@ export class TreeChart {
     }
 
     this.update(parent);
+  }
+
+  private declareContextMenu(event: any, node: any) {
+    event.preventDefault();
+    // console.log(event, node);
+    /*
+    if (!this.store.state.selectedNode.length) {
+      event.stopPropagation();
+      return; // 什么都没有选中不显示菜单
+    }
+    this.store.commit('setContextMenuVisibility', true);
+    */
+    // if (node.parent === null) {
+    //   this.store.tree.menuList = [this.store.tree.menuAllList[3]];
+    // } else {
+    //   this.store.tree.menuList = this.store.tree.menuAllList
+    // }
+    console.log(node);
+    this.store.tree.contextMenuVisible = true;
   }
 
 
@@ -550,10 +558,10 @@ export class TreeChart {
       .attr('width', this.svgWidth)
       .attr('height', this.svgHeight)
       .attr('font-family', this.defaultFont)
-      .attr('viewBox', `${this.margins[0]} ${this.margins[1]} ${this.svgWidth} ${this.svgHeight}`)
-      .call(zoomfunc.bind(this))
-      .on('dblclick.zoom', null)  // 禁用双击缩放
-      .attr('cursor', 'move');
+      // .attr('cursor', 'move')
+      // .attr('viewBox', `${this.margins[0]} ${this.margins[1]} ${this.svgWidth} ${this.svgHeight}`)
+      // .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"))
+      .call(zoomfunc.bind(this)).on('dblclick.zoom', null)  // 禁用双击缩放
 
     // svg画布与容器边距 
     const chart = svg.patternify({ tag: 'g', selector: 'chart' })
@@ -675,8 +683,13 @@ export class TreeChart {
 
     // ************************************节点、节点文本、节点上方边文本****************************
     const nodeGroups = nodeEnter.patternify({ tag: 'g', selector: 'node-group', targetData: (d: any) => [d] });
-    const nodeRectText = nodeEnter.patternify({ tag: 'text', selector: 'node-text', targetData: (d: any) => [d] });
-    const edgeText = nodeEnter.patternify({ tag: 'text', selector: 'edge-text', targetData: (d: any) => [d] });
+    // const nodeRectText = nodeEnter.patternify({ tag: 'text', selector: 'node-text', targetData: (d: any) => [d] });
+
+    // const nodeRectText = nodeGroups.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
+    // nodeRectText.patternify({ tag: 'text', selector: 'node-text' });
+    // nodeRectText.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+
+    // const edgeText = nodeEnter.patternify({ tag: 'text', selector: 'edge-text', targetData: (d: any) => [d] });
 
     const nodeUpdate = nodeEnter.merge(nodesSelection);
 
@@ -691,6 +704,10 @@ export class TreeChart {
 
     // console.log(data);
 
+    // 绑定选中节点的交互
+    nodeGroups
+      // .on('click', this.handleNodeMultipleSelect.bind(this))
+      .on('contextmenu', this.declareContextMenu.bind(this));
 
     // nodeGroups.attr('transform', ({ data: info }: treeDrawingData) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
@@ -708,8 +725,9 @@ export class TreeChart {
           .attr('r', typeNodeStyle.nodeCircleRadius)
           .attr('fill', ({ data: info }: treeDrawingData) => typeNodeStyle.nodeCircleFillColor)
           .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
-          .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-          .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+          // .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+          .attr('cursor', 'pointer')
+        // .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         return;
       }
       /*
@@ -753,15 +771,17 @@ export class TreeChart {
         .attr('class', `multi-type-rect-${dataBindToThis.id} type-node`)
         .attr('d', customRectCorner(nodeRectData as RectDef))
         .attr('fill', nodeRectData.rectColor)
-        .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-        .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+        // .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+        .attr('cursor', 'pointer')
+      // .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
     });
-
-
 
     // 为所有circle和rect绑定展开收起交互事件
     d3.selectAll('.type-node')
       .on('click', (event: any, d: any) => {
+
+        console.log(event, d);
+        return;
 
         // if (d.parent === null || d.parent.data.children.length === 1) {
         //   this.handleCircleClick(event, d);
@@ -831,8 +851,11 @@ export class TreeChart {
 
     // console.log(data);
 
+    const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
+    nodeRectText.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+    nodeRectText.patternify({ tag: 'text', selector: 'node-text' });
 
-    nodeUpdate.select('.node-text')
+    nodeRectText.select('.node-text')
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'middle')
       .attr('fill', nodeTextStyle.color)
@@ -840,9 +863,13 @@ export class TreeChart {
       // .attr('y', ({ data: info }: treeDrawingData) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
       .attr('y', () => nodeTextStyle.yAxisAdjust)
       .attr('cursor', 'pinter')
-      .attr('pointer-events', 'none')
+      // .attr('pointer-events', 'none')
       .text((d: any) => d.data.name || d.id);
     // .append("svg:title").text("(d: any) => d.data.id");
+
+    nodeRectText.select('.node-tooltip')
+      // .filter(({ data: info }: treeDrawingData) => info.dataTypeText !== info.dataTypeTextTruncated)
+      .text((d: any) => d.data.id || "none");
 
 
     /*

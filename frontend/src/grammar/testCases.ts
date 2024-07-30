@@ -1,3 +1,6 @@
+// 将JSON文件极简化
+// cp data.json data1.json && jq -c . data1.json > data.json && rm data1.json
+
 import { Table2D, TableTidierTemplate, ValueType, completeSpecification } from "./grammar";
 import { transformTable, sortWithCorrespondingArray, serialize } from "./handleSpec";
 
