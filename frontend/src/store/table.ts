@@ -65,7 +65,8 @@ export const useTableStore = defineStore('table', {
       specMode: false,
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
-      specification: shallowRef<{ [key: string]: any }>({ "id": "root", "children": [] }),
+      specification: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
+      selectNodeSpec: shallowRef<any>(null),
       editor: {
         mapping_spec: {
           code: '',
@@ -92,13 +93,6 @@ export const useTableStore = defineStore('table', {
       tree: {
         contextMenuVisible: false,
         menuAllList: [{
-          key: "3",
-          label: "Add Sub-Template",
-          title: "Add Sub-Template",
-          // disabled: true
-          // icon: () => h(MailOutlined),
-        }],
-        menuList: [{
           key: "0",
           label: "Select Area",
           title: "Select Area",
@@ -111,8 +105,8 @@ export const useTableStore = defineStore('table', {
           // disabled: true
         }, {
           key: "2",
-          label: "Target Cols",
-          title: "Target Cols",
+          label: "Set Target Cols",
+          title: "Set Target Cols",
           children: [{
             key: "2-0",
             label: "Position Based",
@@ -138,7 +132,8 @@ export const useTableStore = defineStore('table', {
           title: "Delete Template",
           // disabled: true
           // icon: () => h(MailOutlined),
-        }]
+        }],
+        menuList: []
       }
     }
   },
@@ -302,9 +297,15 @@ export const useTableStore = defineStore('table', {
         // console.log(result.outputText);
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
-        const spec: TableTidierTemplate = evalFunction(ValueType, sortWithCorrespondingArray);
-        const specWithDefaults = completeSpecification(spec);
-        return specWithDefaults;
+        const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
+        specs.forEach((spec) => {
+          if (!spec.hasOwnProperty('children')) {
+            spec.children = [];
+          }
+        })
+        return specs
+        // const specWithDefaults = specs.map((spec) => completeSpecification(spec));
+        // return specWithDefaults;
       }
       catch (e) {
         const messageContent = `Failed to parse the specification:\n ${e}`;
@@ -318,11 +319,12 @@ export const useTableStore = defineStore('table', {
 
     transformTablebyCode() {
       try {
-        const specWithDefaults = this.getSpec();
-        if (specWithDefaults === false) return;
+        // const specWithDefaults = this.getSpec();
+        const specs = this.getSpec();
+        if (specs === false) return;
         // console.log(this.input_tbl.tbl);
-        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specWithDefaults);
-        // console.log(tidyData);
+        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
+        console.log(rootArea);
         if (Object.keys(tidyData).length === 0) {
           message.warning({
             content: 'The output table is empty based on the specification.',
@@ -408,9 +410,59 @@ export const useTableStore = defineStore('table', {
       this.output_tbl.out2in = {};
       this.output_tbl.instance.updateData(this.output_tbl.tbl);
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
-
-      this.specification["children"] = [];
     },
+
+    deleteChildrenByPath(path: number[]) {
+      if (path.length === 0) {
+        // 如果路径为空，不做任何处理
+        return;
+      }
+
+      // 获取目标节点的父节点
+      const parentPath = path.slice(0, -1);
+      const lastIndex = path[path.length - 1];
+
+      if (parentPath.length === 0) {
+        // 如果父路径为空，说明是根节点
+        this.specification.children = [];
+        return;
+      }
+
+      const parentNode = this.getSpecbyPath(parentPath);
+
+      // 删除目标节点
+      if (parentNode && parentNode.children) {
+        parentNode.children.splice(lastIndex, 1);
+        // 如果父节点的子节点删除后为空数组，则删除children属性
+        if (parentNode.children.length === 0) {
+          delete parentNode.children;
+        }
+      }
+    },
+
+    getSpecbyPath(path: number[]) {
+      if (path.length === 0) {
+        // 如果路径为空，返回根节点
+        return this.specification;
+      }
+      let currentNodes = this.specification.children;
+      for (let i = 0; i < path.length; i++) {
+        const index = path[i];
+        // 确保路径下的节点存在
+        if (!currentNodes[index]) {
+          return null; // 或者抛出错误
+        }
+        // 如果是最后一个路径元素，返回目标节点
+        if (i === path.length - 1) {
+          return currentNodes[index];
+        }
+        // 更新当前节点为子节点
+        currentNodes = currentNodes[index].children || [];
+      }
+      // 如果路径遍历完仍然没有找到目标节点，返回 null
+      return null;
+    },
+
   },
   // computed
   getters: {}

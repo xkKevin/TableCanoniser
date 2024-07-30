@@ -1,71 +1,75 @@
-const option: TableTidierTemplate = {
-  startCell: {
-    xOffset: 0,
-    yOffset: 1,
-  },
-  size: {
-    width: 2,
-    height: 1,
-  },
-  traverse: {
-    xDirection: "after",
-    yDirection: "after",
-  },
-  transform: {
-    targetCols: ["Method", "Accuracy"],
-  },
-  children: [
-    {
-      startCell: {
-        referenceAreaLayer: "root",
-        xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
-        yOffset: 0,
-      },
-      transform: {
-        targetCols: ["Category"],
-      },
+const option: TableTidierTemplate[] = [
+  {
+    startCell: {
+      xOffset: 0,
+      yOffset: 1,
     },
-  ],
-};
+    size: {
+      width: 2,
+      height: 1,
+    },
+    traverse: {
+      xDirection: "after",
+      yDirection: "after",
+    },
+    transform: {
+      targetCols: ["Method", "Accuracy"],
+    },
+    children: [
+      {
+        startCell: {
+          referenceAreaLayer: "root",
+          xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
+          yOffset: 0,
+        },
+        transform: {
+          targetCols: ["Category"],
+        },
+      },
+    ],
+  },
+];
 
-const case2_2: TableTidierTemplate = {
-  startCell: {
-    xOffset: 0,
-    yOffset: 0,
-  },
-  size: {
-    width: 2,
-    height: "toParentY", // 5,
-  },
-  traverse: {
-    xDirection: "after",
-  },
-  children: [
-    {
-      startCell: {
-        xOffset: 0,
-        yOffset: 1,
-      },
-      size: {
-        width: 2,
-        height: 1,
-      },
-      traverse: {
-        yDirection: "after",
-      },
-      transform: {
-        targetCols: ["Method", "Accuracy"],
-      },
+const case2_2: TableTidierTemplate[] = [
+  {
+    startCell: {
+      xOffset: 0,
+      yOffset: 0,
     },
-    {
-      startCell: {
-        xOffset: 0,
-        yOffset: 0,
-      },
-      transform: {
-        targetCols: ["Category"],
-      },
+    size: {
+      width: 2,
+      height: "toParentY", // 5,
     },
-  ],
-  // fill: "forward"
-};
+    traverse: {
+      xDirection: "after",
+    },
+    children: [
+      {
+        startCell: {
+          xOffset: 0,
+          yOffset: 1,
+        },
+        size: {
+          width: 2,
+          height: 1,
+        },
+        traverse: {
+          yDirection: "after",
+        },
+        transform: {
+          targetCols: ["Method", "Accuracy"],
+        },
+      },
+      {
+        startCell: {
+          xOffset: 0,
+          yOffset: 0,
+        },
+        transform: {
+          targetCols: ["Category"],
+        },
+      },
+    ],
+    // fill: "forward"
+  },
+];

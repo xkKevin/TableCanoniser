@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection } from "./grammar";
+import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification } from "./grammar";
 
 import { CustomError } from "../types";
 
@@ -254,7 +254,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
         const ctxCellsInfo: CellInfo[][] = [];
         if (context) {
             const ctxSelections: CellSelection[][] = [];
-            if (context.position === 'top') {
+            if (context.position === 'above') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
                         ctxSelections.push([completeCellSelection({
@@ -263,7 +263,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                         })]);
                     })
                 })
-            } else if (context.position === 'bottom') {
+            } else if (context.position === 'below') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
                         ctxSelections.push([completeCellSelection({
@@ -463,7 +463,7 @@ interface TidyResult {
     }
 }
 
-export function transformTable(table: Table2D, specWithDefaults: AllParams<TableTidierTemplate>) {
+export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
 
     // const specWithDefaults = completeSpecification(spec);
     // console.log(JSON.stringify(specWithDefaults, null, 2));
@@ -498,7 +498,16 @@ export function transformTable(table: Table2D, specWithDefaults: AllParams<Table
 
     const tidyData: { [key: string]: CellInfo[] } = {}
 
-    processTemplate(specWithDefaults, rootArea, rootArea, tidyData);
+    specs.forEach((template, ti) => {
+        const specWithDefaults = completeSpecification(template);
+        processTemplate(specWithDefaults, rootArea, rootArea, tidyData, ti);
+        // fillColumns(tidyData, specWithDefaults.fill);
+        if (specWithDefaults.fill === null && specWithDefaults.children.length > 1) {
+            fillColumns(tidyData, "");
+        } else {
+            fillColumns(tidyData, specWithDefaults.fill);
+        }
+    });
 
     return { rootArea, tidyData };
 }

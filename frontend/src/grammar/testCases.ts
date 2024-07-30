@@ -1,7 +1,7 @@
 // 将JSON文件极简化
 // cp data.json data1.json && jq -c . data1.json > data.json && rm data1.json
 
-import { Table2D, TableTidierTemplate, ValueType, completeSpecification } from "./grammar";
+import { Table2D, TableTidierTemplate, ValueType } from "./grammar";
 import { transformTable, sortWithCorrespondingArray, serialize } from "./handleSpec";
 
 
@@ -133,7 +133,7 @@ const case1_spec: TableTidierTemplate = {
             },
             transform: {
                 context: {
-                    position: "top",
+                    position: "above",
                     targetCol: "cellValue",
                 },
                 targetCols: "context",
@@ -603,7 +603,7 @@ const case5_spec: TableTidierTemplate = {
     ],
 };
 
-const { rootArea, tidyData } = transformTable(case2_mt, completeSpecification(case2_3_spec));
+const { rootArea, tidyData } = transformTable(case2_mt, [case2_3_spec]);
 // // console.log(serialize(rootArea));
 console.log(tidyData);
 

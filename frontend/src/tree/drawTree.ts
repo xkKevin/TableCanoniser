@@ -431,6 +431,7 @@ export class TreeChart {
 
   private declareContextMenu(event: any, node: any) {
     event.preventDefault();
+    // event.stopPropagation();
     // console.log(event, node);
     /*
     if (!this.store.state.selectedNode.length) {
@@ -439,12 +440,13 @@ export class TreeChart {
     }
     this.store.commit('setContextMenuVisibility', true);
     */
-    // if (node.parent === null) {
-    //   this.store.tree.menuList = [this.store.tree.menuAllList[3]];
-    // } else {
-    //   this.store.tree.menuList = this.store.tree.menuAllList
-    // }
-    console.log(node);
+    if (node.parent === null) {
+      this.store.tree.menuList = [this.store.tree.menuAllList[3]];
+    } else {
+      this.store.tree.menuList = this.store.tree.menuAllList
+    }
+    // console.log("node", node);
+    this.store.selectNodeSpec = node;
     this.store.tree.contextMenuVisible = true;
   }
 
@@ -472,6 +474,18 @@ export class TreeChart {
       mergedSelection.attr('class', selector);
       return mergedSelection;
     };
+  }
+
+  private addPathToNodes(nodes: any[], parentPath: number[] = []) {
+    if (!nodes) return;
+    nodes.forEach((node, index) => {
+      // 构建当前节点的 path
+      const currentPath = [...parentPath, index];
+      node.path = currentPath;
+      // node.id = currentPath.join('-');
+      // 如果当前节点有子节点，递归处理子节点
+      this.addPathToNodes(node.children, currentPath);
+    });
   }
 
   public render() {
@@ -512,7 +526,6 @@ export class TreeChart {
     // console.log(this.calculated);
 
 
-
     if (this.orient === 'h') {
       this.layouts.treemap.nodeSize([this.calculated.nodeMaxHeight + typeNodeStyle.nodeSpacing,
       this.calculated.nodeMaxWidth + this.depth]);
@@ -533,11 +546,16 @@ export class TreeChart {
       this.root.each((node: any) => {
         node.id = idCounter++;
       });
+
+      this.root.path = [];
+      // this.root.id = "root";
+      this.addPathToNodes(this.root.children);
     }
 
     this.root.x0 = 0;
     this.root.y0 = 0;
 
+    /*
     this.allNodes = this.layouts.treemap(this.root)
       .descendants()
       .forEach((d: any) => {
@@ -546,7 +564,7 @@ export class TreeChart {
           totalSubordinates: d.descendants().length - 1,  // 计算总下属的数量（包括所有子孙节点，但不包括自身）
         });
       });
-
+    */
 
     // pan & zoom handler
     const zoomfunc: any = (d3.zoom() as any).on('zoom', this.zoomed.bind(this))
@@ -705,9 +723,9 @@ export class TreeChart {
     // console.log(data);
 
     // 绑定选中节点的交互
-    nodeGroups
-      // .on('click', this.handleNodeMultipleSelect.bind(this))
-      .on('contextmenu', this.declareContextMenu.bind(this));
+    // nodeGroups
+    //   // .on('click', this.handleNodeMultipleSelect.bind(this))
+    //   .on('contextmenu', this.declareContextMenu.bind(this));
 
     // nodeGroups.attr('transform', ({ data: info }: treeDrawingData) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
@@ -776,10 +794,38 @@ export class TreeChart {
       // .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
     });
 
-    // 为所有circle和rect绑定展开收起交互事件
-    d3.selectAll('.type-node')
-      .on('click', (event: any, d: any) => {
+    const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
+    nodeRectText.patternify({ tag: 'text', selector: 'node-text' });
+    nodeRectText.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
 
+    nodeRectText.select('.node-text')
+      .attr('text-anchor', 'middle')
+      .attr('alignment-baseline', 'middle')
+      .attr('fill', nodeTextStyle.color)
+      .attr('font-size', nodeTextStyle.fontSize)
+      // .attr('y', ({ data: info }: treeDrawingData) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
+      .attr('y', () => nodeTextStyle.yAxisAdjust)
+      .attr('cursor', 'pinter')
+      .attr('pointer-events', 'auto')  // .style('pointer-events', 'none');
+      .text((d: any) => d.data.name || d.id)
+    // .on('click', (event: any, d: any) => {
+    //   // 阻止点击事件的默认行为和传播
+    //   // event.stopPropagation();
+    //   // event.preventDefault();
+    //   console.log("click", d);
+    // })
+    // .append("svg:title").text("(d: any) => d.data.id");
+
+    nodeRectText.select('.node-tooltip')
+      // .filter(({ data: info }: treeDrawingData) => info.dataTypeText !== info.dataTypeTextTruncated)
+      .text((d: any) => d.data.id || "none2")
+
+
+    // 为所有circle和rect绑定展开收起交互事件
+    d3.selectAll('.type-node, .node-text-g')
+      .on('contextmenu', this.declareContextMenu.bind(this))
+      .on('click', (event: any, d: any) => {
+        event.stopPropagation();
         console.log(event, d);
         return;
 
@@ -848,28 +894,6 @@ export class TreeChart {
         console.log(d);
         console.log(filteredClass, lastdash, classfull, idx, childrenToToggle);
       });
-
-    // console.log(data);
-
-    const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
-    nodeRectText.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
-    nodeRectText.patternify({ tag: 'text', selector: 'node-text' });
-
-    nodeRectText.select('.node-text')
-      .attr('text-anchor', 'middle')
-      .attr('alignment-baseline', 'middle')
-      .attr('fill', nodeTextStyle.color)
-      .attr('font-size', nodeTextStyle.fontSize)
-      // .attr('y', ({ data: info }: treeDrawingData) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
-      .attr('y', () => nodeTextStyle.yAxisAdjust)
-      .attr('cursor', 'pinter')
-      // .attr('pointer-events', 'none')
-      .text((d: any) => d.data.name || d.id);
-    // .append("svg:title").text("(d: any) => d.data.id");
-
-    nodeRectText.select('.node-tooltip')
-      // .filter(({ data: info }: treeDrawingData) => info.dataTypeText !== info.dataTypeTextTruncated)
-      .text((d: any) => d.data.id || "none");
 
 
     /*

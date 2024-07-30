@@ -151,8 +151,8 @@ interface CellConstraint extends CellSelection {
  * ContextTransform specifies how to derive the target column for a cell based on its context cell.
  * 
  * - `position`: Defines the location of the context cell relative to the current cell.
- *   - 'top': The context cell is located directly above the current cell.
- *   - 'bottom': The context cell is located directly below the current cell.
+ *   - 'above': The context cell is located directly above the current cell.
+ *   - 'below': The context cell is located directly below the current cell.
  *   - 'left': The context cell is located directly to the left of the current cell.
  *   - 'right': The context cell is located directly to the right of the current cell.
  *   - `contextPosiFn`: A custom function to determine the position of the context cell.
@@ -162,7 +162,7 @@ interface CellConstraint extends CellSelection {
  *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
 interface ContextTransform {
-    position: 'top' | 'bottom' | 'left' | 'right' | contextPosiFn;
+    position: 'above' | 'below' | 'left' | 'right' | contextPosiFn;
     targetCol: 'cellValue' | mapColbyContextFn;
 }
 
@@ -183,7 +183,7 @@ interface ContextTransform {
  * - `children`: The child templates for nested selections
  */
 interface TableTidierTemplate {
-    startCell: CellSelection;
+    startCell?: CellSelection;
     size?: {
         width?: number | 'toParentX' | null;
         height?: number | 'toParentY' | null;

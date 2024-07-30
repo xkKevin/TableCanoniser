@@ -26,7 +26,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 // import { flextree, FlextreeNode } from 'd3-flextree';
 import {
     TreeChart
-} from '@/tree/drawTree'
+} from '@/tree/drawTree';
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -35,8 +35,6 @@ const tableStore = useTableStore();
 interface TreeNode {
     name: string;
     children?: TreeNode[];
-    width?: number;
-    height?: number;
 }
 
 const data: TreeNode = {
@@ -70,14 +68,107 @@ const data: TreeNode = {
 
 const menuList = computed(() => tableStore.tree.menuList);
 // const contextMenuVisible = tableStore.tree.contextMenuVisible;
-const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible);
+const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible && tableStore.tree.menuList.length > 0);
 const contextMenuVisibleChange = (value: boolean) => {
     // if (store.state.selectedNode.length === 0 && value === true) return;
     // store.commit('setContextMenuVisibility', value);
     tableStore.tree.contextMenuVisible = value;
+    setTimeout(() => {
+        tableStore.tree.menuList = [];
+    }, 200)
 };
+
+function replaceEvenSpaces(str: string) {
+    // 使用正则表达式匹配连续的空格
+    return str.replace(/ {2,}/g, (match) => {
+        // 获取连续空格的数量
+        const length = match.length;
+
+        // 计算一半的空格数量
+        const halfLength = length / 2;
+
+        // 返回一半数量的空格
+        return ' '.repeat(halfLength);
+    });
+}
+
+let fnList: string[] = [];
+
+function replacer(key: string, value: any) {
+    if (typeof value === 'function') {
+        fnList.push(replaceEvenSpaces(value.toString()));
+        return "$TableTidier$" // value.toString(); // 将函数转化为字符串
+    }
+    return value;
+}
+
+function removeQuotesFromKeys(jsonString: string) {
+    // 正则表达式匹配 JSON 对象中的键（包括可能的空白字符和引号）
+    const regex = /"(\w+)":/g;
+
+    // 使用正则表达式替换引号
+    return jsonString.replace(regex, '$1:');
+}
+
+function stringifySpec() {
+    let strSpec = JSON.stringify(tableStore.specification.children, replacer, 2);
+    fnList.forEach((fn) => {
+        strSpec = strSpec.replace(`"$TableTidier$"`, fn);
+    })
+    tableStore.editor.mapping_spec.code = "const option: TableTidierTemplate[] = " + removeQuotesFromKeys(strSpec);
+    tableStore.editor.mapping_spec.instance?.setValue(tableStore.editor.mapping_spec.code);
+    fnList = [];
+    // tableStore.editor.mapping_spec.instance?.getAction('editor.action.formatDocument')?.run();
+    // tableStore.editor.mapping_spec.instance?.trigger('editor', 'editor.action.formatDocument', null);
+}
+
 const closeContextMenu = (e: any) => {
-    console.log("closeContextMenu", e, e.key);
+    // console.log("closeContextMenu", e, e.key);
+    const node = tableStore.selectNodeSpec;
+    switch (e.key) {
+        case "0":
+            // Select Area Logic
+            break;
+        case "1":
+            // Add Constraints Logic
+            break;
+        case "2-0":
+            // Target Cols - Position Based Logic
+            break;
+        case "2-1":
+            // Target Cols - Context Based Logic
+            break;
+        case "2-2":
+            // Target Cols - Value Based Logic
+            break;
+        case "3":
+            // Add Sub-Template Logic
+            // console.log(node.path, tableStore.getSpecbyPath(node.path));
+            const currentSpec = tableStore.getSpecbyPath(node.path);
+            console.log(node.path, currentSpec, tableStore.specification);
+            if (currentSpec === null) {
+                message.error("The node path is invalid");
+                return;
+            }
+            if (currentSpec.children) {
+                currentSpec.children.push({})
+            } else {
+                currentSpec.children = [{}];
+            }
+            stringifySpec();
+            break;
+        case "4":
+            // Delete Template Logic
+            // let rootNode = node.parent;
+            // while (rootNode.parent) {
+            //     rootNode = rootNode.parent;
+            // }
+            // // console.log(node, rootNode); //, JSON.stringify(rootNode)
+            // console.log(rootNode.data.children);
+            tableStore.deleteChildrenByPath(node.path);
+            stringifySpec();
+            break;
+    }
     tableStore.tree.contextMenuVisible = false;
 }
 
@@ -971,6 +1062,8 @@ const drawTree = (data: any) => {
 };
 
 import { debounce } from 'lodash';
+import { message } from 'ant-design-vue';
+import { TableTidierTemplate } from '@/grammar/grammar';
 
 const debouncedResize = debounce(() => {
 
@@ -981,9 +1074,9 @@ const resizeObserver = new ResizeObserver(() => {
 });
 
 watch(() => tableStore.editor.mapping_spec.code, (newVal) => {
-    const specWithDefaults = tableStore.getSpec();
-    if (specWithDefaults === false) return;
-    tableStore.specification["children"] = [specWithDefaults];
+    const specs = tableStore.getSpec();
+    if (specs === false) return;
+    tableStore.specification["children"] = specs;
     drawTree(tableStore.specification);
 });
 
