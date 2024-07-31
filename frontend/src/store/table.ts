@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import Handsontable from "handsontable";
 import * as d3 from 'd3';
-import { shallowRef, ref } from 'vue';
+import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, completeSpecification } from "@/grammar/grammar"
-import { transformTable, sortWithCorrespondingArray } from "@/grammar/handleSpec"
+import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, AreaInfo } from "@/grammar/grammar"
+import { transformTable, serialize, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 
 import { CustomError } from "@/types";
 
@@ -65,15 +65,31 @@ export const useTableStore = defineStore('table', {
       specMode: false,
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
+      spec: {
+        rawSpecs: shallowRef<TableTidierTemplate[]>([]),
+        visTree: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
+        selectNode: shallowRef<any>(null),
+      },
       specification: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
       selectNodeSpec: shallowRef<any>(null),
       editor: {
-        mapping_spec: {
+        mappingSpec: {
           code: '',
+          codePref: 'const option: TableTidierTemplate[] = ',
+          codeSuff: '\nreturn option;',
+          language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
-        transform_script: {
+        rootArea: {
           code: '',
+          // codePref: 'const rootArea: AreaInfo = ',
+          object: shallowRef<AreaInfo | null>(null),
+          language: 'json',
+          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+        },
+        transformScript: {
+          code: '',
+          language: 'python',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         }
       },
@@ -163,18 +179,19 @@ export const useTableStore = defineStore('table', {
         if (dataText !== null) {
           this.input_tbl.tbl = JSON.parse(dataText).input_tbl;
           this.input_tbl.instance.updateData(this.input_tbl.tbl);
+          this.updateRootArea()
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
 
         if (specText !== null) {
-          this.editor.mapping_spec.code = specText;
+          this.editor.mappingSpec.code = specText;
         } else {
           prompt.push(`Failed to load spec from ${caseN}`);
         }
 
         if (scriptText !== null) {
-          this.editor.transform_script.code = scriptText;
+          this.editor.transformScript.code = scriptText;
         } else {
           prompt.push(`Failed to load script from ${caseN}`);
         }
@@ -187,23 +204,13 @@ export const useTableStore = defineStore('table', {
       return prompt;
     },
 
-    async loadCaseSpec(caseN: string) {
-      let status = false;
-      let spec = '';
-      try {
-        const response = await fetch(`/caseSpecs/${caseN}.js`);
-        if (response.ok) {
-          status = true;
-          spec = await response.text();
-        } else {
-          status = false;
-          spec = `Failed to load script from ${caseN}`;
-        }
-      } catch (error) {
-        status = false;
-        spec = `Error loading script: ${error}`;
-      }
-      return { status, spec };
+    updateRootArea(specs: TableTidierTemplate[] = []) {
+      const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
+      // this.editor.rootArea.codePref + JSON.stringify(rootArea)
+      this.editor.rootArea.object = rootArea;
+      this.editor.rootArea.code = serialize(rootArea);
+      // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
+      return tidyData;
     },
 
     highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[]) {
@@ -284,10 +291,10 @@ export const useTableStore = defineStore('table', {
 
     getSpec() {
       try {
-        // let code = this.editor.mapping_spec.instance!.getValue();
-        let code = this.editor.mapping_spec.code;
+        // let code = this.editor.mappingSpec.instance!.getValue();
+        let code = this.editor.mappingSpec.code;
         if (code.trim() === "") return false;
-        code += '\nreturn option;';
+        code += this.editor.mappingSpec.codeSuff;
         const result = ts.transpileModule(code, {
           compilerOptions: {
             target: ts.ScriptTarget.ES2015,
@@ -298,6 +305,7 @@ export const useTableStore = defineStore('table', {
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
         const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
+        // this.spec.rawSpecs = specs;
         specs.forEach((spec) => {
           if (!spec.hasOwnProperty('children')) {
             spec.children = [];
@@ -323,8 +331,10 @@ export const useTableStore = defineStore('table', {
         const specs = this.getSpec();
         if (specs === false) return;
         // console.log(this.input_tbl.tbl);
-        const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
-        console.log(rootArea);
+
+        const tidyData = this.updateRootArea(specs);
+        this.initTblInfo(false);
+
         if (Object.keys(tidyData).length === 0) {
           message.warning({
             content: 'The output table is empty based on the specification.',
@@ -353,7 +363,6 @@ export const useTableStore = defineStore('table', {
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
-      this.initTblInfo(false);
       const cols = Object.keys(outTbl);
       this.output_tbl.cols = cols;
       // const numRows = outTbl[cols[0]].length;

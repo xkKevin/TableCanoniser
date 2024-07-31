@@ -162,8 +162,11 @@ const debouncedResize = debounce(() => {
     // requestAnimationFrame(() => {
     //     drawGrid();
     // });
-    if (!tableStore.input_tbl.tbl) return;
-    drawGrid(tableStore.input_tbl.tbl.length, tableStore.input_tbl.tbl[0].length);
+    if (tableStore.input_tbl.tbl.length === 0) {
+        d3.select(container.value).selectAll('svg').remove();
+    } else {
+        drawGrid(tableStore.input_tbl.tbl.length, tableStore.input_tbl.tbl[0].length);
+    }
 }, 100); // 调整延迟时间，单位为毫秒
 
 const resizeObserver = new ResizeObserver(() => {
@@ -181,7 +184,11 @@ onMounted(() => {
 // });
 
 watch(() => tableStore.input_tbl.tbl, (newVal) => {
-    drawGrid(newVal.length, newVal[0].length);
+    if (newVal.length === 0) {
+        d3.select(container.value).selectAll('svg').remove();
+    } else {
+        drawGrid(newVal.length, newVal[0].length);
+    }
 });
 
 </script>

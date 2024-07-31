@@ -153,6 +153,7 @@ const handleUpload = (request: any) => {
       tableStore.initTblInfo()
       tableStore.input_tbl.tbl = tblData;
       tableStore.input_tbl.instance.updateData(tblData);
+      tableStore.updateRootArea();
       request.onSuccess("ok");
       // message.success(`${request.file.name} file uploaded successfully`);
     };
@@ -167,6 +168,7 @@ const handleUpload = (request: any) => {
 
 const handleRemove = () => {
   tableStore.initTblInfo()
+  tableStore.updateRootArea();
 };
 
 // const handlePreview = (file: any) => {

@@ -11,38 +11,26 @@ export default defineComponent({
 
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
-import { onMounted, onUnmounted, ref, watch, getCurrentInstance } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useTableStore } from "@/store/table";
 import { message } from "ant-design-vue";
 
 
-const { codeType } = defineProps<{ codeType: "mapping_spec" | "transform_script" }>();
-
-// const props = defineProps(['codeType'])
-// const codeType: "mapping_spec" | "transform_script" = props.codeType;
-
-// const { codeType} = defineProps({
-//   codeType: {
-//     type: String as () => "mapping_spec" | "transform_script",
-//     required: true,
-//   },
-// });
-
-// const codeType = defineProps(['codeType']).codeType as "mapping_spec" | "transform_script"; // incorrect way to use defineProps
+const { codeType } = defineProps<{ codeType: "mappingSpec" | "rootArea" | "transformScript" }>();
 
 const tableStore = useTableStore();
 
 const editorDefaultOptions = {
     value: '',
-    language: codeType === "mapping_spec" ? 'typescript' : 'python',
+    language: tableStore.editor[codeType].language,
     theme: 'vs',
     fontSize: 14,
     glyphMargin: false,
     automaticLayout: false, // Automatic layout may cause "ResizeObserver loop completed with undelivered notifications." warning. To avoid this, set automaticLayout to false
     autoIndent: 'advanced',
-    readOnly: false,
+    readOnly: false, // codeType === "rootArea" ? true : false,
     minimap: {
-        enabled: false,
+        enabled: codeType === "rootArea" ? true : false,
     },
     lineNumbersMinChars: 1,
     scrollBeyondLastLine: false, // Prevent scrolling beyond the last line
@@ -87,8 +75,9 @@ const initEditor = () => {
     });
 };
 
-watch(() => tableStore.currentCase, (newVal) => {
-    editor?.setValue(tableStore.editor[codeType].code);  // update editor content; ? means if editor is not null then call setValue, else do nothing
+watch(() => tableStore.editor[codeType].code, (newVal) => {
+    // console.log("watch editor code", codeType);
+    editor?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
 import { debounce } from 'lodash';
@@ -107,7 +96,7 @@ const resizeObserver = new ResizeObserver(() => {
 });
 
 
-if (codeType === "mapping_spec") {
+if (codeType === "mappingSpec") {
 
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.50.0#example-extending-language-services-configure-javascript-defaults
 

@@ -480,20 +480,10 @@ export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
         yOffset: 0,
         x: 0,
         y: 0,
-        width: table[0].length,
+        width: table.length > 0 ? table[0].length : 0,
         height: table.length,
         areaTbl: table,
         children: []
-    };
-
-    const tidyresul: TidyResult = {
-        tidyTbl: {},
-        in2out: {},
-        out2in: {
-            cells: {},
-            cols: [],
-            rows: []
-        }
     };
 
     const tidyData: { [key: string]: CellInfo[] } = {}

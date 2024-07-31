@@ -24,9 +24,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 // import * as d3 from 'd3';
 // import { flextree, FlextreeNode } from 'd3-flextree';
-import {
-    TreeChart
-} from '@/tree/drawTree';
+import { TreeChart } from '@/tree/drawTree';
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -52,19 +50,6 @@ const data: TreeNode = {
     ]
 };
 */
-
-// let menuList = [{
-//     item: "Select Area",
-// }, {
-//     item: "Add Constraints",
-// }, {
-//     item: "Target Cols",
-//     subItem: ["Position Based", "Context Based", "Value Based"]
-// }, {
-//     item: "Add Sub-Template",
-// }, {
-//     item: "Delete Template",
-// }];
 
 const menuList = computed(() => tableStore.tree.menuList);
 // const contextMenuVisible = tableStore.tree.contextMenuVisible;
@@ -115,11 +100,11 @@ function stringifySpec() {
     fnList.forEach((fn) => {
         strSpec = strSpec.replace(`"$TableTidier$"`, fn);
     })
-    tableStore.editor.mapping_spec.code = "const option: TableTidierTemplate[] = " + removeQuotesFromKeys(strSpec);
-    tableStore.editor.mapping_spec.instance?.setValue(tableStore.editor.mapping_spec.code);
+    tableStore.editor.mappingSpec.code = tableStore.editor.mappingSpec.codePref + removeQuotesFromKeys(strSpec);
+    // tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.code);
     fnList = [];
-    // tableStore.editor.mapping_spec.instance?.getAction('editor.action.formatDocument')?.run();
-    // tableStore.editor.mapping_spec.instance?.trigger('editor', 'editor.action.formatDocument', null);
+    // tableStore.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
+    // tableStore.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
 }
 
 const closeContextMenu = (e: any) => {
@@ -1073,7 +1058,7 @@ const resizeObserver = new ResizeObserver(() => {
     debouncedResize();
 });
 
-watch(() => tableStore.editor.mapping_spec.code, (newVal) => {
+watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     const specs = tableStore.getSpec();
     if (specs === false) return;
     tableStore.specification["children"] = specs;

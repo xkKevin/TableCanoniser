@@ -63,15 +63,15 @@
                     Mapping Specification
                   </span>
                 </template>
-                <CodeView codeType="mapping_spec" />
+                <CodeView codeType="mappingSpec" />
               </a-tab-pane>
               <a-tab-pane key="2">
                 <template #tab>
                   <span>
-                    Mapping Config
+                    Root Area
                   </span>
                 </template>
-                hh
+                <CodeView codeType="rootArea" />
               </a-tab-pane>
               <a-tab-pane key="3">
                 <template #tab>
@@ -80,7 +80,7 @@
                     Transformation Script
                   </span>
                 </template>
-                <CodeView codeType="transform_script" />
+                <CodeView codeType="transformScript" />
               </a-tab-pane>
             </a-tabs>
           </div>
