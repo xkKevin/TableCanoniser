@@ -1,4 +1,4 @@
-const option: TableTidierTemplate = {
+const option: TableTidierTemplate[] = [{
   startCell: {
       xOffset: 0,
       yOffset: 0,
@@ -157,4 +157,4 @@ const option: TableTidierTemplate = {
           },
       },
   ],
-};
+}];

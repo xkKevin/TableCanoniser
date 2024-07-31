@@ -44,7 +44,6 @@ import { ref, computed, CSSProperties, watch, watchEffect } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { useTableStore, AreaForm } from '@/store/table';
 // import { TableTidierTemplate } from '@/grammar/grammar';
-
 const tableStore = useTableStore();
 const areaConfig = tableStore.spec.areaConfig;
 

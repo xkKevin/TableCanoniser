@@ -87,7 +87,7 @@ export const useTableStore = defineStore('table', {
         visTree: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
         selectNode: shallowRef<any>(null),
         selectAreaFlag: false,
-        dragConfigOpen: true,
+        dragConfigOpen: false,
         areaConfig: shallowRef<TableTidierTemplate>({
           startCell: {},
           size: {},

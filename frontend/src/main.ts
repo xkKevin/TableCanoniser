@@ -25,9 +25,9 @@ app.component("v-icon", OhVueIcon);
 
 // import ElementPlus from 'element-plus'
 // app.use(ElementPlus)
-import { ElButton, ElDropdown, ElSwitch } from 'element-plus'
-app.use(ElButton).use(ElDropdown).use(ElSwitch)
+// import { ElButton, ElDropdown, ElSwitch } from 'element-plus'
+// app.use(ElButton).use(ElDropdown).use(ElSwitch)
 
-import 'element-plus/dist/index.css'
+// import 'element-plus/dist/index.css'
 
 app.mount('#app')

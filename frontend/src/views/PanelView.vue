@@ -2,11 +2,10 @@
   <div id="panel">
     <div class="system-name">
       <span>TableTidier</span>
+      <!--
       <span style="left: 20px; position: absolute;">
-        <!-- <el-button-group> -->
         <el-button type="success" plain :disabled="!mode">Select Area</el-button>
         <el-button type="success" plain :disabled="!mode">Add Constrs</el-button>
-        <!-- <el-button type="success" plain>Target Cols</el-button> -->
         <span style="margin: 0 10px">
           <el-dropdown @command="chooseTargetType" :trigger="mode ? 'hover' : 'click'">
             <el-button type="success" plain :disabled="!mode">
@@ -19,15 +18,15 @@
                 <el-dropdown-item command="3">Value Based</el-dropdown-item>
               </el-dropdown-menu>
             </template>
-          </el-dropdown>
-        </span>
-        <el-button type="success" plain :disabled="!mode">Add Childen</el-button>
-        <!-- </el-button-group> -->
-      </span>
-      <span style="right: 20px; position: absolute;">
-        <el-switch v-model="mode" style="--el-switch-on-color: #13ce66; --el-switch-off-color: #13ce66"
-          active-text="Specification Mode" inactive-text="Presentation Mode" @change="changeMode" />
-      </span>
+</el-dropdown>
+</span>
+<el-button type="success" plain :disabled="!mode">Add Childen</el-button>
+</span>
+<span style="right: 20px; position: absolute;">
+  <el-switch v-model="mode" style="--el-switch-on-color: #13ce66; --el-switch-off-color: #13ce66"
+    active-text="Specification Mode" inactive-text="Presentation Mode" @change="changeMode" />
+</span>
+-->
     </div>
     <!-- <ChatBot /> -->
     <div class="main-views">

@@ -6,6 +6,16 @@ module.exports = defineConfig({
   transpileDependencies: true,
   publicPath: "/TableTidier/",
   outputDir: "../docs",
+  // chainWebpack: (config) => {
+  //   config.module
+  //     .rule("js")
+  //     .use("babel-loader")
+  //     .tap((options) => {
+  //       // 修改 babel-loader 的配置
+  //       options.compact = false;
+  //       return options;
+  //     });
+  // },
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin(),
@@ -15,6 +25,12 @@ module.exports = defineConfig({
         __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
       }),
     ],
+    // optimization: {
+    //   splitChunks: {
+    //     chunks: "all",
+    //     maxSize: 500000, // 500KB
+    //   },
+    // },
   },
   devServer: {
     proxy: {

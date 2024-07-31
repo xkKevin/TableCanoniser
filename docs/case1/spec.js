@@ -1,65 +1,67 @@
-const option: TableTidierTemplate = {
-  startCell: {
-    xOffset: 0,
-    yOffset: 1,
-  },
-  size: {
-    width: "toParentX",
-    height: 5,
-  },
-  constraints: [
-    {
+const option: TableTidierTemplate[] = [
+  {
+    startCell: {
       xOffset: 0,
-      yOffset: 0,
-      valueCstr: ValueType.Number,
+      yOffset: 1,
     },
-  ],
-  traverse: {
-    yDirection: "after",
-  },
-  children: [
-    {
-      startCell: {
+    size: {
+      width: "toParentX",
+      height: 5,
+    },
+    constraints: [
+      {
         xOffset: 0,
         yOffset: 0,
+        valueCstr: ValueType.Number,
       },
-      size: {
-        width: 4,
-        height: 1,
-      },
-      transform: {
-        targetCols: ["Rank", "Name", "Location", "Total Score"],
-      },
+    ],
+    traverse: {
+      yDirection: "after",
     },
-    {
-      startCell: {
-        xOffset: 1,
-        yOffset: 2,
-      },
-      constraints: [
-        {
+    children: [
+      {
+        startCell: {
           xOffset: 0,
           yOffset: 0,
-          valueCstr: ValueType.Number,
         },
-        {
-          xOffset: 0,
-          yOffset: -1,
-          valueCstr: ValueType.String,
+        size: {
+          width: 4,
+          height: 1,
         },
-      ],
-      traverse: {
-        xDirection: "after",
-        yDirection: "after",
+        transform: {
+          targetCols: ["Rank", "Name", "Location", "Total Score"],
+        },
       },
-      transform: {
-        context: {
-          position: "top",
-          targetCol: "cellValue",
+      {
+        startCell: {
+          xOffset: 1,
+          yOffset: 2,
         },
-        targetCols: "context",
+        constraints: [
+          {
+            xOffset: 0,
+            yOffset: 0,
+            valueCstr: ValueType.Number,
+          },
+          {
+            xOffset: 0,
+            yOffset: -1,
+            valueCstr: ValueType.String,
+          },
+        ],
+        traverse: {
+          xDirection: "after",
+          yDirection: "after",
+        },
+        transform: {
+          context: {
+            position: "above",
+            targetCol: "cellValue",
+          },
+          targetCols: "context",
+        },
+        // fill: "",
       },
-      // fill: "",
-    },
-  ],
-};
+    ],
+  },
+];

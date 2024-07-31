@@ -80,6 +80,7 @@ watch(() => tableStore.editor[codeType].code, (newVal) => {
     editor?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
+
 import { debounce } from 'lodash';
 const handleResize = debounce(() => {
     if (editor) {
@@ -132,7 +133,7 @@ if (codeType === "mappingSpec") {
 onMounted(() => {
     initEditor();
     // 可以精确地监听元素大小变化，避免了全局 resize 事件可能带来的性能问题，尤其是当页面上有多个需要监听大小变化的元素时。
-    resizeObserver.observe(editorWrapper.value!);
+    // resizeObserver.observe(editorWrapper.value!);
     if (editor) {
         tableStore.editor[codeType].instance = editor;
     }

@@ -183,7 +183,7 @@ interface ContextTransform {
  * - `children`: The child templates for nested selections
  */
 interface TableTidierTemplate {
-    startCell: CellSelection;
+    startCell?: CellSelection;
     size?: {
         width?: number | 'toParentX' | null;
         height?: number | 'toParentY' | null;
