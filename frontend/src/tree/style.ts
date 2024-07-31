@@ -1,14 +1,20 @@
 export const typeMapColor = {
-  Dictionary: '#83b5ed',
-  Array: '#7EAA55',
-  String: '#D07C94',
-  Number: '#EEB189',
-  Boolean: '#926EB8',
-  Null: '#E7D6D6',
+  position: '#83b5ed',
+  context: '#7EAA55',
+  value: '#D07C94',
+  null: '#EEB189',
 };
 
+// Dictionary: '#83b5ed',
+// Array: '#7EAA55',
+// String: '#D07C94',
+// Number: '#EEB189',
+// Boolean: '#926EB8',
+// Null: '#E7D6D6',
+
+
 export const typeNodeStyle = {
-  nodeWidth: 100,
+  nodeWidth: 105,
   nodeHeight: 30,
   nodeRectFillColor: "#7EAA55",
   nodeCircleFillColor: "#83b5ed",

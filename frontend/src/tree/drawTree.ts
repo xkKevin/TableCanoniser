@@ -9,10 +9,19 @@ import {
   nodeTextStyle,
 } from './style';
 import {
-  Point, TypeNode, RectDef, treeDrawingData, edgeType, KV,
+  Point, TypeNode, RectDef, edgeType, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
 
+import { TableTidierTemplate, completeSpecification } from '@/grammar/grammar';
+
+type TransformTypes = keyof typeof typeMapColor;
+type NodeData = {
+  [key: string]: any,
+  children: TypeNode[] | null,
+  parent: TypeNode | null,
+  data: TableTidierTemplate, // { "id": string, "children": TableTidierTemplate[] }
+}
 
 
 const getLetterWidth = (
@@ -324,7 +333,7 @@ export class TreeChart {
   zoomLevel: number;
   depth: number;
   calculated: KV; // SVG画布相关的信息，如宽高、边距、对称中心
-  layouts: any; // 用于存放layout配置
+  treeLayout: any; // 用于存放layout配置
   realChart: any;
   previousTransform: any;
   centerG: any;
@@ -352,7 +361,7 @@ export class TreeChart {
     this.orient = _orient;
     this.depth = 10;
     this.calculated = {};
-    this.layouts = null;
+    this.treeLayout = null;
     this.realChart = null;
     this.previousTransform = null;
     this.centerX = 0;
@@ -388,7 +397,8 @@ export class TreeChart {
     this.realChart.attr('transform', e.transform);
   }
 
-  private handleCircleClick(_: any, d: treeDrawingData) {
+  /*
+  private handleCircleClick(_: any, d: any) {
     if (d.children) {
       d.hiddenChildren = d.children;
       d.children = null;
@@ -402,8 +412,8 @@ export class TreeChart {
 
   private handleRectClick(
     _: any,
-    parent: treeDrawingData,
-    childrenToToggle: Array<treeDrawingData>,
+    parent: any,
+    childrenToToggle: Array<any>,
   ) {
     // childrenToToggle 全部出现在children中，说明当前点击是期望收起
     if (parent.children && AincludeB(parent.children, childrenToToggle)) {
@@ -428,6 +438,7 @@ export class TreeChart {
 
     this.update(parent);
   }
+    */
 
   private declareContextMenu(event: any, node: any) {
     event.preventDefault();
@@ -517,20 +528,18 @@ export class TreeChart {
     };
 
     this.depth = this.orient === 'h' ? nodeMaxWidth / 2 : nodeMaxHeight + 20;
-    this.layouts = {
-      treemap: null,
-    };
-    this.layouts.treemap = d3.tree()
+
+    this.treeLayout = d3.tree()
       .size([this.calculated.chartWidth, this.calculated.chartHeight]);
-    // console.log("layout:", this.layouts.treemap);
+    // console.log("layout:", this.treeLayout);
     // console.log(this.calculated);
 
 
     if (this.orient === 'h') {
-      this.layouts.treemap.nodeSize([this.calculated.nodeMaxHeight + typeNodeStyle.nodeSpacing,
+      this.treeLayout.nodeSize([this.calculated.nodeMaxHeight + typeNodeStyle.nodeSpacing,
       this.calculated.nodeMaxWidth + this.depth]);
     } else {
-      this.layouts.treemap.nodeSize([this.calculated.nodeMaxWidth + typeNodeStyle.nodeSpacing,
+      this.treeLayout.nodeSize([this.calculated.nodeMaxWidth + typeNodeStyle.nodeSpacing,
       this.calculated.nodeMaxHeight + this.depth]);
     }
 
@@ -545,6 +554,18 @@ export class TreeChart {
       // 为每个节点分配唯一的 id
       this.root.each((node: any) => {
         node.id = idCounter++;
+        const spec: TableTidierTemplate = node.data;
+        if (spec.transform === undefined || spec.transform === null) {
+          node.type = "null";
+        } else {
+          if (Array.isArray(spec.transform.targetCols)) {
+            node.type = "position";
+          } else if (spec.transform.targetCols === 'context') {
+            node.type = "context";
+          } else {
+            node.type = "value";
+          }
+        }
       });
 
       this.root.path = [];
@@ -556,7 +577,7 @@ export class TreeChart {
     this.root.y0 = 0;
 
     /*
-    this.allNodes = this.layouts.treemap(this.root)
+    this.allNodes = this.treeLayout(this.root)
       .descendants()
       .forEach((d: any) => {
         Object.assign(d.data, {
@@ -598,13 +619,13 @@ export class TreeChart {
     return this;
   }
 
-  private update(data: treeDrawingData) {
-    const treeData = this.layouts.treemap(this.root);
+  private update(data: any) {
+    const treeData = this.treeLayout(this.root);
     const linksData = treeData.descendants()
       .slice(1);
     const nodesData = treeData.descendants();
     if (this.orient === 'h') {
-      nodesData.forEach((d: treeDrawingData, index: number) => {
+      nodesData.forEach((d: any, index: number) => {
         const originalX = d.x;
         d.x = d.y;
         d.y = originalX;
@@ -620,7 +641,7 @@ export class TreeChart {
 
     // ************************************绘制link************************************
     const linksSelection = this.centerG.selectAll('path.link')
-      .data(linksData, (d: treeDrawingData) => d.id);
+      .data(linksData, (d: any) => d.id);
 
     const linkGen = d3.linkHorizontal();
 
@@ -640,12 +661,12 @@ export class TreeChart {
     linkUpdate.attr('fill', 'none')
       .attr('stroke-width', typeNodeStyle.connectorLineWidth)
       .attr('stroke', typeNodeStyle.connectorLineColor)
-    // .attr('stroke-width', ((d: treeDrawingData) => d.data.connectorLineWidth || 2))
-    // .attr('stroke', (d: treeDrawingData) => (d.data.connectorLineColor ? d.data.connectorLineColor : 'black'));
+    // .attr('stroke-width', ((d: any) => d.data.connectorLineWidth || 2))
+    // .attr('stroke', (d: any) => (d.data.connectorLineColor ? d.data.connectorLineColor : 'black'));
 
     linkUpdate.transition()
       .duration(this.duration)
-      .attr('d', (d: treeDrawingData) => {
+      .attr('d', (d: any) => {
         let xshiftStart = typeNodeStyle.nodeWidth / 2;
         const yshiftStart = 0;
         const xshiftEnd = -typeNodeStyle.nodeWidth / 2;
@@ -687,7 +708,7 @@ export class TreeChart {
 
     // ************************************绘制node************************************
     const nodesSelection = this.centerG.selectAll('g.node')
-      .data(nodesData, (d: treeDrawingData) => d.id);
+      .data(nodesData, (d: any) => d.id);
 
 
 
@@ -714,7 +735,7 @@ export class TreeChart {
     nodeUpdate.transition()
       .attr('opaicty', 0)
       .duration(this.duration)
-      .attr('transform', (d: treeDrawingData) => {
+      .attr('transform', (d: any) => {
         // console.log(d);
         return `translate(${d.x}, ${d.y})`
       })
@@ -727,7 +748,7 @@ export class TreeChart {
     //   // .on('click', this.handleNodeMultipleSelect.bind(this))
     //   .on('contextmenu', this.declareContextMenu.bind(this));
 
-    // nodeGroups.attr('transform', ({ data: info }: treeDrawingData) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
+    // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
 
@@ -741,11 +762,11 @@ export class TreeChart {
         nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
           .attr('class', `node-circle-${dataBindToThis.id} type-node`)
           .attr('r', typeNodeStyle.nodeCircleRadius)
-          .attr('fill', ({ data: info }: treeDrawingData) => typeNodeStyle.nodeCircleFillColor)
+          .attr('fill', ({ type }: { type: TransformTypes }) => typeMapColor[type])
           .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
-          // .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+          // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
           .attr('cursor', 'pointer')
-        // .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+        // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         return;
       }
       /*
@@ -754,11 +775,11 @@ export class TreeChart {
         current.patternify({ tag: 'circle', selector: `node-circle-${dataBindToThis.id}` });
         nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
           .attr('class', `node-circle-${dataBindToThis.id} type-node`)
-          .attr('r', ({ data: info }: treeDrawingData) => info.nodeCircleRadius)
-          .attr('fill', ({ data: info }: treeDrawingData) => info.nodeFillColor)
-          .attr('transform', ({ data: info }: treeDrawingData) => `translate(${info.nodeWidth / 2}, ${info.nodeHeight / 2})`)
-          .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-          .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+          .attr('r', ({ data: info }: any) => info.nodeCircleRadius)
+          .attr('fill', ({ data: info }: any) => info.nodeFillColor)
+          .attr('transform', ({ data: info }: any) => `translate(${info.nodeWidth / 2}, ${info.nodeHeight / 2})`)
+          .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+          .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         return;
       }
         
@@ -769,13 +790,13 @@ export class TreeChart {
           .attr('class', `multi-type-rect-${dataBindToThis.id}-${i} type-node`)
           .attr('d', customRectCorner(nodeRectData))
           .attr('fill', nodeRectData.rectColor)
-          .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-          .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+          .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+          .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
       });
       */
 
       const nodeRectData = {
-        "rectColor": typeNodeStyle.nodeRectFillColor,
+        // "rectColor": typeNodeStyle.nodeRectFillColor,
         "rectHeight": typeNodeStyle.nodeHeight,
         "rectWidth": typeNodeStyle.nodeWidth,
         "starty": 0,
@@ -788,10 +809,11 @@ export class TreeChart {
       nodeGroups.select(`.multi-type-rect-${dataBindToThis.id}`)
         .attr('class', `multi-type-rect-${dataBindToThis.id} type-node`)
         .attr('d', customRectCorner(nodeRectData as RectDef))
-        .attr('fill', nodeRectData.rectColor)
-        // .attr('cursor', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
+        .attr('fill', ({ type }: { type: TransformTypes }) => typeMapColor[type])
+        // .attr('fill', nodeRectData.rectColor)
+        // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
         .attr('cursor', 'pointer')
-      // .attr('pointer-events', (d: treeDrawingData) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+      // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
     });
 
     const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
@@ -803,11 +825,20 @@ export class TreeChart {
       .attr('alignment-baseline', 'middle')
       .attr('fill', nodeTextStyle.color)
       .attr('font-size', nodeTextStyle.fontSize)
-      // .attr('y', ({ data: info }: treeDrawingData) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
+      // .attr('y', ({ data: info }: any) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
       .attr('y', () => nodeTextStyle.yAxisAdjust)
       .attr('cursor', 'pinter')
       .attr('pointer-events', 'auto')  // .style('pointer-events', 'none');
-      .text((d: any) => d.data.name || d.id)
+      .text((d: NodeData) => {
+        if (d.id === 0) {
+          return "0";
+        } else {
+          const specWithDefaults = completeSpecification(d.data);
+          const width = specWithDefaults.size.width;
+          const height = specWithDefaults.size.height;
+          return `(${width}, ${height})`;
+        }
+      })
     // .on('click', (event: any, d: any) => {
     //   // 阻止点击事件的默认行为和传播
     //   // event.stopPropagation();
@@ -817,8 +848,8 @@ export class TreeChart {
     // .append("svg:title").text("(d: any) => d.data.id");
 
     nodeRectText.select('.node-tooltip')
-      // .filter(({ data: info }: treeDrawingData) => info.dataTypeText !== info.dataTypeTextTruncated)
-      .text((d: any) => d.data.id || "none2")
+      // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
+      .text((d: NodeData) => "Path: " + JSON.stringify(d.path));
 
 
     // 为所有circle和rect绑定展开收起交互事件
@@ -829,6 +860,7 @@ export class TreeChart {
         console.log(event, d);
         return;
 
+        /*
         // if (d.parent === null || d.parent.data.children.length === 1) {
         //   this.handleCircleClick(event, d);
         //   return;
@@ -893,6 +925,7 @@ export class TreeChart {
         console.log("------------------");
         console.log(d);
         console.log(filteredClass, lastdash, classfull, idx, childrenToToggle);
+        */
       });
 
 
@@ -900,14 +933,14 @@ export class TreeChart {
     nodeUpdate.select('.edge-text')
       .attr('fill', edgeTextStyle.color)
       .attr('font-size', edgeTextStyle.fontSize)
-      .text(({ data: info }: treeDrawingData) => typeFeatureMapIcon(info.dataTypeFeature))
-      .attr('x', ({ data: info }: treeDrawingData) => {
+      .text(({ data: info }: any) => typeFeatureMapIcon(info.dataTypeFeature))
+      .attr('x', ({ data: info }: any) => {
         if (this.orient === 'h') {
           return (info.dataTypeText ? -info.nodeWidth / 2 : -info.nodeCircleRadius) - 15;
         }
         return edgeTextStyle.distFromEdge;
       })
-      .attr('y', ({ data: info }: treeDrawingData) => (this.orient === 'h' ? -edgeTextStyle.distFromEdge + info.shiftFromEndCenter : -info.nodeHeight / 2 - 2));
+      .attr('y', ({ data: info }: any) => (this.orient === 'h' ? -edgeTextStyle.distFromEdge + info.shiftFromEndCenter : -info.nodeHeight / 2 - 2));
     */
     // ************************************exit 节点************************************
     const nodeExitTransition = nodesSelection.exit()
@@ -922,7 +955,7 @@ export class TreeChart {
       .attr('opacity', 0);
 
     // Store the old positions for transition.
-    nodesData.forEach((d: treeDrawingData) => {
+    nodesData.forEach((d: any) => {
       d.x0 = d.x;
       d.y0 = d.y;
     });

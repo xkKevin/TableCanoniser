@@ -276,7 +276,7 @@ function completeContextTransform(transform: ContextTransform): ContextTransform
     };
 }
 
-function completeTemplate(template: TableTidierTemplate): TableTidierTemplate {
+function completeSpecification(template: TableTidierTemplate): AllParams<TableTidierTemplate> {
     return {
         startCell: completeCellSelection(template.startCell),
         size: {
@@ -295,14 +295,14 @@ function completeTemplate(template: TableTidierTemplate): TableTidierTemplate {
             }
             : null,
         fill: template.fill === undefined ? DEFAULT_FILL : template.fill,
-        children: template.children?.map(completeTemplate) || []
-    };
+        children: template.children?.map(completeSpecification) || []
+    } as AllParams<TableTidierTemplate>;
 }
 
 // Complete the specification with default values
-function completeSpecification(specification: TableTidierTemplate): AllParams<TableTidierTemplate> {
-    return completeTemplate(specification) as AllParams<TableTidierTemplate>;
-}
+// function completeSpecification(specification: TableTidierTemplate): AllParams<TableTidierTemplate> {
+//     return completeTemplate(specification) as AllParams<TableTidierTemplate>;
+// }
 
 
 export {
