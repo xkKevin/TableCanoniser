@@ -453,16 +453,6 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
 }
 
-interface TidyResult {
-    tidyTbl: { [key: string]: CellValueType[] },
-    in2out: { [key: string]: string[] },
-    out2in: {
-        cells: { [key: string]: string },
-        cols: string[][],
-        rows: string[][]
-    }
-}
-
 export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
 
     // const specWithDefaults = completeSpecification(spec);

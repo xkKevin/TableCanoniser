@@ -33,6 +33,23 @@ export interface TblCell {
   className?: string;
 }
 
+export interface AreaForm {
+  referenceAreaLayer: any,
+  referenceAreaPosi: any,
+  position: {
+    x: any,
+    y: any
+  },
+  traverse: {
+    xDirection: any,
+    yDirection: any
+  },
+  size: {
+    width: any,
+    height: any
+  }
+}
+
 const color_config: { [key: string]: { [key: string]: string } } = {
   "posi-mapping": {
     fill: '#37bc6c',
@@ -69,9 +86,34 @@ export const useTableStore = defineStore('table', {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
         visTree: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
         selectNode: shallowRef<any>(null),
+        selectAreaFlag: false,
+        dragConfigOpen: true,
+        areaConfig: shallowRef<TableTidierTemplate>({
+          startCell: {},
+          size: {},
+          traverse: {},
+          transform: null,
+          constraints: [],
+          fill: '',
+          children: [],
+        }),
+        areaFormData: shallowRef<AreaForm>({
+          referenceAreaLayer: null,
+          referenceAreaPosi: null,
+          position: {
+            x: null,
+            y: null
+          },
+          traverse: {
+            xDirection: null,
+            yDirection: null
+          },
+          size: {
+            width: null,
+            height: null
+          }
+        }),
       },
-      specification: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
-      selectNodeSpec: shallowRef<any>(null),
       editor: {
         mappingSpec: {
           code: '',
@@ -433,7 +475,7 @@ export const useTableStore = defineStore('table', {
 
       if (parentPath.length === 0) {
         // 如果父路径为空，说明是根节点
-        this.specification.children = [];
+        this.spec.visTree.children = [];
         return;
       }
 
@@ -452,9 +494,9 @@ export const useTableStore = defineStore('table', {
     getSpecbyPath(path: number[]) {
       if (path.length === 0) {
         // 如果路径为空，返回根节点
-        return this.specification;
+        return this.spec.visTree;
       }
-      let currentNodes = this.specification.children;
+      let currentNodes = this.spec.visTree.children;
       for (let i = 0; i < path.length; i++) {
         const index = path[i];
         // 确保路径下的节点存在
@@ -471,7 +513,64 @@ export const useTableStore = defineStore('table', {
       // 如果路径遍历完仍然没有找到目标节点，返回 null
       return null;
     },
+    stringifySpec() {
+      let fnList: string[] = [];
+      let strSpec = JSON.stringify(this.spec.visTree.children, replacer, 2);
+      fnList.forEach((fn) => {
+        strSpec = strSpec.replace(`"$TableTidier$"`, fn);
+      })
 
+      // 正则表达式匹配 JSON 对象中的键（包括可能的空白字符和引号）
+      const removeQuotesFromKeysRegex = /"(\w+)":/g;
+      strSpec = strSpec.replace(removeQuotesFromKeysRegex, '$1:');
+
+      const replaceTableTidierKeyWordsRegex = /"TableTidier\.(\w+)"/g;
+      strSpec = strSpec.replace(replaceTableTidierKeyWordsRegex, 'ValueType.$1');
+
+      this.editor.mappingSpec.code = this.editor.mappingSpec.codePref + strSpec;
+      // this.editor.mappingSpec.instance?.setValue(this.editor.mappingSpec.code);
+      // this.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
+      // this.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
+
+
+      function replaceEvenSpaces(str: string) {
+        // 使用正则表达式匹配连续的空格
+        return str.replace(/ {2,}/g, (match) => {
+          // 获取连续空格的数量
+          const length = match.length;
+
+          // 计算一半的空格数量
+          const halfLength = length / 2;
+
+          // 返回一半数量的空格
+          return ' '.repeat(halfLength);
+        });
+      }
+
+      function replacer(key: string, value: any) {
+        if (typeof value === 'function') {
+          fnList.push(replaceEvenSpaces(value.toString()));
+          return "$TableTidier$" // value.toString(); // 将函数转化为字符串
+        }
+        return value;
+      }
+    },
+
+    selectArea() {
+      const node = this.spec.selectNode;
+      const currentSpec = this.getSpecbyPath(node.path);
+      console.log(node.path, currentSpec, this.spec.visTree);
+      if (currentSpec === null) {
+        message.error("The node path is invalid");
+        return;
+      }
+      if (currentSpec.children) {
+        currentSpec.children.push({})
+      } else {
+        currentSpec.children = [{}];
+      }
+      this.stringifySpec();
+    },
   },
   // computed
   getters: {}

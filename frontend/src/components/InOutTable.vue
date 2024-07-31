@@ -171,19 +171,6 @@ const handleRemove = () => {
   tableStore.updateRootArea();
 };
 
-// const handlePreview = (file: any) => {
-//   console.log(file.name);
-// };
-
-// const parseCsvData = (csv: string) => {
-//   Papa.parse(csv, {
-//     complete: (results) => {
-//       console.log("parseCsvData", results.data);
-//     },
-//     header: false,
-//     skipEmptyLines: false
-//   });
-// };
 
 // 函数用于将二维数组转换为 CSV 格式
 function arrayToCSV(array: Table2D) {
@@ -279,18 +266,36 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       tableStore.highlightMinimapCells(hightedCells);
     }
 
-    /*
-    let data = [];
-    if (selected.length === 1) {
-      data = inHotInst.getData(...selected[0]);
-
-    } else {
-      for (let i = 0; i < selected.length; i += 1) {
-        data.push(inHotInst.getData(...selected[i]));
+    if (tbl === "input_tbl" && tableStore.spec.selectAreaFlag) {
+      // 说明需要重新为某个节点选择区域
+      const areaConfig = tableStore.spec.areaConfig;
+      areaConfig.startCell = {
+        referenceAreaLayer: "root",
+        referenceAreaPosi: "topLeft",
+        xOffset: selected[0][1],
+        yOffset: selected[0][0]
       }
+      areaConfig.size = {
+        width: selected[0][3] - selected[0][1] + 1,
+        height: selected[0][2] - selected[0][0] + 1
+      }
+      const areaFormData = tableStore.spec.areaFormData;
+      areaFormData.referenceAreaLayer = areaConfig.startCell?.referenceAreaLayer;
+      areaFormData.referenceAreaPosi = areaConfig.startCell?.referenceAreaPosi;
+      areaFormData.position = {
+        x: areaConfig.startCell?.xOffset,
+        y: areaConfig.startCell?.yOffset
+      }
+      areaFormData.traverse = {
+        xDirection: areaConfig.traverse?.xDirection,
+        yDirection: areaConfig.traverse?.yDirection
+      }
+      areaFormData.size = {
+        width: areaConfig.size?.width,
+        height: areaConfig.size?.height
+      }
+      tableStore.spec.dragConfigOpen = true;
     }
-    console.log(selected, data, coords);  // 打印所选区域的坐标及数据
-    */
 
   });
 }

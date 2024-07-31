@@ -63,6 +63,7 @@ const contextMenuVisibleChange = (value: boolean) => {
     }, 200)
 };
 
+/*
 function replaceEvenSpaces(str: string) {
     // 使用正则表达式匹配连续的空格
     return str.replace(/ {2,}/g, (match) => {
@@ -95,21 +96,27 @@ function removeQuotesFromKeys(jsonString: string) {
     return jsonString.replace(regex, '$1:');
 }
 
+function replaceTableTidierKeyWords(jsonString: string) {
+    const regex = /"TableTidier\.(\w+)"/g;
+
+    return jsonString.replace(regex, 'ValueType.$1');
+}
+
 function stringifySpec() {
-    let strSpec = JSON.stringify(tableStore.specification.children, replacer, 2);
+    let strSpec = JSON.stringify(tableStore.spec.visTree.children, replacer, 2);
     fnList.forEach((fn) => {
         strSpec = strSpec.replace(`"$TableTidier$"`, fn);
     })
-    tableStore.editor.mappingSpec.code = tableStore.editor.mappingSpec.codePref + removeQuotesFromKeys(strSpec);
+    tableStore.editor.mappingSpec.code = tableStore.editor.mappingSpec.codePref + replaceTableTidierKeyWords(removeQuotesFromKeys(strSpec));
     // tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.code);
     fnList = [];
     // tableStore.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
     // tableStore.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
-}
+}*/
 
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
-    const node = tableStore.selectNodeSpec;
+    const node = tableStore.spec.selectNode;
     switch (e.key) {
         case "0":
             // Select Area Logic
@@ -129,18 +136,8 @@ const closeContextMenu = (e: any) => {
         case "3":
             // Add Sub-Template Logic
             // console.log(node.path, tableStore.getSpecbyPath(node.path));
-            const currentSpec = tableStore.getSpecbyPath(node.path);
-            console.log(node.path, currentSpec, tableStore.specification);
-            if (currentSpec === null) {
-                message.error("The node path is invalid");
-                return;
-            }
-            if (currentSpec.children) {
-                currentSpec.children.push({})
-            } else {
-                currentSpec.children = [{}];
-            }
-            stringifySpec();
+            message.info("Please select an area in the input table.");
+            tableStore.spec.selectAreaFlag = true;
             break;
         case "4":
             // Delete Template Logic
@@ -151,7 +148,7 @@ const closeContextMenu = (e: any) => {
             // // console.log(node, rootNode); //, JSON.stringify(rootNode)
             // console.log(rootNode.data.children);
             tableStore.deleteChildrenByPath(node.path);
-            stringifySpec();
+            tableStore.stringifySpec();
             break;
     }
     tableStore.tree.contextMenuVisible = false;
@@ -160,7 +157,7 @@ const closeContextMenu = (e: any) => {
 const treeContainer = ref<HTMLDivElement | null>(null);
 
 function drawTree2() {
-    drawTree(tableStore.specification);
+    drawTree(tableStore.spec.visTree);
 }
 
 const drawTree = (data: any) => {
@@ -1061,15 +1058,15 @@ const resizeObserver = new ResizeObserver(() => {
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     const specs = tableStore.getSpec();
     if (specs === false) return;
-    tableStore.specification["children"] = specs;
-    drawTree(tableStore.specification);
+    tableStore.spec.visTree["children"] = specs;
+    drawTree(tableStore.spec.visTree);
 });
 
 onMounted(() => {
     if (treeContainer.value) {
         resizeObserver.observe(treeContainer.value);
     }
-    drawTree(tableStore.specification);
+    drawTree(tableStore.spec.visTree);
 });
 
 

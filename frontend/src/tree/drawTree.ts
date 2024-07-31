@@ -446,7 +446,7 @@ export class TreeChart {
       this.store.tree.menuList = this.store.tree.menuAllList
     }
     // console.log("node", node);
-    this.store.selectNodeSpec = node;
+    this.store.spec.selectNode = node;
     this.store.tree.contextMenuVisible = true;
   }
 

@@ -87,6 +87,7 @@
         </div>
       </div>
     </div>
+    <DraggableModal />
   </div>
 </template>
 
@@ -97,6 +98,7 @@ import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
 import TemplateVis from "@/components/TemplateVis.vue";
+import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
 import { useTableStore } from "@/store/table";
