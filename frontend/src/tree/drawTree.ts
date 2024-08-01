@@ -831,12 +831,26 @@ export class TreeChart {
       .attr('pointer-events', 'auto')  // .style('pointer-events', 'none');
       .text((d: NodeData) => {
         if (d.id === 0) {
+          // console.log(d.data.size);
           return "0";
         } else {
-          const specWithDefaults = completeSpecification(d.data);
-          const width = specWithDefaults.size.width;
-          const height = specWithDefaults.size.height;
-          return `(${width}, ${height})`;
+          const { size } = completeSpecification({ size: d.data.size });
+          d.data.size = size;
+          const parent: TableTidierTemplate = d.parent!.data;
+          let parentX = 0, parentY = 0;
+          if (parent.hasOwnProperty('startCell')) {
+            parentX = parent.startCell!.xOffset as number;
+            parentY = parent.startCell!.yOffset as number;
+          } else {
+            // console.log("parent", parent, d);
+          }
+          if (size.height === 'toParentY') {
+            d.data.size.height = (parent.size!.height as number) - parentY;
+          }
+          if (d.data.size.width === 'toParentX') {
+            d.data.size.width = (parent.size!.width as number) - parentX;
+          }
+          return `(${d.data.size.width}, ${d.data.size.height})`;
         }
       })
     // .on('click', (event: any, d: any) => {

@@ -5,13 +5,14 @@ import { shallowRef } from 'vue';
 
 import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, AreaInfo } from "@/grammar/grammar"
 import { transformTable, serialize, sortWithCorrespondingArray } from "@/grammar/handleSpec"
-
+import { TreeChart } from '@/tree/drawTree';
 import { CustomError } from "@/types";
 
 import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
+import { cloneDeep } from 'lodash';
 
 // export interface TblVisData {
 //   input_tbl: string[][];
@@ -31,6 +32,11 @@ export interface TblCell {
   row: number;
   col: number;
   className?: string;
+}
+
+interface TreeNode {
+  [key: string]: any,
+  children?: TreeNode[];
 }
 
 export interface AreaForm {
@@ -84,9 +90,10 @@ export const useTableStore = defineStore('table', {
       currentCase: '', // caseList[0],
       spec: {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
-        visTree: shallowRef<{ "id": string, "children": TableTidierTemplate[] }>({ "id": "root", "children": [] }),
+        visTree: shallowRef<{ id: string, size: { width: number, height: number }, children: TableTidierTemplate[] }>({ id: "root", size: { width: 0, height: 0 }, children: [] }),
         selectNode: shallowRef<any>(null),
-        selectAreaFlag: false,
+        /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
+        selectAreaFlag: 0 as 0 | 1 | 2 | 3 | 4,
         dragConfigOpen: false,
         areaConfig: shallowRef<TableTidierTemplate>({
           startCell: {},
@@ -119,6 +126,7 @@ export const useTableStore = defineStore('table', {
           code: '',
           codePref: 'const option: TableTidierTemplate[] = ',
           codeSuff: '\nreturn option;',
+          errorMark: null as monaco.editor.IMarker | null,
           language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
@@ -150,10 +158,11 @@ export const useTableStore = defineStore('table', {
       },
       tree: {
         contextMenuVisible: false,
+        visInst: shallowRef<TreeChart | null>(null),
         menuAllList: [{
           key: "0",
-          label: "Select Area",
-          title: "Select Area",
+          label: "Reset Area",
+          title: "Reset Area",
           // icon: () => h(MailOutlined),
         }, {
           key: "1",
@@ -225,7 +234,7 @@ export const useTableStore = defineStore('table', {
           // 通常是由于Handsontable在初始化时还没有正确计算出表格容器的尺寸，或者在Vue组件生命周期的某个阶段，Handsontable的重新渲染没有正确触发。这个问题可能与表格渲染的时机有关。
           this.input_tbl.instance.render();
           // document.getElementById('system_name')?.click();
-          this.updateRootArea()
+          this.transformTblUpdateRootArea()
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
@@ -250,7 +259,7 @@ export const useTableStore = defineStore('table', {
       return prompt;
     },
 
-    updateRootArea(specs: TableTidierTemplate[] = []) {
+    transformTblUpdateRootArea(specs: TableTidierTemplate[] = []) {
       const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
       // this.editor.rootArea.codePref + JSON.stringify(rootArea)
       this.editor.rootArea.object = rootArea;
@@ -335,7 +344,7 @@ export const useTableStore = defineStore('table', {
       return topLeft;
     },
 
-    getSpec() {
+    setSpec() {
       try {
         // let code = this.editor.mappingSpec.instance!.getValue();
         let code = this.editor.mappingSpec.code;
@@ -351,41 +360,34 @@ export const useTableStore = defineStore('table', {
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
         const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
-        // this.spec.rawSpecs = specs;
-        specs.forEach((spec) => {
+        this.spec.rawSpecs = specs;
+        this.spec.visTree.children = cloneDeep(specs);
+        this.spec.visTree.children.forEach((spec) => {
           if (!spec.hasOwnProperty('children')) {
             spec.children = [];
           }
         })
-        return specs
-        // const specWithDefaults = specs.map((spec) => completeSpecification(spec));
-        // return specWithDefaults;
+        return true
       }
       catch (e) {
-        const messageContent = `Failed to parse the specification:\n ${e}`;
-        message.error({
-          content: messageContent,
-          style: { whiteSpace: 'pre-line' },
-        });
+        message.error(`Failed to parse the specification:\n ${e}`);
         return false
       }
     },
 
     transformTablebyCode() {
+      if (this.editor.mappingSpec.errorMark != null) {
+        const marker = this.editor.mappingSpec.errorMark;
+        message.error(`Invalid syntax at Line ${marker.startLineNumber}, Column ${marker.startColumn}:\n ${marker.message}`);
+        return;
+      }
       try {
-        // const specWithDefaults = this.getSpec();
-        const specs = this.getSpec();
-        if (specs === false) return;
-        // console.log(this.input_tbl.tbl);
-
-        const tidyData = this.updateRootArea(specs);
+        const specs = this.spec.rawSpecs;
+        const tidyData = this.transformTblUpdateRootArea(specs);
         this.initTblInfo(false);
 
         if (Object.keys(tidyData).length === 0) {
-          message.warning({
-            content: 'The output table is empty based on the specification.',
-            style: { whiteSpace: 'pre-line' },
-          });
+          message.warning('The output table is empty based on the specification.');
           return;
         }
         // 将tidyData转换为output_tbl.tbl，注意数据格式
@@ -401,10 +403,7 @@ export const useTableStore = defineStore('table', {
         } else {
           messageContent = `Failed to parse the specification:\n ${e}`
         }
-        message.error({
-          content: messageContent,
-          style: { whiteSpace: 'pre-line' },
-        });
+        message.error(messageContent);
       }
     },
 
@@ -467,7 +466,7 @@ export const useTableStore = defineStore('table', {
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
     },
 
-    deleteChildrenByPath(path: number[]) {
+    deleteChildByPath(nodes: TreeNode[], path: number[]) {
       if (path.length === 0) {
         // 如果路径为空，不做任何处理
         return;
@@ -478,12 +477,12 @@ export const useTableStore = defineStore('table', {
       const lastIndex = path[path.length - 1];
 
       if (parentPath.length === 0) {
-        // 如果父路径为空，说明是根节点
-        this.spec.visTree.children = [];
+        // 如果父路径为空，说明父节点是根节点
+        nodes.splice(lastIndex, 1);
         return;
       }
 
-      const parentNode = this.getSpecbyPath(parentPath);
+      const parentNode = this.getNodebyPath(nodes, parentPath);
 
       // 删除目标节点
       if (parentNode && parentNode.children) {
@@ -495,12 +494,10 @@ export const useTableStore = defineStore('table', {
       }
     },
 
-    getSpecbyPath(path: number[]) {
-      if (path.length === 0) {
-        // 如果路径为空，返回根节点
-        return this.spec.visTree;
-      }
-      let currentNodes = this.spec.visTree.children;
+    getNodebyPath(nodes: TreeNode[], path: number[]) {
+      if (path.length === 0) return null; // 如果路径为空，返回null
+
+      let currentNodes = nodes
       for (let i = 0; i < path.length; i++) {
         const index = path[i];
         // 确保路径下的节点存在
@@ -517,9 +514,12 @@ export const useTableStore = defineStore('table', {
       // 如果路径遍历完仍然没有找到目标节点，返回 null
       return null;
     },
+    /**
+     * 根据rawSpecs更新editor.mappingSpec.code
+     */
     stringifySpec() {
       let fnList: string[] = [];
-      let strSpec = JSON.stringify(this.spec.visTree.children, replacer, 2);
+      let strSpec = JSON.stringify(this.spec.rawSpecs, replacer, 2);
       fnList.forEach((fn) => {
         strSpec = strSpec.replace(`"$TableTidier$"`, fn);
       })
@@ -562,16 +562,37 @@ export const useTableStore = defineStore('table', {
 
     selectArea() {
       const node = this.spec.selectNode;
-      const currentSpec = this.getSpecbyPath(node.path);
-      console.log(node.path, currentSpec, this.spec.visTree);
-      if (currentSpec === null) {
-        message.error("The node path is invalid");
-        return;
+      const formData = this.spec.areaFormData
+      const newSpec: TableTidierTemplate = {
+        startCell: {
+          referenceAreaLayer: formData.referenceAreaLayer,
+          referenceAreaPosi: formData.referenceAreaPosi,
+          xOffset: formData.position.x,
+          yOffset: formData.position.y,
+        },
+        size: {
+          width: formData.size.width,
+          height: formData.size.height,
+        },
+        traverse: {
+          xDirection: formData.traverse.xDirection,
+          yDirection: formData.traverse.yDirection,
+        }
       }
-      if (currentSpec.children) {
-        currentSpec.children.push({})
+      if (node.path.length === 0) {
+        // 当前节点为根节点
+        this.spec.rawSpecs.push(newSpec);
       } else {
-        currentSpec.children = [{}];
+        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path);
+        if (currentSpec === null) {
+          message.error("The node path is invalid");
+          return;
+        }
+        if (currentSpec.hasOwnProperty('children') && currentSpec.children != undefined) {
+          currentSpec.children.push(newSpec)
+        } else {
+          currentSpec.children = [newSpec];
+        }
       }
       this.stringifySpec();
     },

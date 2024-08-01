@@ -259,4 +259,13 @@ function transformTablebyCode() {
   color: #e67e22;
   /* Sub-view title text color */
 }
+
+
+.ant-message-notice-content {
+  white-space: pre-wrap;
+  /* 使 \n 换行符生效 */
+  text-align: left;
+  /* 左对齐 */
+  max-width: 700px;
+}
 </style>

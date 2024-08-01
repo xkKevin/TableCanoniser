@@ -50,7 +50,7 @@
 import {
   getCurrentInstance,
   ComponentPublicInstance,
-  ref,
+  ref, watch,
   onMounted,
 } from "vue";
 import { HotTable } from "@handsontable/vue3";
@@ -155,22 +155,19 @@ const handleUpload = (request: any) => {
       tableStore.input_tbl.tbl = tblData;
       tableStore.input_tbl.instance.updateData(tblData);
       tableStore.input_tbl.instance.render();
-      tableStore.updateRootArea();
+      tableStore.transformTblUpdateRootArea();
       request.onSuccess("ok");
       // message.success(`${request.file.name} file uploaded successfully`);
     };
     reader.readAsArrayBuffer(request.file);
   } catch (error) {
-    message.error({
-      content: `${request.file.name} file uploaded failed.\n${error}`,
-      style: { whiteSpace: 'pre-line' },
-    });
+    message.error(`${request.file.name} file uploaded failed.\n${error}`);
   }
 };
 
 const handleRemove = () => {
   tableStore.initTblInfo()
-  tableStore.updateRootArea();
+  tableStore.transformTblUpdateRootArea();
 };
 
 
@@ -280,6 +277,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       areaConfig.size = {
         width: selected[0][3] - selected[0][1] + 1,
         height: selected[0][2] - selected[0][0] + 1
+      }
+      areaConfig.traverse = {
+        xDirection: "after",
+        yDirection: "after"
       }
       const areaFormData = tableStore.spec.areaFormData;
       areaFormData.referenceAreaLayer = areaConfig.startCell?.referenceAreaLayer;

@@ -14,7 +14,7 @@ export const typeMapColor = {
 
 
 export const typeNodeStyle = {
-  nodeWidth: 105,
+  nodeWidth: 100,
   nodeHeight: 30,
   nodeRectFillColor: "#7EAA55",
   nodeCircleFillColor: "#83b5ed",

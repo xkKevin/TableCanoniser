@@ -58,29 +58,29 @@ const initEditor = () => {
     };
     editor = monaco.editor.create(editorWrapper.value!, editorOptions as monaco.editor.IEditorConstructionOptions);  // ! means that editorWrapper.value is not null
 
-    editor.onDidBlurEditorText(async () => {
+    editor.onDidBlurEditorText(() => {
+        // 失焦事件优先于别的按钮的点击事件
         const markers = monaco.editor.getModelMarkers({})
-        if (markers.length > 0) {
-            const lineNo = markers[0].startLineNumber;
-            // const colNo = markers[0].startColumn;
-            // message.error(`Invalid syntax at Line ${lineNo}, Column ${colNo}: ${markers[0].message}`);
-            message.error(`Invalid syntax at Line ${lineNo}: ${markers[0].message}`);
-            return;
+        if (codeType === "mappingSpec") {
+            if (markers.length > 0) {
+                tableStore.editor.mappingSpec.errorMark = markers[0];
+                return;
+            }
+            tableStore.editor.mappingSpec.errorMark = null;
         }
-
         const value = editor!.getValue();
         if (areStringEqual(tableStore.editor[codeType].code, value)) return; // 忽略换行还有空格之后比较字符串是否相等
-
         tableStore.editor[codeType].code = value;
     });
 };
 
+/*
 watch(() => tableStore.editor[codeType].code, (newVal) => {
     // console.log("watch editor code", codeType);
     editor?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
-/*
+
 import { debounce } from 'lodash';
 const handleResize = debounce(() => {
     if (editor) {

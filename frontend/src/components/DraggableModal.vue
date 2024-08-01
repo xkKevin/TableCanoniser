@@ -1,33 +1,96 @@
 <template>
     <a-modal ref="modalRef" v-model:open="open" :wrap-style="{ overflow: 'hidden' }" @cancel="handleCancel"
-        width="600px">
-
+        @ok="handleOk" okText="Confirm" width="600px">
         <div>
-            <a-row>
-                <a-col flex="100px">referenceAreaLayer</a-col>
-                <a-col flex="auto">
-                    <a-radio-group v-model:value="formData.referenceAreaLayer">
-                        <a-radio-button value="current">current</a-radio-button>
-                        <a-radio-button value="parent">parent</a-radio-button>
-                        <a-radio-button value="root">root</a-radio-button>
-                        <a-radio-button value="function">areaLayerFn</a-radio-button>
-                    </a-radio-group>
-                </a-col>
-            </a-row>
-            <a-row>
-                <a-col flex="100px">referenceAreaPosition</a-col>
-                <a-col flex="auto">
-                    <a-radio-group v-model:value="formData.referenceAreaPosi">
-                        <a-radio-button value="topLeft">topLeft</a-radio-button>
-                        <a-radio-button value="topRight">topRight</a-radio-button>
-                        <a-radio-button value="bottomLeft">bottomLeft</a-radio-button>
-                        <a-radio-button value="bottomRight">bottomRight</a-radio-button>
-                    </a-radio-group>
-                </a-col>
-            </a-row>
+            <div>
+                <a-divider>startCell</a-divider>
+                <a-row>
+                    <a-col flex="100px">referenceAreaLayer</a-col>
+                    <a-col flex="auto">
+                        <a-radio-group v-model:value="formData.referenceAreaLayer">
+                            <a-radio-button value="current">current</a-radio-button>
+                            <a-radio-button value="parent">parent</a-radio-button>
+                            <a-radio-button value="root">root</a-radio-button>
+                            <a-radio-button value="areaLayerFn" title="areaLayerFn">Custom Func</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+                <a-row>
+                    <a-col flex="100px">referenceAreaPosition</a-col>
+                    <a-col flex="auto">
+                        <a-radio-group v-model:value="formData.referenceAreaPosi">
+                            <a-radio-button value="topLeft">topLeft</a-radio-button>
+                            <a-radio-button value="topRight">topRight</a-radio-button>
+                            <a-radio-button value="bottomLeft">bottomLeft</a-radio-button>
+                            <a-radio-button value="bottomRight">bottomRight</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+                <a-row>
+                    <a-col flex="100px">Start Position</a-col>
+                    <a-col flex="auto">
+                        <span>x (col):</span>
+                        <a-radio-group v-model:value="formData.position.x">
+                            <a-radio-button :value="areaConfig.startCell!.xOffset">{{ areaConfig.startCell!.xOffset
+                                }}</a-radio-button>
+                            <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
+                        </a-radio-group>
+                        <span>y (row):</span>
+                        <a-radio-group v-model:value="formData.position.y">
+                            <a-radio-button :value="areaConfig.startCell!.yOffset">{{ areaConfig.startCell!.yOffset
+                                }}</a-radio-button>
+                            <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+            </div>
+            <div>
+                <a-divider>size</a-divider>
+                <a-row>
+                    <a-col flex="5">
+                        <span>width:</span>
+                        <a-radio-group v-model:value="formData.size.width">
+                            <a-radio-button :value="areaConfig.size!.width">{{ areaConfig.size!.width
+                                }}</a-radio-button>
+                            <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                    <a-col flex="5">
+                        <span>height:</span>
+                        <a-radio-group v-model:value="formData.size.height">
+                            <a-radio-button :value="areaConfig.size!.height">{{ areaConfig.size!.height
+                                }}</a-radio-button>
+                            <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+            </div>
+            <div>
+                <a-divider>traverse</a-divider>
+                <a-row>
+                    <a-col flex="100px">x direction:</a-col>
+                    <a-col flex="auto">
+                        <a-radio-group v-model:value="formData.traverse.xDirection">
+                            <a-radio-button value="after">after</a-radio-button>
+                            <a-radio-button value="above">above</a-radio-button>
+                            <a-radio-button value="whole">whole</a-radio-button>
+                            <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+                <a-row>
+                    <a-col flex="100px">y direction:</a-col>
+                    <a-col flex="auto">
+                        <a-radio-group v-model:value="formData.traverse.yDirection">
+                            <a-radio-button value="after">after</a-radio-button>
+                            <a-radio-button value="above">above</a-radio-button>
+                            <a-radio-button value="whole">whole</a-radio-button>
+                            <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
+                        </a-radio-group>
+                    </a-col>
+                </a-row>
+            </div>
         </div>
-
-
 
         <template #title>
             <div ref="modalTitleRef" style="width: 100%; cursor: move">Template Area</div>
@@ -55,9 +118,9 @@ const formData = ref<AreaForm>(tableStore.spec.areaFormData)
 
 tableStore.spec.areaFormData = formData.value
 
-const onFinish = (values: any) => {
-    console.log('Success:', values);
+const handleOk = (values: any) => {
     handleCancel();
+    tableStore.selectArea();
 };
 const resetForm = () => {
     formData.value = {
@@ -86,7 +149,7 @@ const modalTitleRef = ref<HTMLElement>();
 const { x, y, isDragging } = useDraggable(modalTitleRef);
 const handleCancel = () => {
     tableStore.spec.dragConfigOpen = false;
-    tableStore.spec.selectAreaFlag = false;
+    tableStore.spec.selectAreaFlag = 0;
 };
 const startX = ref<number>(0);
 const startY = ref<number>(0);

@@ -2,7 +2,7 @@
     <div class="view">
         <div class="view-title">
             <span>Template Visualization</span>
-            <a-button size="small" style="float: right; margin-right: 20px" @click="drawTree2">
+            <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                 <span>Reset</span>
             </a-button>
@@ -119,10 +119,14 @@ const closeContextMenu = (e: any) => {
     const node = tableStore.spec.selectNode;
     switch (e.key) {
         case "0":
-            // Select Area Logic
+            // Reset Area Logic
+            message.info("Please reselect the template's area in the input table.");
+            tableStore.spec.selectAreaFlag = 2;
             break;
         case "1":
             // Add Constraints Logic
+            message.info("Please select the constrained cell in the input table.");
+            tableStore.spec.selectAreaFlag = 3;
             break;
         case "2-0":
             // Target Cols - Position Based Logic
@@ -137,7 +141,7 @@ const closeContextMenu = (e: any) => {
             // Add Sub-Template Logic
             // console.log(node.path, tableStore.getSpecbyPath(node.path));
             message.info("Please select an area in the input table.");
-            tableStore.spec.selectAreaFlag = true;
+            tableStore.spec.selectAreaFlag = 1;
             break;
         case "4":
             // Delete Template Logic
@@ -147,7 +151,7 @@ const closeContextMenu = (e: any) => {
             // }
             // // console.log(node, rootNode); //, JSON.stringify(rootNode)
             // console.log(rootNode.data.children);
-            tableStore.deleteChildrenByPath(node.path);
+            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, node.path);
             tableStore.stringifySpec();
             break;
     }
@@ -161,8 +165,9 @@ function drawTree2() {
 }
 
 const drawTree = (data: any) => {
-    const chartInstance = new TreeChart([2, 1], '.tree-container', data, tableStore, 1.0, 'h');
-    chartInstance.render();
+    const treeInstance = new TreeChart([2, 1], '.tree-container', data, tableStore, 1.0, 'h');
+    treeInstance.render();
+    tableStore.tree.visInst = treeInstance;
 };
 
 /*
@@ -180,18 +185,28 @@ const resizeObserver = new ResizeObserver(() => {
 */
 
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
-    const specs = tableStore.getSpec();
-    if (specs === false) return;
-    tableStore.spec.visTree["children"] = specs;
+    // console.log('watch code changed: start');
+    tableStore.editor.mappingSpec.instance?.setValue(newVal);
+    const setFlag = tableStore.setSpec();
+    if (!setFlag) return;
     drawTree(tableStore.spec.visTree);
+    // console.log('watch code changed: end');
 });
+
+// watch(() => tableStore.spec.visTree.size.height, (newVal) => {
+//     console.log('watch tbl size changed: start');
+//     const setFlag = tableStore.setSpec();
+//     if (!setFlag) return;
+//     drawTree(tableStore.spec.visTree);
+//     console.log('watch tbl size changed: end');
+// });
 
 
 onMounted(() => {
     if (treeContainer.value) {
         // resizeObserver.observe(treeContainer.value);
     }
-    drawTree(tableStore.spec.visTree);
+    // drawTree(tableStore.spec.visTree);
 });
 
 
