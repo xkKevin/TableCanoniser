@@ -80,7 +80,7 @@ watch(() => tableStore.editor[codeType].code, (newVal) => {
     editor?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
 
-
+/*
 import { debounce } from 'lodash';
 const handleResize = debounce(() => {
     if (editor) {
@@ -95,7 +95,7 @@ const resizeObserver = new ResizeObserver(() => {
     // console.log("Resize observed", entries);
     handleResize();
 });
-
+*/
 
 if (codeType === "mappingSpec") {
 

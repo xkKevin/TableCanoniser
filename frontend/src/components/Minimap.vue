@@ -156,7 +156,7 @@ const drawGrid = (rows: number, cols: number) => {
 
 };
 
-
+/*
 import { debounce } from 'lodash';
 
 const debouncedResize = debounce(() => {
@@ -173,7 +173,7 @@ const debouncedResize = debounce(() => {
 const resizeObserver = new ResizeObserver(() => {
     debouncedResize();
 });
-
+*/
 
 onMounted(() => {
     if (container.value) {

@@ -221,6 +221,10 @@ export const useTableStore = defineStore('table', {
         if (dataText !== null) {
           this.input_tbl.tbl = JSON.parse(dataText).input_tbl;
           this.input_tbl.instance.updateData(this.input_tbl.tbl);
+          // 每次都是页面刷新后，所有单元格/列的宽度为50，只有点击一下界面之后，才会突然自动列大小，变成有的列width大一点，有的列width小一点，这是为什么呢
+          // 通常是由于Handsontable在初始化时还没有正确计算出表格容器的尺寸，或者在Vue组件生命周期的某个阶段，Handsontable的重新渲染没有正确触发。这个问题可能与表格渲染的时机有关。
+          this.input_tbl.instance.render();
+          // document.getElementById('system_name')?.click();
           this.updateRootArea()
         } else {
           prompt.push(`Failed to load data from ${caseN}`);

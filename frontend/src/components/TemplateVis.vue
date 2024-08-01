@@ -165,7 +165,7 @@ const drawTree = (data: any) => {
     chartInstance.render();
 };
 
-
+/*
 import { debounce } from 'lodash';
 
 // import { TableTidierTemplate } from '@/grammar/grammar';
@@ -177,7 +177,7 @@ const debouncedResize = debounce(() => {
 const resizeObserver = new ResizeObserver(() => {
     debouncedResize();
 });
-
+*/
 
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     const specs = tableStore.getSpec();
@@ -185,6 +185,7 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.spec.visTree["children"] = specs;
     drawTree(tableStore.spec.visTree);
 });
+
 
 onMounted(() => {
     if (treeContainer.value) {

@@ -21,7 +21,8 @@
     <div class="view-content">
       <div id="input-tbl">
         <hot-table ref="inputTbl" :data="input_tbl" :rowHeaders="true" :colHeaders="true" :manualColumnResize="true"
-          :renderer="renderTblCell" :contextMenu="true" licenseKey="non-commercial-and-evaluation"></hot-table>
+          :autoWrapRow="true" :autoWrapCol="true" :contextMenu="true" :renderer="renderTblCell"
+          licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
@@ -38,8 +39,8 @@
     <div class="view-content">
       <div id="output-tbl">
         <hot-table ref="outputTbl" :data="output_tbl" :rowHeaders="true" :colHeaders="output_col"
-          :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true"
-          licenseKey="non-commercial-and-evaluation"></hot-table>
+          :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true" :autoWrapRow="true"
+          :autoWrapCol="true" licenseKey="non-commercial-and-evaluation"></hot-table>
       </div>
     </div>
   </div>
@@ -153,6 +154,7 @@ const handleUpload = (request: any) => {
       tableStore.initTblInfo()
       tableStore.input_tbl.tbl = tblData;
       tableStore.input_tbl.instance.updateData(tblData);
+      tableStore.input_tbl.instance.render();
       tableStore.updateRootArea();
       request.onSuccess("ok");
       // message.success(`${request.file.name} file uploaded successfully`);

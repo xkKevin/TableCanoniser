@@ -1,7 +1,7 @@
 <template>
   <div id="panel">
     <div class="system-name">
-      <span>TableTidier</span>
+      <span id="system_name">TableTidier</span>
       <!--
       <span style="left: 20px; position: absolute;">
         <el-button type="success" plain :disabled="!mode">Select Area</el-button>
@@ -232,6 +232,7 @@ function transformTablebyCode() {
   font-weight: bold;
   margin-bottom: 10px;
   color: #2c3e50;
+  overflow: auto;
   /* View title text color */
 }
 
