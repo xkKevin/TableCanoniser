@@ -12,7 +12,7 @@ import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
-import { cloneDeep } from 'lodash';
+// import { cloneDeep } from 'lodash';
 
 // export interface TblVisData {
 //   input_tbl: string[][];
@@ -361,7 +361,7 @@ export const useTableStore = defineStore('table', {
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
         const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
         this.spec.rawSpecs = specs;
-        this.spec.visTree.children = cloneDeep(specs);
+        this.spec.visTree.children = JSON.parse(JSON.stringify(specs)); // cloneDeep(specs);
         this.spec.visTree.children.forEach((spec) => {
           if (!spec.hasOwnProperty('children')) {
             spec.children = [];
