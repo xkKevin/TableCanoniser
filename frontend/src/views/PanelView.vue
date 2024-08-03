@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
@@ -121,6 +121,22 @@ function transformTablebyCode() {
   tableStore.transformTablebyCode();
   loading.value = false;
 }
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    // 按下 ESC 键时清除所有高亮、选中等
+    tableStore.editor.mappingSpec.decorations?.clear();
+    tableStore.input_tbl.instance.deselectCell();
+    tableStore.output_tbl.instance.deselectCell();
+    tableStore.input_tbl.instance.updateSettings({ cell: [] });
+    tableStore.output_tbl.instance.updateSettings({ cell: [] });
+    tableStore.highlightMinimapCells([]);
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown);
+});
 
 </script>
 
@@ -267,5 +283,11 @@ function transformTablebyCode() {
   text-align: left;
   /* 左对齐 */
   max-width: 700px;
+}
+
+.myLineDecoration {
+  // background-color: rgba(255, 255, 0, 0.3);
+  // background-color: #74b9ff;
+  background-color: rgba(116, 185, 255, 0.5);
 }
 </style>

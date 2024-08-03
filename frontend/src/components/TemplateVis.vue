@@ -189,6 +189,8 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.setSpec();
+    const startLine = 5;
+    tableStore.highlightCode(startLine, startLine + 46);
     if (!setFlag) return;
     try {
         const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);

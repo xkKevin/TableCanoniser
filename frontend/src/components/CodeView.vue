@@ -71,6 +71,12 @@ const initEditor = () => {
         if (areStringEqual(tableStore.editor[codeType].code, value)) return; // 忽略换行还有空格之后比较字符串是否相等
         tableStore.editor[codeType].code = value;
     });
+    if (codeType === "mappingSpec") {
+        // 编辑器内容变化时取消高亮
+        editor.onDidChangeModelContent(() => {
+            tableStore.editor.mappingSpec.decorations?.clear();
+        })
+    }
 };
 
 watch(() => tableStore.editor.rootArea.code, (newVal) => {
@@ -140,6 +146,9 @@ onMounted(() => {
     // resizeObserver.observe(editorWrapper.value!);
     if (editor) {
         tableStore.editor[codeType].instance = editor;
+        if (codeType === "mappingSpec") {
+            tableStore.editor.mappingSpec.decorations = editor.createDecorationsCollection([]);
+        }
     }
 });
 

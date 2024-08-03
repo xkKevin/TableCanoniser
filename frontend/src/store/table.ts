@@ -117,6 +117,7 @@ export const useTableStore = defineStore('table', {
           codePref: 'const option: TableTidierTemplate[] = ',
           codeSuff: '\nreturn option;',
           errorMark: null as monaco.editor.IMarker | null,
+          decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
           language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
@@ -686,6 +687,25 @@ export const useTableStore = defineStore('table', {
           // console.log(tree1.children[i], tree2.children[i]);
           this.copyTreeAttributes(tree1.children[i], tree2.children[i], attributes);
         }
+      }
+    },
+    highlightCode(startLine: number, endLine: number = startLine) {
+      const editor = this.editor.mappingSpec.instance
+      const decorationsCollection = this.editor.mappingSpec.decorations
+      if (editor && decorationsCollection) {
+        const newDecorations: monaco.editor.IModelDeltaDecoration[] = [
+          {
+            range: new monaco.Range(startLine, 1, endLine, 1),
+            options: {
+              isWholeLine: true,
+              className: 'myLineDecoration',
+            },
+          },
+        ];
+        // 更新装饰集合
+        decorationsCollection.set(newDecorations);
+        // editor.revealLineInCenter(startLine - 3);
+        editor.revealLineNearTop(startLine);
       }
     }
   },
