@@ -112,7 +112,11 @@ const drawGrid = (rows: number, cols: number) => {
             // input_tbl_cell.node()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); // Dispatch a click event on the corresponding cell in the input table
             // input_tbl_cell.dispatch('mouseup')
             // console.log(d3.select(this).attr('width'), d3.select(this).attr('height'), d);
+            d3.selectAll('rect.grid-cell').attr('fill', '#f9f7ff').attr('stroke', '#cccccc');
+            d3.select(this).attr('fill', '#74b9ff');
             tableStore.grid_cell_click({ row: d.row, col: d.col })
+            tableStore.input_tbl.instance.deselectCell();
+            tableStore.output_tbl.instance.deselectCell();
         });
 
     // Calculate the offset to center the matrix in the SVG container

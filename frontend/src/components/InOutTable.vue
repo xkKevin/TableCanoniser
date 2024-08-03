@@ -211,9 +211,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         return false;
       } else {
         tblInst2.updateSettings({ cell: [] });
-        if (tbl === "output_tbl") {
-          tableStore.highlightMinimapCells([])
-        }
+        tableStore.highlightMinimapCells([])
+        // if (tbl === "output_tbl") {
+        //   tableStore.highlightMinimapCells([])
+        // }
         return true;
       }
     },

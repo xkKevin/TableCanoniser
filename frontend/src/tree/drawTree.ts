@@ -904,6 +904,8 @@ export class TreeChart {
         allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
         this.store.highlightMinimapCells(allHightedMiniCells);
 
+        this.store.input_tbl.instance.deselectCell();
+        this.store.output_tbl.instance.deselectCell();
         return;
         // this.handleCircleClick(event, d);  // 收缩节点
       });

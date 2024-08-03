@@ -309,7 +309,7 @@ export const useTableStore = defineStore('table', {
       d3.selectAll('g.matrix text.grid-text').attr('fill', colorConfig.default.text).attr('font-weight', 'normal');
       cells.forEach((cell) => {
         if (cell.className) {
-          d3.select(`g.matrix #grid-${cell.row}-${cell.col}`)
+          d3.select(`g.matrix #grid-${cell.row}-${cell.col}`).raise()
             // @ts-ignore
             .attr('fill', colorConfig[cell.className].fill).attr('stroke', colorConfig[cell.className].stroke);
           // @ts-ignore
@@ -376,12 +376,17 @@ export const useTableStore = defineStore('table', {
     },
 
     grid_cell_click(cell: TblCell, className: string = "posi-mapping") {
-      const tbl_cell = this.input_tbl.instance.getCell(cell.row, cell.col);
-      if (tbl_cell) {
-        let cells: TblCell[] = [{ ...cell, className }];
-        this.highlightTblCells("input_tbl", cells);
-        tbl_cell.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-      }
+      let cells: TblCell[] = [{ ...cell, className }];
+      this.highlightTblCells("input_tbl", cells);
+      let outTblCells = this.in_out_mapping({ "0": [[cell.row, cell.col]] }, "input_tbl", className);
+      this.highlightTblCells("output_tbl", outTblCells);
+      // const tbl_cell = this.input_tbl.instance.getCell(cell.row, cell.col);
+      // console.log(381, tbl_cell);
+      // if (tbl_cell) {
+      //   let cells: TblCell[] = [{ ...cell, className }];
+      //   this.highlightTblCells("input_tbl", cells);
+      //   tbl_cell.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      // }
     },
 
     startPoint(points: [number, number][]) {
