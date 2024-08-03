@@ -190,12 +190,15 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.setSpec();
     if (!setFlag) return;
-
-    const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
-    // console.log(rootArea, tableStore.spec.visTree, tableStore.spec.rawSpecs, tableStore.input_tbl.tbl[0]);
-    tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
-    // console.log(rootArea, tableStore.spec.visTree);
-    drawTree(tableStore.spec.visTree);
+    try {
+        const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
+        // console.log(rootArea, tableStore.spec.visTree, tableStore.spec.rawSpecs, tableStore.input_tbl.tbl[0]);
+        tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
+        // console.log(rootArea, tableStore.spec.visTree);
+        drawTree(tableStore.spec.visTree);
+    } catch (e) {
+        message.error(`Failed to parse the specification:\n ${e}`);
+    }
     // console.log('watch code changed: end');
 });
 

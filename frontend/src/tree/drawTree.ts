@@ -12,9 +12,7 @@ import {
   Point, TypeNode, RectDef, edgeType, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
-
-import { completeSpecification } from '@/grammar/grammar';
-import { VisTreeNode } from "@/store/table";
+import { VisTreeNode, TableStore, TblCell } from "@/store/table";
 
 type TransformTypes = keyof typeof typeMapColor;
 type NodeData = {
@@ -343,7 +341,7 @@ export class TreeChart {
   allNodes: any; // 用于存放root数据输入layout配置中后生成的位置信息
   defaultFont: string;
   duration: number;
-  store: any;
+  store: TableStore;
   orient: 'h' | 'v';
 
   constructor(
@@ -701,7 +699,7 @@ export class TreeChart {
     // .attr('stroke-width', ((d: any) => d.data.connectorLineWidth || 2))
     // .attr('stroke', (d: any) => (d.data.connectorLineColor ? d.data.connectorLineColor : 'black'));
 
-    let realChartWidth = 0;
+    let realChartWidth = 0
     linkUpdate.transition()
       .duration(this.duration)
       .attr('d', (d: any) => {
@@ -711,13 +709,13 @@ export class TreeChart {
           const xshiftEnd = -typeNodeStyle.nodeWidth / 2;
           const yshiftEnd = 0;
 
-          const chartWidth = d.x + typeNodeStyle.nodeWidth / 2;
-          if (chartWidth > realChartWidth) {
-            realChartWidth = chartWidth;
-          }
-
           if (d.parent.id == "0") {
             xshiftStart = typeNodeStyle.nodeCircleRadius
+          }
+
+          const chartWidth = d.x + xshiftStart;
+          if (chartWidth > realChartWidth) {
+            realChartWidth = chartWidth;
           }
 
           const o: d3.DefaultLinkObject = {
@@ -810,31 +808,6 @@ export class TreeChart {
         // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         return;
       }
-      /*
-      if (!dataBindToThis.data.dataTypeText) { // 提前处理圆形节点，array下的元素
-        // @ts-ignore
-        current.patternify({ tag: 'circle', selector: `node-circle-${dataBindToThis.id}` });
-        nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
-          .attr('class', `node-circle-${dataBindToThis.id} type-node`)
-          .attr('r', ({ data: info }: any) => info.nodeCircleRadius)
-          .attr('fill', ({ data: info }: any) => info.nodeFillColor)
-          .attr('transform', ({ data: info }: any) => `translate(${info.nodeWidth / 2}, ${info.nodeHeight / 2})`)
-          .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-          .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
-        return;
-      }
-        
-      dataBindToThis.data.nodeMultipleRectInfo.forEach((nodeRectData: RectDef, i: number) => {
-        // @ts-ignore
-        current.patternify({ tag: 'path', selector: `multi-type-rect-${dataBindToThis.id}-${i}` });
-        nodeGroups.select(`.multi-type-rect-${dataBindToThis.id}-${i}`)
-          .attr('class', `multi-type-rect-${dataBindToThis.id}-${i} type-node`)
-          .attr('d', customRectCorner(nodeRectData))
-          .attr('fill', nodeRectData.rectColor)
-          .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
-          .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
-      });
-      */
 
       const nodeRectData = {
         // "rectColor": typeNodeStyle.nodeRectFillColor,
@@ -902,18 +875,34 @@ export class TreeChart {
       .on('contextmenu', this.declareContextMenu.bind(this))
       .on('click', (event: any, d: any) => {
         event.stopPropagation();
-        console.log(event, d);
+        // console.log(event, d);
         // [startRow, startCol, endRow, endCol]
-        // const selected = [d.data.x, d.data.y, d.data.x + d.data.width - 1, d.data.y + d.data.height - 1];
-        const selected = [d.data.y, d.data.x, d.data.y + d.data.height - 1, d.data.x + d.data.width - 1];
+        const visData = d.data as VisTreeNode;
+        const matchSelected: Array<[number, number, number, number]> = [];
+        visData.matchs?.forEach((match) => {
+          const { x, y, width, height } = match;
+          matchSelected.push([y, x, y + height - 1, x + width - 1]);
+        })
+        let allHightedInCells: TblCell[] = [];
+        let allHightedOutCells: TblCell[] = [];
+        let allHightedMiniCells: TblCell[] = [];
+        if (matchSelected.length > 0) {
+          const { selectedCoords, hightedCells } = this.store.getHightlightedCells(matchSelected, "posi-mapping-shallow");
+          allHightedInCells = allHightedInCells.concat(hightedCells);
+          const cells = this.store.in_out_mapping(selectedCoords, "input_tbl", "posi-mapping-shallow");
+          allHightedOutCells = allHightedOutCells.concat(cells);
+          allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
+        }
 
-        const { selectedCoords, hightedCells } = this.store.getHightlightedCells([selected]);
-        console.log(selected, selectedCoords, hightedCells);
-        this.store.highlightTblCells("input_tbl", hightedCells);
-        // const cells = this.store.in_out_mapping(selectedCoords, "input_tbl");
-        // this.store.highlightTblCells("output_tbl", cells);
-        // tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
-        this.store.highlightMinimapCells(hightedCells);
+        const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
+        const { selectedCoords, hightedCells } = this.store.getHightlightedCells(selected);
+        allHightedInCells = allHightedInCells.concat(hightedCells);
+        this.store.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
+        const cells = this.store.in_out_mapping(selectedCoords, "input_tbl");
+        allHightedOutCells = allHightedOutCells.concat(cells);
+        this.store.highlightTblCells("output_tbl", allHightedOutCells);
+        allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
+        this.store.highlightMinimapCells(allHightedMiniCells);
 
         return;
         // this.handleCircleClick(event, d);  // 收缩节点
@@ -951,7 +940,7 @@ export class TreeChart {
       d.y0 = d.y;
     });
 
-    const offsetX = Math.max((this.svgWidth - realChartWidth) / 2 - this.margins[0], 0);
+    const offsetX = Math.max((this.svgWidth - realChartWidth) / 2, 0) - typeNodeStyle.nodeCircleRadius * 2;
     const offsetY = Math.max((this.svgHeight - this.realChart.node()!.getBBox().height) / 2, 0);
     this.centerG.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
   }

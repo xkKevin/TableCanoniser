@@ -12,6 +12,7 @@ import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
+import { colorConfig } from '@/tree/style';
 // import { cloneDeep } from 'lodash';
 
 // export interface TblVisData {
@@ -39,11 +40,15 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-export interface VisTreeNode extends TableTidierTemplate {
-  width?: number,
-  height?: number,
-  x?: number,
-  y?: number,
+interface AreaBox {
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+}
+
+export interface VisTreeNode extends TableTidierTemplate, AreaBox {
+  matchs?: AreaBox[]
   children?: VisTreeNode[]
 }
 
@@ -64,30 +69,6 @@ export interface AreaForm {
   }
 }
 
-const color_config: { [key: string]: { [key: string]: string } } = {
-  "posi-mapping": {
-    fill: '#37bc6c',
-    stroke: '#37bc6c',
-    text: '#fff',
-  },
-  "ambiguous-cell": {
-    fill: '#83e4aa',
-    stroke: '#83e4aa',
-    text: '#e91010',
-  },
-  "determined-cell": {
-    fill: '#37bc6c',
-    stroke: '#37bc6c',
-    text: '#e91010',
-    weight: 'bold',
-  },
-  "default": {
-    fill: '#f9f7ff',
-    stroke: '#cccccc',
-    text: '#000',
-  },
-}
-
 // define and expose a store
 export const useTableStore = defineStore('table', {
   // data
@@ -99,6 +80,7 @@ export const useTableStore = defineStore('table', {
       spec: {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
         visTree: shallowRef<VisTreeNode>({ width: 0, height: 0, x: 0, y: 0, children: [] }),
+        visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<any>(null),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
         selectAreaFlag: 0 as 0 | 1 | 2 | 3 | 4,
@@ -153,13 +135,13 @@ export const useTableStore = defineStore('table', {
       },
       input_tbl: {
         instance: {} as Handsontable,
-        cells: [] as [number, number][],  // highlighted cells
+        // cells: [] as [number, number][],  // highlighted cells
         tbl: shallowRef<Table2D>([]),
         in2out: shallowRef<{ [key: string]: string[] }>({}),
       },
       output_tbl: {
         instance: {} as Handsontable,
-        cells: [] as [number, number][], // highlighted cells
+        // cells: [] as [number, number][], // highlighted cells
         tbl: shallowRef<Table2D>([]),
         cols: shallowRef<string[]>([]),
         out2in: shallowRef<{ [key: string]: string[] }>({}),
@@ -208,7 +190,7 @@ export const useTableStore = defineStore('table', {
           // disabled: true
           // icon: () => h(MailOutlined),
         }],
-        menuList: []
+        menuList: [] as Array<{ [key: string]: any }>,
       }
     }
   },
@@ -267,20 +249,49 @@ export const useTableStore = defineStore('table', {
       return prompt;
     },
 
+    traverseTree(nodes: AreaInfo[]) {
+      let visNode: VisTreeNode | null = null;
+      nodes.forEach((node) => {
+        const path = node.templateRef.toString()
+        if (!this.spec.visTreeMatchPath.hasOwnProperty(path)) {
+          visNode = this.getNodebyPath(this.spec.visTree.children!, node.templateRef) as VisTreeNode;
+          if (visNode === null) return;
+          this.spec.visTreeMatchPath[path] = visNode;
+          visNode.matchs = [{
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height
+          }];
+        } else {
+          this.spec.visTreeMatchPath[path].matchs!.push({
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height
+          });
+        }
+        this.traverseTree(node.children)
+      })
+    },
+
     transformTblUpdateRootArea(specs: TableTidierTemplate[] = []) {
       const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
       // this.editor.rootArea.codePref + JSON.stringify(rootArea)
       this.editor.rootArea.object = rootArea;
       this.editor.rootArea.code = serialize(rootArea);
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
+      this.traverseTree(rootArea.children);
       return tidyData;
     },
 
-    highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[]) {
+    highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[], coords: [number, number][] | null = null) {
       this[tbl].instance.updateSettings({ cell: cells });
-      this[tbl].cells = cells!.map((c) => [c.row, c.col] as [number, number]);
-      if (this[tbl].cells.length) {
-        let { topLeft, rowSize, colSize } = this.startPoint(this[tbl].cells);
+      if (coords === null) {
+        coords = cells!.map((c) => [c.row, c.col] as [number, number]);
+      }
+      if (coords.length) {
+        let { topLeft, rowSize, colSize } = this.startPoint(coords);
         // 滚动到中间位置
         const visibleRows = this[tbl].instance.countVisibleRows();
         const visibleCols = this[tbl].instance.countVisibleCols();
@@ -294,20 +305,22 @@ export const useTableStore = defineStore('table', {
     },
 
     highlightMinimapCells(cells: TblCell[]) {
-      d3.selectAll('g.matrix rect.grid-cell').attr('fill', color_config.default.fill).attr('stroke', color_config.default.stroke);
-      d3.selectAll('g.matrix text.grid-text').attr('fill', color_config.default.text).attr('font-weight', 'normal');
+      d3.selectAll('g.matrix rect.grid-cell').attr('fill', colorConfig.default.fill).attr('stroke', colorConfig.default.stroke);
+      d3.selectAll('g.matrix text.grid-text').attr('fill', colorConfig.default.text).attr('font-weight', 'normal');
       cells.forEach((cell) => {
         if (cell.className) {
           d3.select(`g.matrix #grid-${cell.row}-${cell.col}`)
-            .attr('fill', color_config[cell.className].fill).attr('stroke', color_config[cell.className].stroke);
-          d3.select(`g.matrix #text-${cell.row}-${cell.col}`).attr('fill', color_config[cell.className].text).attr('font-weight', color_config[cell.className].weight || 'normal');
+            // @ts-ignore
+            .attr('fill', colorConfig[cell.className].fill).attr('stroke', colorConfig[cell.className].stroke);
+          // @ts-ignore
+          d3.select(`g.matrix #text-${cell.row}-${cell.col}`).attr('fill', colorConfig[cell.className].text).attr('font-weight', colorConfig[cell.className].weight || 'normal');
         }
 
       });
 
     },
 
-    in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl") {
+    in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl", className: string = "posi-mapping") {
       const posi_mapping = type === "input_tbl" ? this.input_tbl.in2out : this.output_tbl.out2in;
       if (Object.keys(posi_mapping).length === 0) {
         return [];
@@ -324,14 +337,14 @@ export const useTableStore = defineStore('table', {
         posi.forEach((pi) => {
           if (pi && pi.startsWith("[") && pi.endsWith("]")) {
             let pi_n = JSON.parse(pi) as [number, number];
-            cells.push({ row: pi_n[0], col: pi_n[1], className: "posi-mapping" });
+            cells.push({ row: pi_n[0], col: pi_n[1], className });
           }
         });
       }
       return cells;
     },
 
-    getHightlightedCells(selected: Array<[number, number, number, number]>) {
+    getHightlightedCells(selected: Array<[number, number, number, number]>, className: string = "posi-mapping") {
       let selectedCoords: { [key: string]: [number, number][] } = {};
       let hightedCells: { row: number, col: number, className: string }[] = [];
       // 遍历选定区域
@@ -355,17 +368,17 @@ export const useTableStore = defineStore('table', {
           for (let col = startCol; col <= endCol; col++) {
             // 将坐标添加到数组中
             selectedCoords[range.toString()].push([row, col]);
-            hightedCells.push({ row, col, className: "posi-mapping" });
+            hightedCells.push({ row, col, className });
           }
         }
       });
       return { selectedCoords, hightedCells };
     },
 
-    grid_cell_click(cell: TblCell) {
+    grid_cell_click(cell: TblCell, className: string = "posi-mapping") {
       const tbl_cell = this.input_tbl.instance.getCell(cell.row, cell.col);
       if (tbl_cell) {
-        let cells: TblCell[] = [{ ...cell, className: "posi-mapping" }];
+        let cells: TblCell[] = [{ ...cell, className }];
         this.highlightTblCells("input_tbl", cells);
         tbl_cell.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
       }
@@ -434,6 +447,7 @@ export const useTableStore = defineStore('table', {
       }
       try {
         const specs = this.spec.rawSpecs;
+        this.spec.visTreeMatchPath = {};
         const tidyData = this.transformTblUpdateRootArea(specs);
         this.initTblInfo(false);
 
@@ -506,12 +520,10 @@ export const useTableStore = defineStore('table', {
         this.input_tbl.instance.updateData(this.input_tbl.tbl);
       }
 
-      this.input_tbl.cells = [];
       this.input_tbl.in2out = {};
 
       this.output_tbl.tbl = [];
       this.output_tbl.cols = [];
-      this.output_tbl.cells = [];
       this.output_tbl.out2in = {};
       this.output_tbl.instance.updateData(this.output_tbl.tbl);
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
@@ -675,3 +687,6 @@ export const useTableStore = defineStore('table', {
   // computed
   getters: {}
 })
+
+
+export type TableStore = ReturnType<typeof useTableStore>;

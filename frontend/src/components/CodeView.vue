@@ -13,7 +13,6 @@ export default defineComponent({
 import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useTableStore } from "@/store/table";
-import { message } from "ant-design-vue";
 
 
 const { codeType } = defineProps<{ codeType: "mappingSpec" | "rootArea" | "transformScript" }>();
@@ -73,6 +72,11 @@ const initEditor = () => {
         tableStore.editor[codeType].code = value;
     });
 };
+
+watch(() => tableStore.editor.rootArea.code, (newVal) => {
+    // console.log("watch editor code", codeType);
+    tableStore.editor.rootArea.instance?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
+});
 
 /*
 watch(() => tableStore.editor[codeType].code, (newVal) => {

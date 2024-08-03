@@ -439,8 +439,8 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
             }
         } else {
             // 父区域有 transform
-            for (let templateChild of template.children) {
-                currentArea.children.forEach((areaChild, ti) => {
+            template.children.forEach((templateChild, ti) => {
+                currentArea.children.forEach((areaChild) => {
                     processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
                 // fillColumns(tidyData, template.fill);
@@ -449,7 +449,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
                 } else {
                     fillColumns(tidyData, template.fill);
                 }
-            }
+            })
         }
     }
 

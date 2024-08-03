@@ -354,7 +354,12 @@ function handleCaseChange(value: string) {
 
   td.posi-mapping {
     color: #fff !important;
-    background-color: #37bc6c;
+    background-color: #0984e3 // #37bc6c;
+  }
+
+  td.posi-mapping-shallow {
+    color: #fff !important;
+    background-color: #74b9ff //  #37bc6c;
   }
 
   td.ambiguous-cell {
