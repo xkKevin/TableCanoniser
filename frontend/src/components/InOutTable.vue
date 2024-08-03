@@ -225,33 +225,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     if (tableStore.specMode) return;
     const selected = tblInst1.getSelected() || [];
     // key 表示所选区域，value 表示所选区域所有单元格的坐标
-    let selectedCoords: { [key: string]: [number, number][] } = {};
-    let hightedCells: { row: number, col: number, className: string }[] = [];
-    // 遍历选定区域
-    selected.forEach(range => {
-      let startRow = range[0];
-      let startCol = range[1];
-      let endRow = range[2];
-      let endCol = range[3];
-
-      if (startRow > endRow) {
-        [startRow, endRow] = [endRow, startRow];
-      }
-      if (startCol > endCol) {
-        [startCol, endCol] = [endCol, startCol];
-      }
-
-      selectedCoords[range.toString()] = [];
-      // 遍历行
-      for (let row = startRow; row <= endRow; row++) {
-        // 遍历列
-        for (let col = startCol; col <= endCol; col++) {
-          // 将坐标添加到数组中
-          selectedCoords[range.toString()].push([row, col]);
-          hightedCells.push({ row, col, className: "posi-mapping" });
-        }
-      }
-    });
+    const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected);
 
     // 打印所有坐标
     // console.log(selectedCoords);
@@ -271,8 +245,8 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       areaConfig.startCell = {
         referenceAreaLayer: "root",
         referenceAreaPosi: "topLeft",
-        xOffset: selected[0][1],
-        yOffset: selected[0][0]
+        xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
+        yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
       }
       areaConfig.size = {
         width: selected[0][3] - selected[0][1] + 1,

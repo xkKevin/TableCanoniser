@@ -27,11 +27,12 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { TreeChart } from '@/tree/drawTree';
 import { message } from 'ant-design-vue';
 import { useTableStore } from "@/store/table";
+import { transformTable } from '@/grammar/handleSpec';
 const tableStore = useTableStore();
 
 /*
 interface TreeNode {
-    name: string;
+    [key: string]: any;
     children?: TreeNode[];
 }
 
@@ -189,6 +190,11 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.setSpec();
     if (!setFlag) return;
+
+    const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
+    // console.log(rootArea, tableStore.spec.visTree, tableStore.spec.rawSpecs, tableStore.input_tbl.tbl[0]);
+    tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
+    // console.log(rootArea, tableStore.spec.visTree);
     drawTree(tableStore.spec.visTree);
     // console.log('watch code changed: end');
 });

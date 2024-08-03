@@ -39,6 +39,14 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
+export interface VisTreeNode extends TableTidierTemplate {
+  width?: number,
+  height?: number,
+  x?: number,
+  y?: number,
+  children?: VisTreeNode[]
+}
+
 export interface AreaForm {
   referenceAreaLayer: any,
   referenceAreaPosi: any,
@@ -90,7 +98,7 @@ export const useTableStore = defineStore('table', {
       currentCase: '', // caseList[0],
       spec: {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
-        visTree: shallowRef<{ id: string, size: { width: number, height: number }, children: TableTidierTemplate[] }>({ id: "root", size: { width: 0, height: 0 }, children: [] }),
+        visTree: shallowRef<VisTreeNode>({ width: 0, height: 0, x: 0, y: 0, children: [] }),
         selectNode: shallowRef<any>(null),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
         selectAreaFlag: 0 as 0 | 1 | 2 | 3 | 4,
@@ -272,10 +280,13 @@ export const useTableStore = defineStore('table', {
       this[tbl].instance.updateSettings({ cell: cells });
       this[tbl].cells = cells!.map((c) => [c.row, c.col] as [number, number]);
       if (this[tbl].cells.length) {
-        let start_point = this.startPoint(this[tbl].cells);
+        let { topLeft, rowSize, colSize } = this.startPoint(this[tbl].cells);
+        // 滚动到中间位置
+        const visibleRows = this[tbl].instance.countVisibleRows();
+        const visibleCols = this[tbl].instance.countVisibleCols();
         this[tbl].instance.scrollViewportTo({
-          row: start_point[0],
-          col: start_point[1],
+          row: rowSize === 1 ? Math.max(0, topLeft[0] - Math.floor(visibleRows / 2)) : topLeft[0] - 1,
+          col: colSize === 1 ? Math.max(0, topLeft[1] - Math.floor(visibleCols / 2)) : topLeft[1] - 1,
           verticalSnap: "top",
           horizontalSnap: "start",
         });
@@ -320,6 +331,37 @@ export const useTableStore = defineStore('table', {
       return cells;
     },
 
+    getHightlightedCells(selected: Array<[number, number, number, number]>) {
+      let selectedCoords: { [key: string]: [number, number][] } = {};
+      let hightedCells: { row: number, col: number, className: string }[] = [];
+      // 遍历选定区域
+      selected.forEach(range => {
+        let startRow = range[0] < 0 ? 0 : range[0];
+        let startCol = range[1] < 0 ? 0 : range[1];
+        let endRow = range[2];
+        let endCol = range[3];
+
+        if (startRow > endRow) {
+          [startRow, endRow] = [endRow, startRow];
+        }
+        if (startCol > endCol) {
+          [startCol, endCol] = [endCol, startCol];
+        }
+
+        selectedCoords[range.toString()] = [];
+        // 遍历行
+        for (let row = startRow; row <= endRow; row++) {
+          // 遍历列
+          for (let col = startCol; col <= endCol; col++) {
+            // 将坐标添加到数组中
+            selectedCoords[range.toString()].push([row, col]);
+            hightedCells.push({ row, col, className: "posi-mapping" });
+          }
+        }
+      });
+      return { selectedCoords, hightedCells };
+    },
+
     grid_cell_click(cell: TblCell) {
       const tbl_cell = this.input_tbl.instance.getCell(cell.row, cell.col);
       if (tbl_cell) {
@@ -331,9 +373,13 @@ export const useTableStore = defineStore('table', {
 
     startPoint(points: [number, number][]) {
       let topLeft = points[0];
+      const rows = new Set([topLeft[0]]);
+      const cols = new Set([topLeft[1]]);
 
       for (let i = 1; i < points.length; i++) {
         let current = points[i];
+        rows.add(current[0]);
+        cols.add(current[1]);
         if (
           current[0] < topLeft[0] ||
           (current[0] === topLeft[0] && current[1] < topLeft[1])
@@ -341,7 +387,12 @@ export const useTableStore = defineStore('table', {
           topLeft = current;
         }
       }
-      return topLeft;
+
+      return {
+        topLeft,
+        rowSize: rows.size,
+        colSize: cols.size,
+      };
     },
 
     setSpec() {
@@ -362,11 +413,11 @@ export const useTableStore = defineStore('table', {
         const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
         this.spec.rawSpecs = specs;
         this.spec.visTree.children = JSON.parse(JSON.stringify(specs)); // cloneDeep(specs);
-        this.spec.visTree.children.forEach((spec) => {
-          if (!spec.hasOwnProperty('children')) {
-            spec.children = [];
-          }
-        })
+        // this.spec.visTree.children!.forEach((spec) => {
+        //   if (!spec.hasOwnProperty('children')) {
+        //     spec.children = [];
+        //   }
+        // })
         return true
       }
       catch (e) {
@@ -596,6 +647,30 @@ export const useTableStore = defineStore('table', {
       }
       this.stringifySpec();
     },
+    // 复制属性的函数
+    copyAttributes(source: TreeNode, target: TreeNode, attributes: string[]) {
+      for (const attr of attributes) {
+        if (source.hasOwnProperty(attr)) {
+          target[attr] = source[attr];
+        }
+      }
+    },
+
+    // 递归遍历树并复制属性
+    copyTreeAttributes(tree1: TreeNode, tree2: TreeNode, attributes = ['width', 'height', 'x', 'y']) {
+      this.copyAttributes(tree1, tree2, attributes);
+
+      if (tree1.children && tree2.children) {
+        if (tree1.children.length > tree2.children.length) {
+          console.log(tree1.children);
+          console.log(tree2.children);
+        }
+        for (let i = 0; i < tree1.children.length; i++) {
+          // console.log(tree1.children[i], tree2.children[i]);
+          this.copyTreeAttributes(tree1.children[i], tree2.children[i], attributes);
+        }
+      }
+    }
   },
   // computed
   getters: {}

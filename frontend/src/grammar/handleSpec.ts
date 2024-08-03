@@ -144,7 +144,7 @@ const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueTyp
     }
 }
 
-const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
+const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, traverseFlag: boolean = true) => {
 
     let currentStartX = startX;
     let currentEndX = startX + width - 1;
@@ -171,6 +171,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
                 }
             } else {
                 index.instanceIndex += 1;
+                if (!traverseFlag) return;
                 if (template.traverse.xDirection === null) break;
                 index.xIndex += 1;
                 currentStartX += areaWidth
@@ -190,6 +191,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
                 currentEndY = currentStartY
             }
         } else {
+            if (!traverseFlag) return;
             if (template.traverse.yDirection === null) break;
             index.yIndex += 1;
             currentStartY += areaHeight
@@ -360,7 +362,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
 
 
 // Recursive function to process a template
-const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, templateIndex: number = 0) => {
+const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, templateIndex: number = 0, traverseFlag: boolean = true) => {
 
     const index: MatchedIndex = {
         templateRef: [...currentArea.templateRef, templateIndex],
@@ -387,45 +389,46 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
     let startX, startY, endX, endY;
 
-    if (xDirection === 'before') {
+    if (xDirection === null || !traverseFlag) {
+        startX = xOffset;
+        if (template.size.width === null) endX = currentArea.width - 1;
+        else endX = startX + width - 1;
+    } else if (xDirection === 'before') {
         startX = 0;
         endX = xOffset;
     } else if (xDirection === 'after') {
         startX = xOffset;
         endX = currentArea.width - 1;
-    } else if (xDirection === 'whole') {
+    } else {  //  if (xDirection === 'whole')
         startX = 0;
         endX = currentArea.width - 1;
-    } else {
-        startX = xOffset;
-        if (template.size.width === null) endX = currentArea.width - 1;
-        else endX = startX + width - 1;
     }
-    if (yDirection === 'before') {
+
+    if (yDirection === null || !traverseFlag) {
+        startY = yOffset;
+        if (template.size.height === null) endY = currentArea.height - 1;
+        else endY = startY + height - 1;
+    } else if (yDirection === 'before') {
         startY = 0;
         endY = yOffset;
     } else if (yDirection === 'after') {
         startY = yOffset;
         endY = currentArea.height - 1;
-    } else if (yDirection === 'whole') {
+    } else {  // if (yDirection === 'whole')
         startY = 0;
         endY = currentArea.height - 1;
-    } else {
-        startY = yOffset;
-        if (template.size.height === null) endY = currentArea.height - 1;
-        else endY = startY + height - 1;
     }
 
     // console.log(startX, startY, endX, endY, width, height);
 
-    traverseArea(template, startX, startY, endX, endY, width, height, index, currentArea, rootArea, tidyData);
+    traverseArea(template, startX, startY, endX, endY, width, height, index, currentArea, rootArea, tidyData, traverseFlag);
 
     if (template.children.length > 0 && currentArea.children.length > 0) {
         if (template.transform === null) {
             // 父区域没有 transform
             for (let areaChild of currentArea.children) {
                 template.children.forEach((templateChild, ti) => {
-                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
+                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
                 // fillColumns(tidyData, template.fill);
                 if (template.fill === null && template.children.length > 1) {
@@ -438,7 +441,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
             // 父区域有 transform
             for (let templateChild of template.children) {
                 currentArea.children.forEach((areaChild, ti) => {
-                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
+                    processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
                 // fillColumns(tidyData, template.fill);
                 if (template.fill === null) {
@@ -453,7 +456,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
 }
 
-export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
+export function transformTable(table: Table2D, specs: TableTidierTemplate[], traverseFlag: boolean = true) {
 
     // const specWithDefaults = completeSpecification(spec);
     // console.log(JSON.stringify(specWithDefaults, null, 2));
@@ -480,7 +483,7 @@ export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
 
     specs.forEach((template, ti) => {
         const specWithDefaults = completeSpecification(template);
-        processTemplate(specWithDefaults, rootArea, rootArea, tidyData, ti);
+        processTemplate(specWithDefaults, rootArea, rootArea, tidyData, ti, traverseFlag);
         // fillColumns(tidyData, specWithDefaults.fill);
         if (specWithDefaults.fill === null && specWithDefaults.children.length > 1) {
             fillColumns(tidyData, "");

@@ -18,6 +18,7 @@
 import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
 import { useTableStore, TblCell } from "@/store/table";
+import { transformTable } from '@/grammar/handleSpec';
 
 const tableStore = useTableStore();
 
@@ -189,15 +190,18 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
     // console.log('watch: tbl changed: start');
     if (newVal.length === 0) {
         d3.select(container.value).selectAll('svg').remove();
-        tableStore.spec.visTree.size.height = 0;
-        tableStore.spec.visTree.size.width = 0;
     } else {
-        tableStore.spec.visTree.size.height = newVal.length;
-        tableStore.spec.visTree.size.width = newVal[0].length;
         drawGrid(newVal.length, newVal[0].length);
     }
-    tableStore.setSpec();
-    tableStore.tree.visInst?.render();
+    // const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
+    // tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
+    // tableStore.tree.visInst?.render();
+
+
+    // tableStore.setSpec();
+    // const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
+    // tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
+    // tableStore.tree.visInst?.render();
     // console.log('watch: tbl changed: end');
 });
 
