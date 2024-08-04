@@ -18,7 +18,6 @@
 import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
 import { useTableStore, TblCell } from "@/store/table";
-import { transformTable } from '@/grammar/handleSpec';
 
 const tableStore = useTableStore();
 

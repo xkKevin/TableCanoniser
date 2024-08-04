@@ -2,6 +2,18 @@
   <div id="panel">
     <div class="system-name">
       <span id="system_name">TableTidier</span>
+      <span style="right: 20px; position: absolute;">
+        <a-button-group>
+          <a-button size="small" @click="undo" :disabled="undoFlag">
+            <v-icon name="io-arrow-undo-outline" scale="0.9"></v-icon>
+            <span style="margin-left: 5px">Undo</span>
+          </a-button>
+          <a-button size="small" @click="redo" :disabled="redoFlag">
+            <v-icon name="io-arrow-redo-outline" scale="0.9"></v-icon>
+            <span style="margin-left: 5px">Redo</span>
+          </a-button>
+        </a-button-group>
+      </span>
       <!--
       <span style="left: 20px; position: absolute;">
         <el-button type="success" plain :disabled="!mode">Select Area</el-button>
@@ -91,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
@@ -114,6 +126,27 @@ function chooseTargetType(a: any) { // 选择目标类型
 
 function changeMode() {
   tableStore.specMode = mode.value;
+}
+
+const undoFlag = computed(() => tableStore.spec.undoHistory.length === 0);
+const redoFlag = computed(() => tableStore.spec.redoHistory.length === 0);
+
+// 撤销操作
+function undo() {
+  const lastSpec = tableStore.spec.undoHistory.pop();
+  if (lastSpec !== undefined) {
+    tableStore.spec.redoHistory.push(tableStore.editor.mappingSpec.code);
+    tableStore.editor.mappingSpec.code = lastSpec;
+  }
+}
+
+// 重做操作
+function redo() {
+  const lastUndo = tableStore.spec.redoHistory.pop();
+  if (lastUndo !== undefined) {
+    tableStore.spec.undoHistory.push(tableStore.editor.mappingSpec.code);
+    tableStore.editor.mappingSpec.code = lastUndo;
+  }
 }
 
 function transformTablebyCode() {
@@ -289,5 +322,27 @@ onMounted(() => {
   // background-color: rgba(255, 255, 0, 0.3);
   // background-color: #74b9ff;
   background-color: rgba(116, 185, 255, 0.5);
+}
+
+.ant-btn-default {
+  transition: 0s;
+}
+
+.ant-btn-default:hover {
+  svg path {
+    stroke: #4494fc;
+  }
+}
+
+.ant-btn-default:disabled {
+  background-color: #ffffff;
+  border-color: #d9d9d9;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
+  cursor: not-allowed;
+  color: rgba(0, 0, 0, 0.25);
+
+  svg path {
+    stroke: rgba(0, 0, 0, 0.25);
+  }
 }
 </style>

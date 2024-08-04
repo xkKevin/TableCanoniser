@@ -88,6 +88,8 @@ export const useTableStore = defineStore('table', {
       caseList: ["case1", "case2", "case3", "case4", "case5"],
       currentCase: '', // caseList[0],
       spec: {
+        undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
+        redoHistory: [] as string[],
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
         visTree: shallowRef<VisTreeNode>({ width: 0, height: 0, x: 0, y: 0, children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
@@ -242,6 +244,8 @@ export const useTableStore = defineStore('table', {
         }
 
         if (specText !== null) {
+          this.spec.undoHistory = [];
+          this.spec.redoHistory = [];
           this.editor.mappingSpec.code = specText;
         } else {
           prompt.push(`Failed to load spec from ${caseN}`);

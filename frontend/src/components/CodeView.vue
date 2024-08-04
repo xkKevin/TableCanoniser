@@ -69,6 +69,11 @@ const initEditor = () => {
         }
         const value = editor!.getValue();
         if (areStringEqual(tableStore.editor[codeType].code, value)) return; // 忽略换行还有空格之后比较字符串是否相等
+        if (codeType === "mappingSpec") {
+            tableStore.spec.undoHistory.push(tableStore.editor.mappingSpec.code);
+            // 当执行新的操作时，重做历史应当清空
+            tableStore.spec.redoHistory = [];
+        }
         tableStore.editor[codeType].code = value;
     });
     if (codeType === "mappingSpec") {

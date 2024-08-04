@@ -134,8 +134,6 @@ const resizeObserver = new ResizeObserver(() => {
 });
 */
 
-import * as monaco from "monaco-editor";
-
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
