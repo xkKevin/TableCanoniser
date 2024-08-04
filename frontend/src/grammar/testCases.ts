@@ -401,7 +401,7 @@ const case3_spec: TableTidierTemplate = {
                     position: "left",
                     targetCol: (ctxCells) => {
                         if (ctxCells[0].value === "Announced Date") return "Release Date";
-                        return ctxCells[0].value as string;
+                        return ctxCells[0].value;
                     },
                 },
                 targetCols: "context",

@@ -252,7 +252,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
     const cellArray = currentArea.areaTbl.flat();
     if (template.transform) {
         const context = template.transform.context;
-        const ctxCols: (string | null)[] = []
+        const ctxCols: (CellValueType | null)[] = []
         const ctxCellsInfo: CellInfo[][] = [];
         if (context) {
             const ctxSelections: CellSelection[][] = [];
@@ -335,7 +335,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
             }
         }
 
-        let transformedCols: (string | null)[];
+        let transformedCols: (CellValueType | null)[];
         if (typeof template.transform.targetCols === 'object') {
             transformedCols = template.transform.targetCols
         } else if (template.transform.targetCols === 'context') {
@@ -344,7 +344,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
             transformedCols = template.transform.targetCols(currentArea.areaTbl);
         }
         transformedCols.forEach((targetCol, index) => {
-            if (targetCol) {
+            if (targetCol !== null && targetCol !== undefined) {
                 const cellInfo: CellInfo = {
                     x: currentArea.x + index % currentArea.width,
                     y: currentArea.y + Math.floor(index / currentArea.width),
