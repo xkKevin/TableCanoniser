@@ -15,19 +15,29 @@ import * as ts from "typescript";
 import { colorConfig } from '@/tree/style';
 // import { cloneDeep } from 'lodash';
 
-// export interface TblVisData {
-//   input_tbl: string[][];
-//   output_tbl: string[][];
-//   output_col: string[];
-//   in2out: { [key: string]: string[] }
-//   out2in: {
-//     cells: { [key: string]: string },
-//     cols: string[][],
-//     rows: string[][]
-//   },
-//   ambiguous_posi?: { [key: string]: number[][] },
-//   [key: string]: any  // Index signature, allowing other fields
-// }
+function replaceEvenSpaces(str: string) {
+  // 使用正则表达式匹配连续的空格
+  return str.replace(/ {2,}/g, (match) => {
+    // 获取连续空格的数量
+    const length = match.length;
+
+    // 计算一半的空格数量
+    const halfLength = length / 2;
+
+    // 返回一半数量的空格
+    return ' '.repeat(halfLength);
+  });
+}
+
+// 去除所有空格
+function removeWhitespace(str: string) {
+  return str.replace(/ /g, '') // .replace(/\s+/g, '');  这个会把换行符也去掉
+}
+
+const removeSpaceType = {
+  even: replaceEvenSpaces,
+  all: removeWhitespace,
+}
 
 export interface TblCell {
   row: number;
@@ -118,6 +128,7 @@ export const useTableStore = defineStore('table', {
           codeSuff: '\nreturn option;',
           errorMark: null as monaco.editor.IMarker | null,
           decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
+          // highlightCode: null as [number, number] | null,
           language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
@@ -297,8 +308,8 @@ export const useTableStore = defineStore('table', {
         const visibleRows = this[tbl].instance.countVisibleRows();
         const visibleCols = this[tbl].instance.countVisibleCols();
         this[tbl].instance.scrollViewportTo({
-          row: rowSize === 1 ? Math.max(0, topLeft[0] - Math.floor(visibleRows / 2)) : topLeft[0] - 1,
-          col: colSize === 1 ? Math.max(0, topLeft[1] - Math.floor(visibleCols / 2)) : topLeft[1] - 1,
+          row: rowSize === 1 ? Math.max(0, topLeft[0] - Math.floor(visibleRows / 2)) : Math.max(0, topLeft[0] - 2),
+          col: colSize === 1 ? Math.max(0, topLeft[1] - Math.floor(visibleCols / 2)) : Math.max(0, topLeft[1] - 1),
           verticalSnap: "top",
           horizontalSnap: "start",
         });
@@ -453,6 +464,7 @@ export const useTableStore = defineStore('table', {
       }
       try {
         const specs = this.spec.rawSpecs;
+        // this.stringifySpec(); // 更新(格式化) editor.mappingSpec.code
         this.spec.visTreeMatchPath = {};
         const tidyData = this.transformTblUpdateRootArea(specs);
         this.initTblInfo(false);
@@ -584,11 +596,12 @@ export const useTableStore = defineStore('table', {
       return null;
     },
     /**
-     * 根据rawSpecs更新editor.mappingSpec.code
+     * 默认根据rawSpecs更新editor.mappingSpec.code
      */
-    stringifySpec() {
+    stringifySpec(specs: TableTidierTemplate[] | TableTidierTemplate | null = null, replaceSpace: "even" | "all" = "even", replaceCode = true) {
       let fnList: string[] = [];
-      let strSpec = JSON.stringify(this.spec.rawSpecs, replacer, 2);
+      if (specs === null) specs = this.spec.rawSpecs;
+      let strSpec = JSON.stringify(specs, replacer, 2);
       fnList.forEach((fn) => {
         strSpec = strSpec.replace(`"$TableTidier$"`, fn);
       })
@@ -600,33 +613,26 @@ export const useTableStore = defineStore('table', {
       const replaceTableTidierKeyWordsRegex = /"TableTidier\.(\w+)"/g;
       strSpec = strSpec.replace(replaceTableTidierKeyWordsRegex, 'ValueType.$1');
 
-      this.editor.mappingSpec.code = this.editor.mappingSpec.codePref + strSpec;
-      // this.editor.mappingSpec.instance?.setValue(this.editor.mappingSpec.code);
-      // this.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
-      // this.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
+      if (replaceSpace === "all") {
+        strSpec = removeSpaceType.all(strSpec);
+      }
 
-
-      function replaceEvenSpaces(str: string) {
-        // 使用正则表达式匹配连续的空格
-        return str.replace(/ {2,}/g, (match) => {
-          // 获取连续空格的数量
-          const length = match.length;
-
-          // 计算一半的空格数量
-          const halfLength = length / 2;
-
-          // 返回一半数量的空格
-          return ' '.repeat(halfLength);
-        });
+      if (replaceCode) {
+        this.editor.mappingSpec.code = this.editor.mappingSpec.codePref + strSpec;
+        // this.editor.mappingSpec.instance?.setValue(this.editor.mappingSpec.code);
+        // this.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
+        // this.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
       }
 
       function replacer(key: string, value: any) {
         if (typeof value === 'function') {
-          fnList.push(replaceEvenSpaces(value.toString()));
+          fnList.push(removeSpaceType[replaceSpace](value.toString()));
           return "$TableTidier$" // value.toString(); // 将函数转化为字符串
         }
         return value;
       }
+
+      return strSpec;
     },
 
     selectArea() {
@@ -693,9 +699,10 @@ export const useTableStore = defineStore('table', {
       const editor = this.editor.mappingSpec.instance
       const decorationsCollection = this.editor.mappingSpec.decorations
       if (editor && decorationsCollection) {
+        const range = new monaco.Range(startLine, 1, endLine, 1);
         const newDecorations: monaco.editor.IModelDeltaDecoration[] = [
           {
-            range: new monaco.Range(startLine, 1, endLine, 1),
+            range,
             options: {
               isWholeLine: true,
               className: 'myLineDecoration',
@@ -704,8 +711,11 @@ export const useTableStore = defineStore('table', {
         ];
         // 更新装饰集合
         decorationsCollection.set(newDecorations);
-        // editor.revealLineInCenter(startLine - 3);
-        editor.revealLineNearTop(startLine);
+        // editor.revealLineInCenter(startLine);
+        // editor.revealLineNearTop(startLine);
+        // editor.revealRangeNearTopIfOutsideViewport(range);
+        // editor.setSelection(range);  // 选择范围
+        editor.revealRangeAtTop(range);
       }
     }
   },

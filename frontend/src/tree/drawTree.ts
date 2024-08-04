@@ -875,37 +875,67 @@ export class TreeChart {
       .on('contextmenu', this.declareContextMenu.bind(this))
       .on('click', (event: any, d: any) => {
         event.stopPropagation();
-        // console.log(event, d);
-        // [startRow, startCol, endRow, endCol]
-        const visData = d.data as VisTreeNode;
-        const matchSelected: Array<[number, number, number, number]> = [];
-        visData.matchs?.forEach((match) => {
-          const { x, y, width, height } = match;
-          matchSelected.push([y, x, y + height - 1, x + width - 1]);
-        })
-        let allHightedInCells: TblCell[] = [];
-        let allHightedOutCells: TblCell[] = [];
-        let allHightedMiniCells: TblCell[] = [];
-        if (matchSelected.length > 0) {
-          const { selectedCoords, hightedCells } = this.store.getHightlightedCells(matchSelected, "posi-mapping-shallow");
+        if (d.id) {
+          this.store.editor.mappingSpec.instance?.setValue(this.store.editor.mappingSpec.codePref + this.store.stringifySpec(null, "even", false));
+          // console.log(event, d);
+          // [startRow, startCol, endRow, endCol]
+          const visData = d.data as VisTreeNode;
+          const matchSelected: Array<[number, number, number, number]> = [];
+          visData.matchs?.forEach((match) => {
+            const { x, y, width, height } = match;
+            matchSelected.push([y, x, y + height - 1, x + width - 1]);
+          })
+          let allHightedInCells: TblCell[] = [];
+          let allHightedOutCells: TblCell[] = [];
+          let allHightedMiniCells: TblCell[] = [];
+          if (matchSelected.length > 0) {
+            const { selectedCoords, hightedCells } = this.store.getHightlightedCells(matchSelected, "posi-mapping-shallow");
+            allHightedInCells = allHightedInCells.concat(hightedCells);
+            const cells = this.store.in_out_mapping(selectedCoords, "input_tbl", "posi-mapping-shallow");
+            allHightedOutCells = allHightedOutCells.concat(cells);
+            allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
+          }
+
+          const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
+          const { selectedCoords, hightedCells } = this.store.getHightlightedCells(selected);
           allHightedInCells = allHightedInCells.concat(hightedCells);
-          const cells = this.store.in_out_mapping(selectedCoords, "input_tbl", "posi-mapping-shallow");
+          this.store.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
+          const cells = this.store.in_out_mapping(selectedCoords, "input_tbl");
           allHightedOutCells = allHightedOutCells.concat(cells);
+          this.store.highlightTblCells("output_tbl", allHightedOutCells);
           allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
+          this.store.highlightMinimapCells(allHightedMiniCells);
+
+          this.store.input_tbl.instance.deselectCell();
+          this.store.output_tbl.instance.deselectCell();
+
+          /************** 与 monaco editor 交互 ***************/
+          const subTemplate = this.store.getNodebyPath(this.store.spec.rawSpecs, d.path);
+          const subTemplateStr = this.store.stringifySpec(subTemplate, "all", false)
+          const specsStr = this.store.stringifySpec(this.store.spec.rawSpecs, "all", false)
+          const startIndex = specsStr.indexOf(subTemplateStr);
+
+          const strBefore = specsStr.slice(0, startIndex);
+
+          const startLine = (strBefore.match(/\n/g) || []).length + 1;
+          const endLine = startLine + (subTemplateStr.match(/\n/g) || []).length;
+          this.store.highlightCode(startLine, endLine);
+        } else {
+          // this.store.editor.mappingSpec.decorations?.clear();
+          // 创建一个新的键盘事件，指定事件类型和相关参数
+          const event = new KeyboardEvent('keydown', {
+            key: 'Escape',
+            code: 'Escape',
+            keyCode: 27,
+            charCode: 27,
+            which: 27,
+            bubbles: true,
+            cancelable: true
+          });
+
+          // 将事件分发到目标元素或整个文档
+          document.dispatchEvent(event);
         }
-
-        const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
-        const { selectedCoords, hightedCells } = this.store.getHightlightedCells(selected);
-        allHightedInCells = allHightedInCells.concat(hightedCells);
-        this.store.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
-        const cells = this.store.in_out_mapping(selectedCoords, "input_tbl");
-        allHightedOutCells = allHightedOutCells.concat(cells);
-        this.store.highlightTblCells("output_tbl", allHightedOutCells);
-        allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
-        this.store.highlightMinimapCells(allHightedMiniCells);
-
-        this.store.input_tbl.instance.deselectCell();
-        this.store.output_tbl.instance.deselectCell();
         return;
         // this.handleCircleClick(event, d);  // 收缩节点
       });

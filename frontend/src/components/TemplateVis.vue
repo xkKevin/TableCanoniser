@@ -64,57 +64,6 @@ const contextMenuVisibleChange = (value: boolean) => {
     }, 200)
 };
 
-/*
-function replaceEvenSpaces(str: string) {
-    // 使用正则表达式匹配连续的空格
-    return str.replace(/ {2,}/g, (match) => {
-        // 获取连续空格的数量
-        const length = match.length;
-
-        // 计算一半的空格数量
-        const halfLength = length / 2;
-
-        // 返回一半数量的空格
-        return ' '.repeat(halfLength);
-    });
-}
-
-let fnList: string[] = [];
-
-function replacer(key: string, value: any) {
-    if (typeof value === 'function') {
-        fnList.push(replaceEvenSpaces(value.toString()));
-        return "$TableTidier$" // value.toString(); // 将函数转化为字符串
-    }
-    return value;
-}
-
-function removeQuotesFromKeys(jsonString: string) {
-    // 正则表达式匹配 JSON 对象中的键（包括可能的空白字符和引号）
-    const regex = /"(\w+)":/g;
-
-    // 使用正则表达式替换引号
-    return jsonString.replace(regex, '$1:');
-}
-
-function replaceTableTidierKeyWords(jsonString: string) {
-    const regex = /"TableTidier\.(\w+)"/g;
-
-    return jsonString.replace(regex, 'ValueType.$1');
-}
-
-function stringifySpec() {
-    let strSpec = JSON.stringify(tableStore.spec.visTree.children, replacer, 2);
-    fnList.forEach((fn) => {
-        strSpec = strSpec.replace(`"$TableTidier$"`, fn);
-    })
-    tableStore.editor.mappingSpec.code = tableStore.editor.mappingSpec.codePref + replaceTableTidierKeyWords(removeQuotesFromKeys(strSpec));
-    // tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.code);
-    fnList = [];
-    // tableStore.editor.mappingSpecinstance?.getAction('editor.action.formatDocument')?.run();
-    // tableStore.editor.mappingSpec.instance?.trigger('editor', 'editor.action.formatDocument', null);
-}*/
-
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
     const node = tableStore.spec.selectNode;
@@ -185,12 +134,12 @@ const resizeObserver = new ResizeObserver(() => {
 });
 */
 
+import * as monaco from "monaco-editor";
+
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.setSpec();
-    const startLine = 5;
-    tableStore.highlightCode(startLine, startLine + 46);
     if (!setFlag) return;
     try {
         const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
