@@ -211,10 +211,11 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         return false;
       } else {
         tblInst2.updateSettings({ cell: [] });
-        tableStore.highlightMinimapCells([])
-        // if (tbl === "output_tbl") {
-        //   tableStore.highlightMinimapCells([])
-        // }
+        tableStore.highlightMinimapCells([]);
+        if (tbl === "input_tbl") {
+          if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
+            tableStore.editor.mappingSpec.decorations?.clear();
+        }
         return true;
       }
     },
