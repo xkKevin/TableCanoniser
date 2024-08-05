@@ -54,6 +54,8 @@ export const typeNodeStyle = {
   nodeSpacing: 30,
   connectorLineColor: '#0000004D', // 树中link的颜色
   connectorLineWidth: 1.5,
+  iconsize: 15, // 树中node上侧constraint icon的大小
+  iconPadding: 10,  // 树中node上侧constraint icon的间距
 };
 
 export const nodeTextStyle = {

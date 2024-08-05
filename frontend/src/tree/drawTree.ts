@@ -793,8 +793,13 @@ export class TreeChart {
     // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
-    nodeGroups.each(function (this: any, dataBindToThis: any) {
+
+    const tableStore = this.store;
+
+
+    nodeGroups.each(function (this: any, dataBindToThis: NodeData) {
       const current = d3.select(this);
+      /** 绘制节点（circle + rect） */
       if (dataBindToThis.parent === null) { // 提前处理圆形节点，array下的元素
         // @ts-ignore
         current.patternify({ tag: 'circle', selector: `node-circle-${dataBindToThis.id}` });
@@ -819,15 +824,53 @@ export class TreeChart {
         "rounded": "all"
       }
       // @ts-ignore
-      current.patternify({ tag: 'path', selector: `multi-type-rect-${dataBindToThis.id}` });
-      nodeGroups.select(`.multi-type-rect-${dataBindToThis.id}`)
-        .attr('class', `multi-type-rect-${dataBindToThis.id} type-node`)
+      current.patternify({ tag: 'path', selector: `node-rect-${dataBindToThis.id}` });
+      nodeGroups.select(`.node-rect-${dataBindToThis.id}`)
+        .attr('class', `node-rect-${dataBindToThis.id} type-node`)
         .attr('d', customRectCorner(nodeRectData as RectDef))
         .attr('fill', ({ type }: { type: TransformTypes }) => typeMapColor[type])
         // .attr('fill', nodeRectData.rectColor)
         // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
         .attr('cursor', 'pointer')
       // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+
+      /** 绘制节点的constraints */
+      dataBindToThis.data.constraints?.forEach((constraint, i) => {
+        // console.log('hhh', constraint, i, dataBindToThis.id, dataBindToThis);
+        const iconsz = typeNodeStyle.iconsize;
+        // @ts-ignore
+        current.patternify({ tag: 'image', selector: `node-constraint-icon-${dataBindToThis.id}-${i}` });
+        nodeGroups.select(`.node-constraint-icon-${dataBindToThis.id}-${i}`)
+          .attr('transform', `translate(${2 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 1})`)
+          .attr('xlink:xlink:href', () => {
+            // eslint-disable-next-line
+            const iconPath = require(`@/assets/constraint.png`);
+            return iconPath;
+          })
+          .attr('width', iconsz)
+          .attr('height', iconsz)
+          .on('click', (_e: any, d: NodeData) => {
+            // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
+            tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
+
+            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
+            const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
+            const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
+            const constraintStr = tableStore.stringifySpec(subTemplate!.constraints![i], "all", false) //这里不能用 constraint，如果是自定义函数的话会出现问题
+
+            const startConstIndex = subTemplateStr.indexOf(constraintStr);
+            const strConstBefore = subTemplateStr.slice(0, startConstIndex);
+            const startConstLine = (strConstBefore.match(/\n/g) || []).length + 1;
+
+            const startIndex = specsStr.indexOf(subTemplateStr);
+            const strBefore = specsStr.slice(0, startIndex);
+            const startLine = (strBefore.match(/\n/g) || []).length + startConstLine;
+
+            const endLine = startLine + (constraintStr.match(/\n/g) || []).length;
+            tableStore.highlightCode(startLine, endLine);
+          });
+
+      });
     });
 
     const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });

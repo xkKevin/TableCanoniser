@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, AreaInfo } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, AreaInfo, CellConstraint } from "@/grammar/grammar"
 import { transformTable, serialize, sortWithCorrespondingArray } from "@/grammar/handleSpec"
 import { TreeChart } from '@/tree/drawTree';
 import { CustomError } from "@/types";
@@ -602,7 +602,7 @@ export const useTableStore = defineStore('table', {
     /**
      * 默认根据rawSpecs更新editor.mappingSpec.code
      */
-    stringifySpec(specs: TableTidierTemplate[] | TableTidierTemplate | null = null, replaceSpace: "even" | "all" = "even", replaceCode = true) {
+    stringifySpec(specs: TableTidierTemplate[] | TableTidierTemplate | CellConstraint | null = null, replaceSpace: "even" | "all" = "even", replaceCode = true) {
       let fnList: string[] = [];
       if (specs === null) specs = this.spec.rawSpecs;
       let strSpec = JSON.stringify(specs, replacer, 2);
