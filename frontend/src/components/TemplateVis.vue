@@ -1,5 +1,5 @@
 <template>
-    <div class="view">
+    <div class="view" style="flex: 4">
         <div class="view-title">
             <span>Template Visualization</span>
             <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
@@ -7,17 +7,22 @@
                 <span>Reset</span>
             </a-button>
         </div>
-        <div class="view-content">
-            <a-dropdown :trigger="['contextmenu']" :open="contextMenuVisible" @openChange="contextMenuVisibleChange">
-                <template #overlay>
-                    <a-menu @click="closeContextMenu" :items="menuList">
-                    </a-menu>
-                </template>
-                <div class="tree-container" ref="treeContainer"></div>
-            </a-dropdown>
-        </div>
+        <a-row class="view-content">
+            <a-col span="12">
+                1-2-3
+            </a-col>
+            <a-col span="12">
+                <a-dropdown :trigger="['contextmenu']" :open="contextMenuVisible"
+                    @openChange="contextMenuVisibleChange">
+                    <template #overlay>
+                        <a-menu @click="closeContextMenu" :items="menuList">
+                        </a-menu>
+                    </template>
+                    <div class="tree-container" ref="treeContainer"></div>
+                </a-dropdown>
+            </a-col>
+        </a-row>
     </div>
-
 </template>
 
 <script setup lang="ts">

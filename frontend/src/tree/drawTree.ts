@@ -22,6 +22,17 @@ type NodeData = {
   data: VisTreeNode
 }
 
+/** 创建一个新的Escape键盘事件，指定事件类型和相关参数 */
+const escapeEvent = new KeyboardEvent('keydown', {
+  key: 'Escape',
+  code: 'Escape',
+  keyCode: 27,
+  charCode: 27,
+  which: 27,
+  bubbles: true,
+  cancelable: true
+});
+
 
 const getLetterWidth = (
   letter: string,
@@ -965,19 +976,8 @@ export class TreeChart {
           this.store.highlightCode(startLine, endLine);
         } else {
           // this.store.editor.mappingSpec.decorations?.clear();
-          // 创建一个新的键盘事件，指定事件类型和相关参数
-          const event = new KeyboardEvent('keydown', {
-            key: 'Escape',
-            code: 'Escape',
-            keyCode: 27,
-            charCode: 27,
-            which: 27,
-            bubbles: true,
-            cancelable: true
-          });
-
           // 将事件分发到目标元素或整个文档
-          document.dispatchEvent(event);
+          document.dispatchEvent(escapeEvent);
         }
         return;
         // this.handleCircleClick(event, d);  // 收缩节点
@@ -1015,7 +1015,7 @@ export class TreeChart {
       d.y0 = d.y;
     });
 
-    const offsetX = Math.max((this.svgWidth - realChartWidth) / 2, 0) - typeNodeStyle.nodeCircleRadius * 2;
+    const offsetX = Math.max((this.svgWidth - realChartWidth) / 2, 0) - typeNodeStyle.nodeCircleRadius;
     const offsetY = Math.max((this.svgHeight - this.realChart.node()!.getBBox().height) / 2, 0);
     this.centerG.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
   }

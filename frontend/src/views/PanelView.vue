@@ -16,50 +16,23 @@
       </span>
     </div>
     <!-- <ChatBot /> -->
-    <a-row class="main-views">
-      <a-col :flex="12">
-        <a-row style="height: 50%;">
-          <a-col :flex="1" class="view">
-            1-1-1
-          </a-col>
-          <a-col :flex="1" class="view">
-            1-1-2
-          </a-col>
-        </a-row>
-
-        <a-row style="height: 50%;">
-          <a-col :flex="1" class="view">
-            1-2-1
-          </a-col>
-          <a-col :flex="1" class="view">
-            1-2-2
-          </a-col>
-          <a-col :flex="1" class="view">
-            1-2-3
-          </a-col>
-        </a-row>
-      </a-col>
-
-      <a-col :flex="5" class="view">
-        3
-      </a-col>
-    </a-row>
-    <!--
     <div class="main-views">
-      <div class="column left">
-        <InOutTable />
+      <div class="column" style="flex: 12">
+        <div style="flex: 1; display: flex;">
+          <InOutTable />
+        </div>
+
+        <div style="flex: 1; display: flex;">
+          <Minimap />
+          <TemplateVis />
+        </div>
       </div>
 
-      <div class="column center">
-        <TemplateVis />
-        <Minimap />
-      </div>
-
-      <div class="column right">
+      <div class="column" style="flex: 5;">
         <div class="view">
           <div class="view-title">
             <span>Code Panel</span>
-            <span style="float: right; margin-right: 30px">
+            <span style="float: right; margin-right: 20px">
               <a-button size="small" :loading="loading" @click="transformTablebyCode">
                 <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
                 <span>Run</span>
@@ -74,42 +47,41 @@
                     Mapping Specification
                   </span>
                 </template>
-<CodeView codeType="mappingSpec" />
-</a-tab-pane>
-<a-tab-pane key="2">
-  <template #tab>
+                <CodeView codeType="mappingSpec" />
+              </a-tab-pane>
+              <a-tab-pane key="2">
+                <template #tab>
                   <span>
                     Root Area
                   </span>
                 </template>
-  <CodeView codeType="rootArea" />
-</a-tab-pane>
-<a-tab-pane key="3">
-  <template #tab>
+                <CodeView codeType="rootArea" />
+              </a-tab-pane>
+              <a-tab-pane key="3">
+                <template #tab>
                   <span>
                     Transformation Script
                   </span>
                 </template>
-  <CodeView codeType="transformScript" />
-</a-tab-pane>
-</a-tabs>
-</div>
-</div>
-</div>
-</div>
--->
-    <!-- <DraggableModal /> -->
+                <CodeView codeType="transformScript" />
+              </a-tab-pane>
+            </a-tabs>
+          </div>
+        </div>
+      </div>
+    </div>
+    <DraggableModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
-// import InOutTable from "@/components/InOutTable.vue";
-// import CodeView from "@/components/CodeView.vue";
-// import Minimap from "@/components/Minimap.vue";
-// import TemplateVis from "@/components/TemplateVis.vue";
-// import DraggableModal from "@/components/DraggableModal.vue";
+import InOutTable from "@/components/InOutTable.vue";
+import CodeView from "@/components/CodeView.vue";
+import Minimap from "@/components/Minimap.vue";
+import TemplateVis from "@/components/TemplateVis.vue";
+import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
 import { useTableStore } from "@/store/table";
@@ -211,10 +183,9 @@ onMounted(() => {
 }
 
 .main-views {
-  // display: flex;
+  display: flex;
   justify-content: space-between;
   width: calc(100vw - 15px);
-  height: calc(100vh - 54px);
   padding: 1px;
   box-sizing: border-box;
 
@@ -227,38 +198,19 @@ onMounted(() => {
     height: calc(100vh - 54px);
   }
 
-  .left {
-    flex: 6;
+  .view {
+    flex: 1;
 
-    .view {
-      flex: 1;
-    }
-  }
+    // // height: calc(100vh - 80px);
+    .ant-tabs {
+      height: 100%;
 
-  .center {
-    flex: 5;
-
-    .view {
-      flex: 1;
-    }
-  }
-
-  .right {
-    flex: 5;
-
-    .view {
-      flex: 1;
-
-      // // height: calc(100vh - 80px);
-      .ant-tabs {
+      .ant-tabs-content {
         height: 100%;
-
-        .ant-tabs-content {
-          height: 100%;
-        }
       }
     }
   }
+
 }
 
 .column {
@@ -295,19 +247,6 @@ onMounted(() => {
 .mapping-details {
   display: flex;
   flex-direction: column;
-}
-
-.sub-view {
-  margin-bottom: 5px;
-  flex: 1;
-}
-
-.sub-view-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #e67e22;
-  /* Sub-view title text color */
 }
 
 

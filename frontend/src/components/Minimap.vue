@@ -1,7 +1,7 @@
 <template>
     <div class="view">
         <div class="view-title">
-            <span>Mapping Minimap</span>
+            <span>Minimap</span>
             <a-button size="small" style="float: right; margin-right: 20px" @click="resetZoom">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                 <span>Reset</span>
@@ -156,8 +156,6 @@ const drawGrid = (rows: number, cols: number) => {
     };
 
     updateCellTextVisibility(1); // Initial update for default scale 1
-
-
 };
 
 /*

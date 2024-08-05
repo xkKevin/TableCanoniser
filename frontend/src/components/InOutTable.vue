@@ -1,7 +1,7 @@
 <template>
   <div class="view">
     <div class="view-title">
-      <span class="head-text"> Input Table </span>
+      <span class="head-text">Input Table</span>
       <span class="toolbar" style="float: right; margin-right: 5px">
         <span class="controller">
           <a-space>
@@ -29,7 +29,7 @@
   <div class="view">
     <div class="view-title">
       <span>Output Table</span>
-      <span style="float: right; margin-right: 30px">
+      <span style="float: right; margin-right: 20px">
         <a-button size="small" @click="handleDownload">
           <v-icon name="bi-download" scale="0.85"></v-icon>
           <span>Download</span>
@@ -50,7 +50,7 @@
 import {
   getCurrentInstance,
   ComponentPublicInstance,
-  ref, watch,
+  ref,
   onMounted,
 } from "vue";
 import { HotTable } from "@handsontable/vue3";
