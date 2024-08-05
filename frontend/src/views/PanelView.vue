@@ -14,46 +14,47 @@
           </a-button>
         </a-button-group>
       </span>
-      <!--
-      <span style="left: 20px; position: absolute;">
-        <el-button type="success" plain :disabled="!mode">Select Area</el-button>
-        <el-button type="success" plain :disabled="!mode">Add Constrs</el-button>
-        <span style="margin: 0 10px">
-          <el-dropdown @command="chooseTargetType" :trigger="mode ? 'hover' : 'click'">
-            <el-button type="success" plain :disabled="!mode">
-              Target Cols
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="1">Position Based</el-dropdown-item>
-                <el-dropdown-item command="2">Context Based</el-dropdown-item>
-                <el-dropdown-item command="3">Value Based</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-</el-dropdown>
-</span>
-<el-button type="success" plain :disabled="!mode">Add Childen</el-button>
-</span>
-<span style="right: 20px; position: absolute;">
-  <el-switch v-model="mode" style="--el-switch-on-color: #13ce66; --el-switch-off-color: #13ce66"
-    active-text="Specification Mode" inactive-text="Presentation Mode" @change="changeMode" />
-</span>
--->
     </div>
     <!-- <ChatBot /> -->
+    <a-row class="main-views">
+      <a-col :flex="12">
+        <a-row style="height: 50%;">
+          <a-col :flex="1" class="view">
+            1-1-1
+          </a-col>
+          <a-col :flex="1" class="view">
+            1-1-2
+          </a-col>
+        </a-row>
+
+        <a-row style="height: 50%;">
+          <a-col :flex="1" class="view">
+            1-2-1
+          </a-col>
+          <a-col :flex="1" class="view">
+            1-2-2
+          </a-col>
+          <a-col :flex="1" class="view">
+            1-2-3
+          </a-col>
+        </a-row>
+      </a-col>
+
+      <a-col :flex="5" class="view">
+        3
+      </a-col>
+    </a-row>
+    <!--
     <div class="main-views">
-      <!-- Column 1 -->
       <div class="column left">
         <InOutTable />
       </div>
 
-      <!-- Column 2 -->
       <div class="column center">
         <TemplateVis />
         <Minimap />
       </div>
 
-      <!-- Column 3 -->
       <div class="column right">
         <div class="view">
           <div class="view-title">
@@ -70,46 +71,45 @@
               <a-tab-pane key="1">
                 <template #tab>
                   <span>
-                    <!-- <apple-outlined /> -->
                     Mapping Specification
                   </span>
                 </template>
-                <CodeView codeType="mappingSpec" />
-              </a-tab-pane>
-              <a-tab-pane key="2">
-                <template #tab>
+<CodeView codeType="mappingSpec" />
+</a-tab-pane>
+<a-tab-pane key="2">
+  <template #tab>
                   <span>
                     Root Area
                   </span>
                 </template>
-                <CodeView codeType="rootArea" />
-              </a-tab-pane>
-              <a-tab-pane key="3">
-                <template #tab>
+  <CodeView codeType="rootArea" />
+</a-tab-pane>
+<a-tab-pane key="3">
+  <template #tab>
                   <span>
-                    <!-- <android-outlined /> -->
                     Transformation Script
                   </span>
                 </template>
-                <CodeView codeType="transformScript" />
-              </a-tab-pane>
-            </a-tabs>
-          </div>
-        </div>
-      </div>
-    </div>
-    <DraggableModal />
+  <CodeView codeType="transformScript" />
+</a-tab-pane>
+</a-tabs>
+</div>
+</div>
+</div>
+</div>
+-->
+    <!-- <DraggableModal /> -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
-import InOutTable from "@/components/InOutTable.vue";
-import CodeView from "@/components/CodeView.vue";
-import Minimap from "@/components/Minimap.vue";
-import TemplateVis from "@/components/TemplateVis.vue";
-import DraggableModal from "@/components/DraggableModal.vue";
+// import InOutTable from "@/components/InOutTable.vue";
+// import CodeView from "@/components/CodeView.vue";
+// import Minimap from "@/components/Minimap.vue";
+// import TemplateVis from "@/components/TemplateVis.vue";
+// import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
 import { useTableStore } from "@/store/table";
@@ -211,9 +211,10 @@ onMounted(() => {
 }
 
 .main-views {
-  display: flex;
+  // display: flex;
   justify-content: space-between;
   width: calc(100vw - 15px);
+  height: calc(100vh - 54px);
   padding: 1px;
   box-sizing: border-box;
 
