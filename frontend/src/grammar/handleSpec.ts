@@ -162,7 +162,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
             if (tmpArea === null) {
                 // 如果没有找到，则移动到下一列
                 currentEndX += 1
-                if (template.size.width != null) {
+                if (template.match.size.width != null) {
                     currentStartX += 1;
                 } else if (currentEndX === endX) {
                     // 宽度可变且已经到了最后一列
@@ -172,7 +172,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
             } else {
                 index.instanceIndex += 1;
                 if (!traverseFlag) return;
-                if (template.traverse.xDirection === null) break;
+                if (template.match.traverse.xDirection === null) break;
                 index.xIndex += 1;
                 currentStartX += areaWidth
                 currentEndX = currentStartX + width - 1;
@@ -183,7 +183,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
         if (tmpArea === null) {
             // 如果没有找到，则移动到下一行
             currentEndY += 1
-            if (template.size.height != null) {
+            if (template.match.size.height != null) {
                 currentStartY += 1
             } else if (currentEndY === endY) {
                 // 高度可变且已经到了最后一行
@@ -192,7 +192,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
             }
         } else {
             if (!traverseFlag) return;
-            if (template.traverse.yDirection === null) break;
+            if (template.match.traverse.yDirection === null) break;
             index.yIndex += 1;
             currentStartY += areaHeight
             currentEndY = currentStartY + height - 1;
@@ -208,8 +208,8 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
 
     let x = currentArea.x + xOffset, y = currentArea.y + yOffset;
 
-    if (template.startCell.referenceAreaLayer !== "current") {
-        const cellInfo = getCellBySelect(template.startCell, currentArea, rootArea);
+    if (template.match.startCell.referenceAreaLayer !== "current") {
+        const cellInfo = getCellBySelect(template.match.startCell, currentArea, rootArea);
         if (cellInfo === null) {
             return null;
         };
@@ -233,7 +233,7 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
         areaTbl: getSubArea(rootArea.areaTbl, x, y, width, height),
         children: []
     }
-    for (let cstr of template.constraints) {
+    for (let cstr of template.match.constraints) {
         const cellInfo = getCellBySelect(cstr, tmpArea, rootArea);
         if (cellInfo === null) {
             return null;
@@ -250,11 +250,15 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
 const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
 
     const cellArray = currentArea.areaTbl.flat();
-    if (template.transform) {
-        const context = template.transform.context;
-        const ctxCols: (CellValueType | null)[] = []
-        const ctxCellsInfo: CellInfo[][] = [];
-        if (context) {
+    if (template.extract) {
+        let transformedCols: (CellValueType | null)[];
+        if (template.extract.byPositionToTargetCols !== undefined) {
+            transformedCols = template.extract.byPositionToTargetCols
+        } else if (template.extract.byContext !== undefined) {
+            const context = template.extract.byContext;
+            const ctxCols: (CellValueType | null)[] = []
+            const ctxCellsInfo: CellInfo[][] = [];
+
             const ctxSelections: CellSelection[][] = [];
             if (context.position === 'above') {
                 currentArea.areaTbl.forEach((row, ri) => {
@@ -323,28 +327,24 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                 console.log('No context cells found');
             }
 
-            if (context.targetCol === 'cellValue') {
+            if (context.toTargetCols === 'cellValue') {
                 ctxCellsInfo.forEach((cellCtxsInfo) => {
                     ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
                 })
             } else {
-                const customMapColbyCxt = context.targetCol
+                const customMapColbyCxt = context.toTargetCols
                 ctxCellsInfo.forEach((ctxCells) => {
                     ctxCols.push(customMapColbyCxt(ctxCells));
                 })
             }
-        }
-
-        let transformedCols: (CellValueType | null)[];
-        if (typeof template.transform.targetCols === 'object') {
-            transformedCols = template.transform.targetCols
-        } else if (template.transform.targetCols === 'context') {
             transformedCols = ctxCols
+        } else if (template.extract.byValue !== undefined) {
+            transformedCols = template.extract.byValue(currentArea.areaTbl);
         } else {
-            transformedCols = template.transform.targetCols(currentArea.areaTbl);
+            throw new CustomError(`Please specify 'byPositionToTargetCols', 'byContext', or 'byValue' for extraction`, 'NoExtractionSpecified');
         }
         transformedCols.forEach((targetCol, index) => {
-            if (targetCol !== null && targetCol !== undefined) {
+            if (targetCol !== null && targetCol !== undefined && targetCol !== '') {
                 const cellInfo: CellInfo = {
                     x: currentArea.x + index % currentArea.width,
                     y: currentArea.y + Math.floor(index / currentArea.width),
@@ -371,11 +371,11 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
         yIndex: 0
     };
 
-    const xDirection = template.traverse.xDirection;
-    const yDirection = template.traverse.yDirection;
+    const xDirection = template.match.traverse.xDirection;
+    const yDirection = template.match.traverse.yDirection;
 
 
-    const startCell = getCellBySelect(template.startCell, currentArea, rootArea);
+    const startCell = getCellBySelect(template.match.startCell, currentArea, rootArea);
     if (startCell === null) {
         return null;
     };
@@ -384,14 +384,14 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
     const yOffset = startCell.y - currentArea.y;
 
     // Calculate size
-    const width = calculateSize(template.size.width, xOffset, yOffset, currentArea);
-    const height = calculateSize(template.size.height, xOffset, yOffset, currentArea);
+    const width = calculateSize(template.match.size.width, xOffset, yOffset, currentArea);
+    const height = calculateSize(template.match.size.height, xOffset, yOffset, currentArea);
 
     let startX, startY, endX, endY;
 
     if (xDirection === null || !traverseFlag) {
         startX = xOffset;
-        if (template.size.width === null) endX = currentArea.width - 1;
+        if (template.match.size.width === null) endX = currentArea.width - 1;
         else endX = startX + width - 1;
     } else if (xDirection === 'before') {
         startX = 0;
@@ -406,7 +406,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
     if (yDirection === null || !traverseFlag) {
         startY = yOffset;
-        if (template.size.height === null) endY = currentArea.height - 1;
+        if (template.match.size.height === null) endY = currentArea.height - 1;
         else endY = startY + height - 1;
     } else if (yDirection === 'before') {
         startY = 0;
@@ -424,7 +424,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
     traverseArea(template, startX, startY, endX, endY, width, height, index, currentArea, rootArea, tidyData, traverseFlag);
 
     if (template.children.length > 0 && currentArea.children.length > 0) {
-        if (template.transform === null) {
+        if (template.extract === null) {
             // 父区域没有 transform
             for (let areaChild of currentArea.children) {
                 template.children.forEach((templateChild, ti) => {

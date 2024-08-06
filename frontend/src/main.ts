@@ -13,7 +13,7 @@ app.use(pinia).use(Select).use(Tabs).use(Button).use(Upload)
     .use(Tooltip).use(Popover).use(Input).use(Modal).use(Space).use(Dropdown).use(Menu).use(Form).use(Row).use(Col).use(Radio).use(Divider);
 
 // A Vue component for including inline SVG icons from different popular iconpacks easily.
-// https://oh-vue-icons.js.org/docs
+// https://oh-vue-icons.js.org/docs   // MdFitscreenOutlined
 import { OhVueIcon, addIcons } from "oh-vue-icons";
 import { BiUpload, BiDownload, LaRocketSolid, BiArrowClockwise, IoArrowUndoOutline, IoArrowRedoOutline } from "oh-vue-icons/icons";
 

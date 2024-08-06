@@ -18,20 +18,26 @@ const example1_mt: Table2D = [
 ];
 
 const example1_spec: TableTidierTemplate = {
-    startCell: { xOffset: 0, yOffset: 1 },
-    size: { width: 'toParentX', height: 2 },
-    constraints: [{ xOffset: 0, yOffset: 0, valueCstr: ValueType.Number }],
-    traverse: { yDirection: 'after' },
+    match: {
+        startCell: { xOffset: 0, yOffset: 1 },
+        size: { width: 'toParentX', height: 2 },
+        constraints: [{ xOffset: 0, yOffset: 0, valueCstr: ValueType.Number }],
+        traverse: { yDirection: 'after' },
+    },
     children: [
         {
-            startCell: { xOffset: 0, yOffset: 0 },
-            size: { width: 'toParentX' },
-            transform: { targetCols: ["Rank", "Name", "Age"] }
+            match: {
+                startCell: { xOffset: 0, yOffset: 0 },
+                size: { width: 'toParentX' },
+            },
+            extract: { byPositionToTargetCols: ["Rank", "Name", "Age"] }
         },
         {
-            startCell: { xOffset: 2, yOffset: 1 },
-            constraints: [{ xOffset: -1, yOffset: 0, valueCstr: 'Score' }],
-            transform: { targetCols: ["Score"] }
+            match: {
+                startCell: { xOffset: 2, yOffset: 1 },
+                constraints: [{ xOffset: -1, yOffset: 0, valueCstr: 'Score' }],
+            },
+            extract: { byPositionToTargetCols: ["Score"] }
         }
     ]
 };
@@ -78,65 +84,71 @@ const case1_mt: Table2D = [
 
 
 const case1_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 1,
-    },
-    size: {
-        width: "toParentX",
-        height: 5,
-    },
-    constraints: [
-        {
+    match: {
+        startCell: {
             xOffset: 0,
-            yOffset: 0,
-            valueCstr: ValueType.Number,
+            yOffset: 1,
         },
-    ],
-    traverse: {
-        yDirection: "after",
-    },
-    children: [
-        {
-            startCell: {
+        size: {
+            width: "toParentX",
+            height: 5,
+        },
+        constraints: [
+            {
                 xOffset: 0,
                 yOffset: 0,
+                valueCstr: ValueType.Number,
             },
-            size: {
-                width: 4,
-                height: 1,
+        ],
+        traverse: {
+            yDirection: "after",
+        },
+    },
+
+    children: [
+        {
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 0,
+                },
+                size: {
+                    width: 4,
+                    height: 1,
+                },
             },
-            transform: {
-                targetCols: ["Rank", "Name", "Location", "Total Score"],
+            extract: {
+                byPositionToTargetCols: ["Rank", "Name", "Location", "Total Score"],
             },
         },
         {
-            startCell: {
-                xOffset: 1,
-                yOffset: 2,
-            },
-            constraints: [
-                {
-                    xOffset: 0,
-                    yOffset: 0,
-                    valueCstr: ValueType.Number,
+            match: {
+                startCell: {
+                    xOffset: 1,
+                    yOffset: 2,
                 },
-                {
-                    xOffset: 0,
-                    yOffset: -1,
-                    valueCstr: ValueType.String,
-                },
-            ],
-            traverse: {
-                xDirection: "after",
-                yDirection: "after",
+                constraints: [
+                    {
+                        xOffset: 0,
+                        yOffset: 0,
+                        valueCstr: ValueType.Number,
+                    },
+                    {
+                        xOffset: 0,
+                        yOffset: -1,
+                        valueCstr: ValueType.String,
+                    },
+                ],
+                traverse: {
+                    xDirection: "after",
+                    yDirection: "after",
+                }
             },
-            transform: {
-                context: {
+            extract: {
+                byContext: {
                     position: "above",
-                    targetCol: "cellValue",
-                },
-                targetCols: "context",
+                    toTargetCols: "cellValue",
+                }
             },
             fill: "",
         },
@@ -153,71 +165,81 @@ const case2_mt: Table2D = [
 ];
 
 const case2_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 1,
+    match: {
+        startCell: {
+            xOffset: 0,
+            yOffset: 1,
+        },
+        size: {
+            width: 2,
+            height: 1,
+        },
+        traverse: {
+            xDirection: "after",
+            yDirection: "after",
+        }
     },
-    size: {
-        width: 2,
-        height: 1,
-    },
-    traverse: {
-        xDirection: "after",
-        yDirection: "after",
-    },
-    transform: {
-        targetCols: ["Method", "Accuracy"],
+    extract: {
+        byPositionToTargetCols: ["Method", "Accuracy"],
     },
     children: [
         {
-            startCell: {
-                referenceAreaLayer: "root",
-                xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
-                yOffset: 0,
+            match: {
+                startCell: {
+                    referenceAreaLayer: "root",
+                    xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
+                    yOffset: 0,
+                }
             },
-            transform: {
-                targetCols: ["Category"],
+            extract: {
+                byPositionToTargetCols: ["Category"],
             },
         },
     ],
 };
 
 const case2_2_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 0,
-    },
-    size: {
-        width: 2,
-        height: "toParentY", // 5,
-    },
-    traverse: {
-        xDirection: "after",
+    match: {
+        startCell: {
+            xOffset: 0,
+            yOffset: 0,
+        },
+        size: {
+            width: 2,
+            height: "toParentY", // 5,
+        },
+        traverse: {
+            xDirection: "after",
+        }
     },
     children: [
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 1,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 1,
+                },
+                size: {
+                    width: 2,
+                    height: 1,
+                },
+                traverse: {
+                    yDirection: "after",
+                }
             },
-            size: {
-                width: 2,
-                height: 1,
-            },
-            traverse: {
-                yDirection: "after",
-            },
-            transform: {
-                targetCols: ["Method", "Accuracy"],
+            extract: {
+                byPositionToTargetCols: ["Method", "Accuracy"],
             },
         },
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 0,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 0,
+                }
             },
-            transform: {
-                targetCols: ["Category"],
+            extract: {
+                byPositionToTargetCols: ["Category"],
             },
         },
     ],
@@ -225,47 +247,53 @@ const case2_2_spec: TableTidierTemplate = {
 };
 
 const case2_3_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 0,
+    match: {
+        startCell: {
+            xOffset: 0,
+            yOffset: 0,
+        },
+        size: {
+            width: 2,
+            height: "toParentY",
+        },
+        traverse: {
+            xDirection: "after",
+        },
+        constraints: [
+            {
+                referenceAreaPosi: "topRight",
+                valueCstr: ValueType.None
+            }
+        ]
     },
-    size: {
-        width: 2,
-        height: "toParentY",
-    },
-    traverse: {
-        xDirection: "after",
-    },
-    constraints: [
-        {
-            referenceAreaPosi: "topRight",
-            valueCstr: ValueType.None
-        }
-    ],
     children: [
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 1,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 1,
+                },
+                size: {
+                    width: 2,
+                    height: 1,
+                },
+                traverse: {
+                    yDirection: "after",
+                }
             },
-            size: {
-                width: 2,
-                height: 1,
-            },
-            traverse: {
-                yDirection: "after",
-            },
-            transform: {
-                targetCols: ["Method", "Accuracy"],
+            extract: {
+                byPositionToTargetCols: ["Method", "Accuracy"],
             },
         },
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 0,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 0,
+                }
             },
-            transform: {
-                targetCols: ["Category"],
+            extract: {
+                byPositionToTargetCols: ["Category"],
             },
         },
     ],
@@ -335,120 +363,129 @@ const case3_mt: Table2D = [
 ];
 
 const case3_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 0,
-    },
-    size: {
-        width: 7,
-        height: null, // 6
-    },
-    constraints: [
-        {
-            xOffset: 1,
-            yOffset: 0,
-            valueCstr: (value) => {
-                if (typeof value === "string") return value.startsWith("$");
-                return false;
-            },
-        },
-        {
-            referenceAreaPosi: "bottomLeft",
+    match: {
+        startCell: {
             xOffset: 0,
-            yOffset: 1,
-            valueCstr: ValueType.None,
+            yOffset: 0,
         },
-    ],
-    traverse: {
-        yDirection: "after",
+        size: {
+            width: 7,
+            height: null, // 6
+        },
+        constraints: [
+            {
+                xOffset: 1,
+                yOffset: 0,
+                valueCstr: (value) => {
+                    if (typeof value === "string") return value.startsWith("$");
+                    return false;
+                },
+            },
+            {
+                referenceAreaPosi: "bottomLeft",
+                xOffset: 0,
+                yOffset: 1,
+                valueCstr: ValueType.None,
+            },
+        ],
+        traverse: {
+            yDirection: "after",
+        }
     },
     children: [
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 0,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 0,
+                },
+                size: {
+                    width: 2,
+                    height: 1,
+                }
             },
-            size: {
-                width: 2,
-                height: 1,
-            },
-            transform: {
-                targetCols: ["Phone", "Price"],
+            extract: {
+                byPositionToTargetCols: ["Phone", "Price"],
             },
         },
         {
-            startCell: {
-                xOffset: 1,
-                yOffset: 1,
-            },
-            constraints: [
-                {
-                    xOffset: -1,
-                    yOffset: 0,
-                    valueCstr: ValueType.String,
-                },
-                {
+            match: {
+                startCell: {
                     xOffset: 1,
-                    yOffset: 0,
-                    valueCstr: ValueType.None,
+                    yOffset: 1,
                 },
-            ],
-            traverse: {
-                yDirection: "after",
+                constraints: [
+                    {
+                        xOffset: -1,
+                        yOffset: 0,
+                        valueCstr: ValueType.String,
+                    },
+                    {
+                        xOffset: 1,
+                        yOffset: 0,
+                        valueCstr: ValueType.None,
+                    },
+                ],
+                traverse: {
+                    yDirection: "after",
+                }
             },
-            transform: {
-                context: {
+            extract: {
+                byContext: {
                     position: "left",
-                    targetCol: (ctxCells) => {
+                    toTargetCols: (ctxCells) => {
                         if (ctxCells[0].value === "Announced Date") return "Release Date";
                         return ctxCells[0].value;
                     },
-                },
-                targetCols: "context",
+                }
             },
         },
         {
-            startCell: {
-                xOffset: 1,
-                yOffset: 2,
-            },
-            size: {
-                width: 6,
-                height: 1,
-            },
-            constraints: [
-                {
-                    xOffset: -1,
-                    yOffset: 0,
-                    valueCstr: "Dimensions",
+            match: {
+                startCell: {
+                    xOffset: 1,
+                    yOffset: 2,
                 },
-            ],
-            traverse: {
-                yDirection: "whole",
+                size: {
+                    width: 6,
+                    height: 1,
+                },
+                constraints: [
+                    {
+                        xOffset: -1,
+                        yOffset: 0,
+                        valueCstr: "Dimensions",
+                    },
+                ],
+                traverse: {
+                    yDirection: "whole",
+                }
             },
             children: [
                 {
-                    startCell: {
-                        xOffset: 1,
-                        yOffset: 0,
-                    },
-                    constraints: [
-                        {
-                            xOffset: 0,
+                    match: {
+                        startCell: {
+                            xOffset: 1,
                             yOffset: 0,
-                            valueCstr: (value) => {
-                                if (typeof value === "string") return value.endsWith("mm");
-                                return false;
-                            },
                         },
-                    ],
-                    traverse: {
-                        xDirection: "after",
+                        constraints: [
+                            {
+                                xOffset: 0,
+                                yOffset: 0,
+                                valueCstr: (value) => {
+                                    if (typeof value === "string") return value.endsWith("mm");
+                                    return false;
+                                },
+                            },
+                        ],
+                        traverse: {
+                            xDirection: "after",
+                        }
                     },
-                    transform: {
-                        context: {
+                    extract: {
+                        byContext: {
                             position: "left",
-                            targetCol: (ctxCells) => {
+                            toTargetCols: (ctxCells) => {
                                 const contextValue = ctxCells[0].value;
                                 if (typeof contextValue != "string") return null;
                                 if (["Height", "H"].includes(contextValue)) return "Height";
@@ -457,32 +494,33 @@ const case3_spec: TableTidierTemplate = {
                                 return null;
                             },
                         },
-                        targetCols: "context",
                     },
                 }
             ],
         },
         {
-            startCell: {
-                xOffset: 1,
-                yOffset: 4,
-            },
-            size: {
-                width: 2,
-                height: 1,
-            },
-            constraints: [
-                {
-                    xOffset: -1,
-                    yOffset: 0,
-                    valueCstr: "Camera",
+            match: {
+                startCell: {
+                    xOffset: 1,
+                    yOffset: 4,
                 },
-            ],
-            traverse: {
-                yDirection: "whole",
+                size: {
+                    width: 2,
+                    height: 1,
+                },
+                constraints: [
+                    {
+                        xOffset: -1,
+                        yOffset: 0,
+                        valueCstr: "Camera",
+                    },
+                ],
+                traverse: {
+                    yDirection: "whole",
+                }
             },
-            transform: {
-                targetCols: (currentAreaTbl) => {
+            extract: {
+                byValue: (currentAreaTbl) => {
                     // console.log(currentAreaTbl[0].map(Number));
                     return sortWithCorrespondingArray(
                         currentAreaTbl[0].map(Number),
@@ -501,28 +539,30 @@ const case4_mt: Table2D = [
 ];
 
 const case4_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 7,
+    match: {
+        startCell: {
+            xOffset: 0,
+            yOffset: 7,
+        },
+        size: {
+            width: "toParentX", // 12,
+            height: 2,
+        },
+        traverse: {
+            yDirection: "after",
+        }
     },
-    size: {
-        width: "toParentX", // 12,
-        height: 2,
-    },
-    traverse: {
-        yDirection: "after",
-    },
-    transform: {
-        context: {
+    extract: {
+        byContext: {
             position: (cell, currentArea) => {
                 return [{
                     xOffset: cell.xOffset,
                     yOffset: cell.yOffset - (currentArea.yIndex + 1) * currentArea.height,
                 }];
             },
-            targetCol: "cellValue",
+            toTargetCols: "cellValue",
         },
-        targetCols: "context",
+
     },
 };
 
@@ -532,60 +572,66 @@ const case5_mt: Table2D = [
 ]
 
 const case5_spec: TableTidierTemplate = {
-    startCell: {
-        xOffset: 0,
-        yOffset: 0,
-    },
-    size: {
-        width: "toParentX", // 12,
-        height: null,
-    },
-    constraints: [
-        {
-            xOffset: 5,
-            yOffset: 0,
-            valueCstr: "Employee Previous Earnings",
-        },
-        {
-            referenceAreaPosi: "bottomLeft",
+    match: {
+        startCell: {
             xOffset: 0,
             yOffset: 0,
-            valueCstr: (value) => {
-                if (typeof value === "string") return value.startsWith("ACME Payroll");
-                return false;
-            },
         },
-    ],
-    traverse: {
-        yDirection: "after",
+        size: {
+            width: "toParentX", // 12,
+            height: null,
+        },
+        constraints: [
+            {
+                xOffset: 5,
+                yOffset: 0,
+                valueCstr: "Employee Previous Earnings",
+            },
+            {
+                referenceAreaPosi: "bottomLeft",
+                xOffset: 0,
+                yOffset: 0,
+                valueCstr: (value) => {
+                    if (typeof value === "string") return value.startsWith("ACME Payroll");
+                    return false;
+                },
+            },
+        ],
+        traverse: {
+            yDirection: "after",
+        }
     },
     fill: "forward",
     children: [
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 4,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 4,
+                },
+                size: {
+                    width: 2,
+                }
             },
-            size: {
-                width: 2,
-            },
-            transform: {
-                targetCols: ["EmployeeID", "Employee Name"],
+            extract: {
+                byPositionToTargetCols: ["EmployeeID", "Employee Name"],
             },
         },
         {
-            startCell: {
-                xOffset: 0,
-                yOffset: 8,
+            match: {
+                startCell: {
+                    xOffset: 0,
+                    yOffset: 8,
+                },
+                size: {
+                    width: "toParentX",
+                },
+                traverse: {
+                    yDirection: "after",
+                }
             },
-            size: {
-                width: "toParentX",
-            },
-            traverse: {
-                yDirection: "after",
-            },
-            transform: {
-                context: {
+            extract: {
+                byContext: {
                     position: (cell) => {
                         let xOffset = cell.xOffset, yOffset = 7;
                         if (cell.xOffset == 4) yOffset = 6;
@@ -595,9 +641,8 @@ const case5_spec: TableTidierTemplate = {
                             referenceAreaLayer: "parent",
                         }];
                     },
-                    targetCol: "cellValue",
+                    toTargetCols: "cellValue",
                 },
-                targetCols: "context",
             },
         },
     ],

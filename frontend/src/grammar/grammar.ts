@@ -1,4 +1,4 @@
-// The Declarative Grammar v0.3.2
+// The Declarative Grammar v0.4.0
 
 type CellValueType = string | number | undefined;
 
@@ -71,6 +71,9 @@ interface CellPosi {
 
 /**
  * Represents information about a cell
+ * - `x`: The x-coordinate of the cell
+ * - `y`: The y-coordinate of the cell
+ * - `value`: The value of the cell
  */
 interface CellInfo extends CellPosi {
     /**
@@ -241,7 +244,7 @@ interface CellConstraint extends CellSelection {
  *   - 'right': The context cell is located directly to the right of the current cell.
  *   - `contextPosiFn`: A custom function to determine the position of the context cell.
  * 
- * - `targetCol`: Determines how to derive the target column based on the context cell's value.
+ * - `toTargetCols`: Determines how to derive the target column based on the context cell's value.
  *   - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
  *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
@@ -260,72 +263,84 @@ interface ContextTransform {
      * - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
      * - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
      */
-    targetCol: 'cellValue' | mapColbyContextFn;
+    toTargetCols: 'cellValue' | mapColbyContextFn;
 }
+
 
 /**
  * The main template for defining the transformation rules
- * - `startCell`: The starting cell for the selection
- * - `size`: The size of the selection area
- *   - `width`: The width of the selection area, 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
- *   - `height`: The height of the selection area, 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
- * - `constraints`: Constraints to apply to the cells within the selection area
- * - `traverse`: The traversal direction for the selection area
- *   - `xDirection`: The x-axis traversal direction: 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
- *   - `yDirection`: The y-axis traversal direction: 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
- * - `transform`: The transformation rules for the selection area
- *   - `context`: The context-based transformation for the selection area
- *   - `targetCols`: The target columns for the transformation, which can be an array (position-based transformation), 'context' (context-based transformation), or a custom function (value-based transformation)
+ * - `match`: The matching criteria for a selecting area
+ *   - `startCell`: The starting cell for the selection
+ *   - `size`: The size of the selection area
+ *     - `width`: The width of the selection area; 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
+ *     - `height`: The height of the selection area; 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
+ *   - `constraints`: Constraints to apply to the cells within the selection area
+ *   - `traverse`: The traversal direction for the selection area
+ *     - `xDirection`: The x-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
+ *     - `yDirection`: The y-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
+ * - `extract`: The extraction rules for transforming the selection area
+ *   - `byContext`: The context-based transformation for the selection area
+ *   - `byPositionToTargetCols`: The target columns for the transformation, which is an array (position-based transformation)
+ *   - `byValue`: The custom function for value-based transformation
  * - `fill`: Fill value for the cells within the selection area to ensure all columns have the same number of cells
  * - `children`: The child templates for nested selections
  */
 interface TableTidierTemplate {
     /**
-     * The starting cell for the selection
+     * The matching criteria for a selecting area
      */
-    startCell?: CellSelection;
-    /**
-     * The size of the selection area
-     */
-    size?: {
+    match?: {
         /**
-         * The width of the selection area, 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
+         * The starting cell for the selection
          */
-        width?: number | 'toParentX' | null;
+        startCell?: CellSelection;
         /**
-         * The height of the selection area, 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
+         * The size of the selection area
          */
-        height?: number | 'toParentY' | null;
+        size?: {
+            /**
+             * The width of the selection area; 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
+             */
+            width?: number | 'toParentX' | null;
+            /**
+             * The height of the selection area; 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
+             */
+            height?: number | 'toParentY' | null;
+        };
+        /**
+         * Constraints to apply to the cells within the selection area
+         */
+        constraints?: CellConstraint[];
+        /**
+         * The traversal direction for the selection area
+         */
+        traverse?: {
+            /**
+             * The x-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
+             */
+            xDirection?: null | 'after' | 'before' | 'whole';
+            /**
+             * The y-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
+             */
+            yDirection?: null | 'after' | 'before' | 'whole';
+        };
     };
     /**
-     * Constraints to apply to the cells within the selection area
+     * The extraction rules for transforming the selection area
      */
-    constraints?: CellConstraint[];
-    /**
-     * The traversal direction for the selection area
-     */
-    traverse?: {
-        /**
-         * The x-axis traversal direction: 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
-         */
-        xDirection?: null | 'after' | 'before' | 'whole';
-        /**
-         * The y-axis traversal direction: 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
-         */
-        yDirection?: null | 'after' | 'before' | 'whole';
-    };
-    /**
-     * The transformation rules for the selection area
-     */
-    transform?: {
+    extract?: {
         /**
          * The context-based transformation for the selection area
          */
-        context?: ContextTransform | null;
+        byContext?: ContextTransform;
         /**
-         * The target columns for the transformation, which can be an array (position-based transformation), 'context' (context-based transformation), or a custom function (value-based transformation)
+         * The target columns for the transformation, which is an array (position-based transformation)
          */
-        targetCols: (CellValueType | null)[] | 'context' | mapColsFn;
+        byPositionToTargetCols?: (CellValueType | null)[];
+        /**
+         * The custom function for value-based transformation
+         */
+        byValue?: mapColsFn;
     } | null;
     /**
      * Fill value for the cells within the selection area to ensure all columns have the same number of cells
@@ -408,10 +423,11 @@ function completeCellConstraint(constraint: CellConstraint): CellConstraint {
 function completeContextTransform(transform: ContextTransform): ContextTransform {
     return {
         position: transform.position || DEFAULT_CONTEXT_POSITION,
-        targetCol: transform.targetCol || DEFAULT_TARGET_COL
+        toTargetCols: transform.toTargetCols || DEFAULT_TARGET_COL
     };
 }
 
+/*
 function completeSpecification(template: TableTidierTemplate): AllParams<TableTidierTemplate> {
     return {
         startCell: completeCellSelection(template.startCell),
@@ -428,6 +444,33 @@ function completeSpecification(template: TableTidierTemplate): AllParams<TableTi
             ? {
                 context: template.transform.context ? completeContextTransform(template.transform.context) : null,
                 targetCols: template.transform.targetCols || DEFAULT_TARGET_COLS
+            }
+            : null,
+        fill: template.fill === undefined ? DEFAULT_FILL : template.fill,
+        children: template.children?.map(completeSpecification) || []
+    } as AllParams<TableTidierTemplate>;
+}
+*/
+
+function completeSpecification(template: TableTidierTemplate): AllParams<TableTidierTemplate> {
+    return {
+        match: {
+            startCell: completeCellSelection(template.match?.startCell),
+            size: {
+                width: template.match?.size?.width === undefined ? DEFAULT_WIDTH : template.match.size.width,
+                height: template.match?.size?.height === undefined ? DEFAULT_HEIGHT : template.match.size.height
+            },
+            constraints: template.match?.constraints?.map(completeCellConstraint) || [],
+            traverse: {
+                xDirection: template.match?.traverse?.xDirection === undefined ? DEFAULT_X_DIRECTION : template.match.traverse.xDirection,
+                yDirection: template.match?.traverse?.yDirection === undefined ? DEFAULT_Y_DIRECTION : template.match.traverse.yDirection
+            }
+        },
+        extract: template.extract
+            ? {
+                byPositionToTargetCols: template.extract.byPositionToTargetCols || undefined,
+                byContext: template.extract.byContext ? completeContextTransform(template.extract.byContext) : undefined,
+                byValue: template.extract.byValue || undefined
             }
             : null,
         fill: template.fill === undefined ? DEFAULT_FILL : template.fill,

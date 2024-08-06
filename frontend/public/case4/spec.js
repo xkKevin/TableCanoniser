@@ -1,18 +1,20 @@
 const option: TableTidierTemplate[] = [
   {
-    startCell: {
-      xOffset: 0,
-      yOffset: 7,
+    match: {
+      startCell: {
+        xOffset: 0,
+        yOffset: 7,
+      },
+      size: {
+        width: "toParentX", // 12,
+        height: 2,
+      },
+      traverse: {
+        yDirection: "after",
+      },
     },
-    size: {
-      width: "toParentX", // 12,
-      height: 2,
-    },
-    traverse: {
-      yDirection: "after",
-    },
-    transform: {
-      context: {
+    extract: {
+      byContext: {
         position: (cell, currentArea) => {
           return [
             {
@@ -22,9 +24,8 @@ const option: TableTidierTemplate[] = [
             },
           ];
         },
-        targetCol: "cellValue",
+        toTargetCols: "cellValue",
       },
-      targetCols: "context",
     },
   },
 ];

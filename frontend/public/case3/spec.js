@@ -1,119 +1,128 @@
 const option: TableTidierTemplate[] = [
   {
-    startCell: {
-      xOffset: 0,
-      yOffset: 0,
-    },
-    size: {
-      width: 7,
-      height: null, // 6
-    },
-    constraints: [
-      {
-        xOffset: 1,
-        yOffset: 0,
-        valueCstr: (value) => {
-          if (typeof value === "string") return value.startsWith("$");
-          return false;
-        },
-      },
-      {
-        referenceAreaPosi: "bottomLeft",
+    match: {
+      startCell: {
         xOffset: 0,
-        yOffset: 1,
-        valueCstr: ValueType.None,
+        yOffset: 0,
       },
-    ],
-    traverse: {
-      yDirection: "after",
+      size: {
+        width: 7,
+        height: null, // 6
+      },
+      constraints: [
+        {
+          xOffset: 1,
+          yOffset: 0,
+          valueCstr: (value) => {
+            if (typeof value === "string") return value.startsWith("$");
+            return false;
+          },
+        },
+        {
+          referenceAreaPosi: "bottomLeft",
+          xOffset: 0,
+          yOffset: 1,
+          valueCstr: ValueType.None,
+        },
+      ],
+      traverse: {
+        yDirection: "after",
+      },
     },
     children: [
       {
-        startCell: {
-          xOffset: 0,
-          yOffset: 0,
+        match: {
+          startCell: {
+            xOffset: 0,
+            yOffset: 0,
+          },
+          size: {
+            width: 2,
+            height: 1,
+          },
         },
-        size: {
-          width: 2,
-          height: 1,
-        },
-        transform: {
-          targetCols: ["Phone", "Price"],
+        extract: {
+          byPositionToTargetCols: ["Phone", "Price"],
         },
       },
       {
-        startCell: {
-          xOffset: 1,
-          yOffset: 1,
-        },
-        constraints: [
-          {
-            xOffset: -1,
-            yOffset: 0,
-            valueCstr: ValueType.String,
-          },
-          {
+        match: {
+          startCell: {
             xOffset: 1,
-            yOffset: 0,
-            valueCstr: ValueType.None,
+            yOffset: 1,
           },
-        ],
-        traverse: {
-          yDirection: "after",
+          constraints: [
+            {
+              xOffset: -1,
+              yOffset: 0,
+              valueCstr: ValueType.String,
+            },
+            {
+              xOffset: 1,
+              yOffset: 0,
+              valueCstr: ValueType.None,
+            },
+          ],
+          traverse: {
+            yDirection: "after",
+          },
         },
-        transform: {
-          context: {
+        extract: {
+          byContext: {
             position: "left",
-            targetCol: (ctxCells) => {
+            toTargetCols: (ctxCells) => {
               if (ctxCells[0].value === "Announced Date") return "Release Date";
               return ctxCells[0].value;
             },
           },
-          targetCols: "context",
         },
       },
       {
-        startCell: {
-          xOffset: 1,
-          yOffset: 2,
-        },
-        size: {
-          width: 6,
-          height: 1,
-        },
-        constraints: [
-          {
-            xOffset: -1,
-            yOffset: 0,
-            valueCstr: "Dimensions",
+        match: {
+          startCell: {
+            xOffset: 1,
+            yOffset: 2,
           },
-        ],
-        traverse: {
-          yDirection: "whole",
+          size: {
+            width: 6,
+            height: 1,
+          },
+          constraints: [
+            {
+              xOffset: -1,
+              yOffset: 0,
+              valueCstr: "Dimensions",
+            },
+          ],
+          traverse: {
+            yDirection: "whole",
+          },
         },
         children: [
           {
-            startCell: {
-              xOffset: 1,
-              yOffset: 0,
-            },
-            constraints: [
-              {
-                xOffset: 0,
+            match: {
+              startCell: {
+                xOffset: 1,
                 yOffset: 0,
-                valueCstr: (value) => {
-                  if (typeof value === "string") return value.endsWith("mm");
-                  return false;
-                },
               },
-            ],
-            traverse: {
-              xDirection: "after",
+              constraints: [
+                {
+                  xOffset: 0,
+                  yOffset: 0,
+                  valueCstr: (value) => {
+                    if (typeof value === "string") return value.endsWith("mm");
+                    return false;
+                  },
+                },
+              ],
+              traverse: {
+                xDirection: "after",
+              },
             },
-            transform: {
-              context: {
+            extract: {
+              byContext: {
                 position: "left",
-                targetCol: (ctxCells) => {
+                toTargetCols: (ctxCells) => {
                   const contextValue = ctxCells[0].value;
                   if (typeof contextValue != "string") return null;
                   if (["Height", "H"].includes(contextValue)) return "Height";
@@ -122,32 +131,33 @@ const option: TableTidierTemplate[] = [
                   return null;
                 },
               },
-              targetCols: "context",
             },
           },
         ],
       },
       {
-        startCell: {
-          xOffset: 1,
-          yOffset: 4,
-        },
-        size: {
-          width: 2,
-          height: 1,
-        },
-        constraints: [
-          {
-            xOffset: -1,
-            yOffset: 0,
-            valueCstr: "Camera",
+        match: {
+          startCell: {
+            xOffset: 1,
+            yOffset: 4,
           },
-        ],
-        traverse: {
-          yDirection: "whole",
+          size: {
+            width: 2,
+            height: 1,
+          },
+          constraints: [
+            {
+              xOffset: -1,
+              yOffset: 0,
+              valueCstr: "Camera",
+            },
+          ],
+          traverse: {
+            yDirection: "whole",
+          },
         },
-        transform: {
-          targetCols: (currentAreaTbl) => {
+        extract: {
+          byValue: (currentAreaTbl) => {
             // console.log(currentAreaTbl[0].map(Number));
             return sortWithCorrespondingArray(
               currentAreaTbl[0].map(Number),

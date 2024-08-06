@@ -31,13 +31,15 @@
                     <a-col flex="auto">
                         <span>x (col):</span>
                         <a-radio-group v-model:value="formData.position.x">
-                            <a-radio-button :value="areaConfig.startCell!.xOffset">{{ areaConfig.startCell!.xOffset
+                            <a-radio-button :value="areaConfig.match!.startCell!.xOffset">{{
+                                areaConfig.match!.startCell!.xOffset
                                 }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
                         <span>y (row):</span>
                         <a-radio-group v-model:value="formData.position.y">
-                            <a-radio-button :value="areaConfig.startCell!.yOffset">{{ areaConfig.startCell!.yOffset
+                            <a-radio-button :value="areaConfig.match!.startCell!.yOffset">{{
+                                areaConfig.match!.startCell!.yOffset
                                 }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
@@ -50,7 +52,7 @@
                     <a-col flex="5">
                         <span>width:</span>
                         <a-radio-group v-model:value="formData.size.width">
-                            <a-radio-button :value="areaConfig.size!.width">{{ areaConfig.size!.width
+                            <a-radio-button :value="areaConfig.match!.size!.width">{{ areaConfig.match!.size!.width
                                 }}</a-radio-button>
                             <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
                         </a-radio-group>
@@ -58,7 +60,7 @@
                     <a-col flex="5">
                         <span>height:</span>
                         <a-radio-group v-model:value="formData.size.height">
-                            <a-radio-button :value="areaConfig.size!.height">{{ areaConfig.size!.height
+                            <a-radio-button :value="areaConfig.match!.size!.height">{{ areaConfig.match!.size!.height
                                 }}</a-radio-button>
                             <a-radio-button :value="null" title="Don't specify">null</a-radio-button>
                         </a-radio-group>
@@ -124,19 +126,19 @@ const handleOk = (values: any) => {
 };
 const resetForm = () => {
     formData.value = {
-        referenceAreaLayer: areaConfig.startCell?.referenceAreaLayer,
-        referenceAreaPosi: areaConfig.startCell?.referenceAreaPosi,
+        referenceAreaLayer: areaConfig.match!.startCell?.referenceAreaLayer,
+        referenceAreaPosi: areaConfig.match!.startCell?.referenceAreaPosi,
         position: {
-            x: areaConfig.startCell?.xOffset,
-            y: areaConfig.startCell?.yOffset
+            x: areaConfig.match!.startCell?.xOffset,
+            y: areaConfig.match!.startCell?.yOffset
         },
         traverse: {
-            xDirection: areaConfig.traverse?.xDirection,
-            yDirection: areaConfig.traverse?.yDirection
+            xDirection: areaConfig.match!.traverse?.xDirection,
+            yDirection: areaConfig.match!.traverse?.yDirection
         },
         size: {
-            width: areaConfig.size?.width,
-            height: areaConfig.size?.height
+            width: areaConfig.match!.size?.width,
+            height: areaConfig.match!.size?.height
         }
     };
 }

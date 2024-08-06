@@ -244,34 +244,34 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     if (tbl === "input_tbl" && tableStore.spec.selectAreaFlag) {
       // 说明需要重新为某个节点选择区域
       const areaConfig = tableStore.spec.areaConfig;
-      areaConfig.startCell = {
+      areaConfig.match!.startCell = {
         referenceAreaLayer: "root",
         referenceAreaPosi: "topLeft",
         xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
         yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
       }
-      areaConfig.size = {
+      areaConfig.match!.size = {
         width: selected[0][3] - selected[0][1] + 1,
         height: selected[0][2] - selected[0][0] + 1
       }
-      areaConfig.traverse = {
+      areaConfig.match!.traverse = {
         xDirection: "after",
         yDirection: "after"
       }
       const areaFormData = tableStore.spec.areaFormData;
-      areaFormData.referenceAreaLayer = areaConfig.startCell?.referenceAreaLayer;
-      areaFormData.referenceAreaPosi = areaConfig.startCell?.referenceAreaPosi;
+      areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
+      areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
       areaFormData.position = {
-        x: areaConfig.startCell?.xOffset,
-        y: areaConfig.startCell?.yOffset
+        x: areaConfig.match!.startCell?.xOffset,
+        y: areaConfig.match!.startCell?.yOffset
       }
       areaFormData.traverse = {
-        xDirection: areaConfig.traverse?.xDirection,
-        yDirection: areaConfig.traverse?.yDirection
+        xDirection: areaConfig.match!.traverse?.xDirection,
+        yDirection: areaConfig.match!.traverse?.yDirection
       }
       areaFormData.size = {
-        width: areaConfig.size?.width,
-        height: areaConfig.size?.height
+        width: areaConfig.match!.size?.width,
+        height: areaConfig.match!.size?.height
       }
       tableStore.spec.dragConfigOpen = true;
     }

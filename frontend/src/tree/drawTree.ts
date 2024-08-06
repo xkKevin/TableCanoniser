@@ -599,15 +599,17 @@ export class TreeChart {
       this.root.each((node: any) => {
         node.id = idCounter++;
         const spec: VisTreeNode = node.data;
-        if (spec.transform === undefined || spec.transform === null) {
+        if (spec.extract === undefined || spec.extract === null) {
           node.type = "null";
         } else {
-          if (Array.isArray(spec.transform.targetCols)) {
+          if (spec.extract.byPositionToTargetCols !== undefined) {
             node.type = "position";
-          } else if (spec.transform.targetCols === 'context') {
+          } else if (spec.extract.byContext !== undefined) {
             node.type = "context";
-          } else {
+          } else if (spec.extract.byValue !== undefined) {
             node.type = "value";
+          } else {
+            node.type = "null";
           }
         }
       });
@@ -846,7 +848,7 @@ export class TreeChart {
       // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
 
       /** 绘制节点的constraints */
-      dataBindToThis.data.constraints?.forEach((constraint, i) => {
+      dataBindToThis.data.match?.constraints?.forEach((constraint, i) => {
         // console.log('hhh', constraint, i, dataBindToThis.id, dataBindToThis);
         const iconsz = typeNodeStyle.iconsize;
         // @ts-ignore
@@ -867,7 +869,7 @@ export class TreeChart {
             const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
             const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
             const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
-            const constraintStr = tableStore.stringifySpec(subTemplate!.constraints![i], "all", false) //这里不能用 constraint，如果是自定义函数的话会出现问题
+            const constraintStr = tableStore.stringifySpec(subTemplate!.match.constraints![i], "all", false) //这里不能用 constraint，如果是自定义函数的话会出现问题
 
             const startConstIndex = subTemplateStr.indexOf(constraintStr);
             const strConstBefore = subTemplateStr.slice(0, startConstIndex);
@@ -904,9 +906,9 @@ export class TreeChart {
         } else {
           let width: number | null = d.data.width!;
           let height: number | null = d.data.height!;
-          if (d.data.size !== undefined) {
-            if (d.data.size.width === null) width = null;
-            if (d.data.size.height === null) height = null;
+          if (d.data.match?.size !== undefined) {
+            if (d.data.match.size.width === null) width = null;
+            if (d.data.match.size.height === null) height = null;
           }
           return `(${width}, ${height})`;
         }

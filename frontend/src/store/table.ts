@@ -98,11 +98,13 @@ export const useTableStore = defineStore('table', {
         selectAreaFlag: 0 as 0 | 1 | 2 | 3 | 4,
         dragConfigOpen: false,
         areaConfig: shallowRef<TableTidierTemplate>({
-          startCell: {},
-          size: {},
-          traverse: {},
-          transform: null,
-          constraints: [],
+          match: {
+            startCell: {},
+            size: {},
+            traverse: {},
+            constraints: [],
+          },
+          extract: null,
           fill: '',
           children: [],
         }),
@@ -646,19 +648,21 @@ export const useTableStore = defineStore('table', {
       const node = this.spec.selectNode;
       const formData = this.spec.areaFormData
       const newSpec: TableTidierTemplate = {
-        startCell: {
-          referenceAreaLayer: formData.referenceAreaLayer,
-          referenceAreaPosi: formData.referenceAreaPosi,
-          xOffset: formData.position.x,
-          yOffset: formData.position.y,
-        },
-        size: {
-          width: formData.size.width,
-          height: formData.size.height,
-        },
-        traverse: {
-          xDirection: formData.traverse.xDirection,
-          yDirection: formData.traverse.yDirection,
+        match: {
+          startCell: {
+            referenceAreaLayer: formData.referenceAreaLayer,
+            referenceAreaPosi: formData.referenceAreaPosi,
+            xOffset: formData.position.x,
+            yOffset: formData.position.y,
+          },
+          size: {
+            width: formData.size.width,
+            height: formData.size.height,
+          },
+          traverse: {
+            xDirection: formData.traverse.xDirection,
+            yDirection: formData.traverse.yDirection,
+          }
         }
       }
       if (node.path.length === 0) {
