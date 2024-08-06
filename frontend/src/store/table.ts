@@ -484,6 +484,7 @@ export const useTableStore = defineStore('table', {
         // console.log(this.output_tbl.tbl, this.output_tbl.cols);
         this.output_tbl.instance.updateData(this.output_tbl.tbl);
         this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
+        this.output_tbl.instance.render();
       } catch (e) {
         let messageContent;
         console.log(e);

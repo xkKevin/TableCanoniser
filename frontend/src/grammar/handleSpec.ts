@@ -158,16 +158,20 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
             const areaWidth = currentEndX - currentStartX + 1;
             tmpArea = matchArea(template, currentStartX, currentStartY, areaWidth, areaHeight, index, currentArea, rootArea, tidyData);
             // if (currentArea.templateRef.length === 0)
-            // console.log("after match", currentStartX, currentStartY, areaWidth, areaHeight, tmpArea != null);
+            // console.log("after match", [currentStartX, currentStartY, currentEndX, currentEndY], areaWidth, areaHeight, tmpArea != null);
             if (tmpArea === null) {
                 // 如果没有找到，则移动到下一列
-                currentEndX += 1
                 if (template.match.size.width != null) {
+                    // 宽度固定
                     currentStartX += 1;
+                    currentEndX += 1
                 } else if (currentEndX === endX) {
                     // 宽度可变且已经到了最后一列
                     currentStartX += 1
                     currentEndX = currentStartX
+                } else {
+                    // 宽度可变没有到最后一列
+                    currentEndX += 1
                 }
             } else {
                 index.instanceIndex += 1;
@@ -182,13 +186,15 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
         // 换行，列从 0 开始
         if (tmpArea === null) {
             // 如果没有找到，则移动到下一行
-            currentEndY += 1
             if (template.match.size.height != null) {
                 currentStartY += 1
+                currentEndY += 1
             } else if (currentEndY === endY) {
                 // 高度可变且已经到了最后一行
                 currentStartY += 1
                 currentEndY = currentStartY
+            } else {
+                currentEndY += 1
             }
         } else {
             if (!traverseFlag) return;
@@ -234,11 +240,15 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
         children: []
     }
     for (let cstr of template.match.constraints) {
-        const cellInfo = getCellBySelect(cstr, tmpArea, rootArea);
-        if (cellInfo === null) {
+        try {  // constraint 里的数组超界不会报错，只会返回 null，即不符合约束
+            const cellInfo = getCellBySelect(cstr, tmpArea, rootArea);
+            if (cellInfo === null) {
+                return null;
+            }
+            if (!evaluateConstraint(cellInfo.value, cstr)) return null;
+        } catch (e) {
             return null;
         }
-        if (!evaluateConstraint(cellInfo.value, cstr)) return null;
     }
     currentArea.children.push(tmpArea);
 
