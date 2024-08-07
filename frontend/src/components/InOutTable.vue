@@ -2,19 +2,17 @@
   <div class="view">
     <div class="view-title">
       <span class="head-text">Input Table</span>
-      <span class="toolbar" style="float: right; margin-right: 5px">
+      <span style="float: right; margin-right: 20px">
         <span class="controller">
-          <a-space>
-            <a-select ref="select" :value="currentCase" :options="caseOption" size="small"
-              @change="handleCaseChange"></a-select>
-            <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
-              :customRequest="handleUpload" @remove="handleRemove">
-              <a-button size="small">
-                <v-icon name="bi-upload" scale="0.85" />
-                <span>Upload</span>
-              </a-button>
-            </a-upload>
-          </a-space>
+          <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
+            :customRequest="handleUpload" @remove="handleRemove" @preview="handlePreview" :showUploadList="{
+              showRemoveIcon: true,
+            }">
+            <a-button size="small">
+              <v-icon name="bi-upload" scale="0.85" />
+              <span>Upload</span>
+            </a-button>
+          </a-upload>
         </span>
       </span>
     </div>
@@ -75,18 +73,6 @@ const output_col = ref(tableStore.output_tbl.cols);
 const output_tbl = ref(tableStore.output_tbl.tbl);
 const input_tbl = ref(tableStore.input_tbl.tbl);
 
-// let caseOption: Ref<{ value: string; label: string; }[]> = ref([]);
-let caseOption = ref<{ value: string; label: string }[]>([]);
-
-caseOption.value = tableStore.caseList.map((v) => {
-  return { value: v, label: v };
-});
-
-let currentCase = ref(tableStore.caseList[0]);
-
-// let caseData = ref(tblCases[currentCase.value]);
-// let caseData = tblCases[currentCase.value];
-
 let inHotInst: Handsontable;
 let outHotInst: Handsontable;
 
@@ -118,6 +104,7 @@ const fileList = ref([]);
 //     response: 'Server Error 500', // custom error message to show
 //     url: 'http://www.baidu.com/xxx.png',
 //   },]);
+let fileTblData: Table2D = [];
 
 const handleUpload = (request: any) => {
   // console.log(request.file);
@@ -145,17 +132,13 @@ const handleUpload = (request: any) => {
       const maxColumns = Math.max(...rawData.map(row => row.length));
 
       // Ensure all rows have the same number of columns
-      const tblData = rawData.map(row => {
+      fileTblData = rawData.map(row => {
         while (row.length < maxColumns) {
           row.push(undefined); // Fill missing cells with an empty string or a placeholder
         }
         return row;
       });
-      tableStore.initTblInfo()
-      tableStore.input_tbl.tbl = tblData;
-      tableStore.input_tbl.instance.updateData(tblData);
-      tableStore.input_tbl.instance.render();
-      tableStore.transformTblUpdateRootArea();
+      handlePreview()
       request.onSuccess("ok");
       // message.success(`${request.file.name} file uploaded successfully`);
     };
@@ -167,6 +150,15 @@ const handleUpload = (request: any) => {
 
 const handleRemove = () => {
   tableStore.initTblInfo()
+  tableStore.transformTblUpdateRootArea();
+};
+
+const handlePreview = () => {
+  // executed when file link or preview icon is clicked.
+  tableStore.initTblInfo()
+  tableStore.input_tbl.tbl = fileTblData;
+  tableStore.input_tbl.instance.updateData(fileTblData);
+  tableStore.input_tbl.instance.render();
   tableStore.transformTblUpdateRootArea();
 };
 
@@ -290,8 +282,6 @@ onMounted(() => {
 
   initEventsForTbl("input_tbl");
   initEventsForTbl("output_tbl");
-
-  handleCaseChange(currentCase.value);
 });
 
 // function showDropdown() {
@@ -300,20 +290,6 @@ onMounted(() => {
 // function hideDropdown() {
 //   //   isOpen = false;
 // }
-
-function handleCaseChange(value: string) {
-  currentCase.value = value;
-  // tableStore.currentCase = value;
-  // caseData = tblCases[currentCase.value];
-  fileList.value = [];
-  tableStore.loadCaseData(value);
-  // handleRemove();
-  // inHotInst.updateData(tableStore.input_tbl.tbl);
-  // outHotInst.updateData(tableStore.output_tbl.tbl);
-  // output_col.value = caseData.output_col;
-
-  // caseData.output_tbl && outHotInst.updateData(caseData.output_tbl);
-}
 </script>
 
 <style lang="less">
@@ -322,20 +298,20 @@ function handleCaseChange(value: string) {
 
   .ant-upload {
     display: inline-block;
-    margin-right: 60px;
+    // margin-right: 60px;
   }
 
   .ant-upload-list {
     position: absolute;
     top: -11px;
-    right: -2px;
+    right: 81px;
     cursor: pointer;
   }
 
   .ant-upload-list-item-name {
     color: #1677ff;
     padding: 0 0 0 2px !important;
-    max-width: 80px;
+    max-width: 100px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

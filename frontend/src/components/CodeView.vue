@@ -15,7 +15,7 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useTableStore } from "@/store/table";
 
 
-const { codeType } = defineProps<{ codeType: "mappingSpec" | "rootArea" | "transformScript" }>();
+const { codeType } = defineProps<{ codeType: "mappingSpec" | "rootArea" }>();  // | "transformScript"
 
 const tableStore = useTableStore();
 

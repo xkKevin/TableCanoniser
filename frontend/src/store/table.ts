@@ -85,7 +85,7 @@ export const useTableStore = defineStore('table', {
   state() {
     return {
       specMode: false,
-      caseList: ["case1", "case2", "case3", "case4", "case5"],
+      caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll"],
       currentCase: '', // caseList[0],
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
@@ -143,11 +143,11 @@ export const useTableStore = defineStore('table', {
           language: 'json',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
-        transformScript: {
-          code: '',
-          language: 'python',
-          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
-        }
+        // transformScript: {
+        //   code: '',
+        //   language: 'python',
+        //   instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+        // }
       },
       input_tbl: {
         instance: {} as Handsontable,
@@ -218,17 +218,17 @@ export const useTableStore = defineStore('table', {
       // const begin = Date.now();
       try {
         // Parallel processing of all fetch requests ==> faster: 0.678s vs 0.275s
-        const [data_res, spec_res, script_res] = await Promise.all([
+        const [data_res, spec_res] = await Promise.all([   // , script_res
           fetch(case_path + 'data.json'),
           fetch(case_path + 'spec.js'),
-          fetch(case_path + 'script.py')
+          // fetch(case_path + 'script.py')
         ]);
 
         // Parallel processing of all text extraction
-        const [dataText, specText, scriptText] = await Promise.all([
+        const [dataText, specText] = await Promise.all([    // , scriptText
           data_res.ok ? data_res.text() : Promise.resolve(null),
           spec_res.ok ? spec_res.text() : Promise.resolve(null),
-          script_res.ok ? script_res.text() : Promise.resolve(null)
+          // script_res.ok ? script_res.text() : Promise.resolve(null)
         ]);
 
         this.initTblInfo();
@@ -253,11 +253,11 @@ export const useTableStore = defineStore('table', {
           prompt.push(`Failed to load spec from ${caseN}`);
         }
 
-        if (scriptText !== null) {
-          this.editor.transformScript.code = scriptText;
-        } else {
-          prompt.push(`Failed to load script from ${caseN}`);
-        }
+        // if (scriptText !== null) {
+        //   this.editor.transformScript.code = scriptText;
+        // } else {
+        //   prompt.push(`Failed to load script from ${caseN}`);
+        // }
       } catch (error) {
         prompt.push(`Error loading data: ${error}`);
       }

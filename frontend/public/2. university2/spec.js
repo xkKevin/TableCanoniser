@@ -20,7 +20,6 @@ const option: TableTidierTemplate[] = [
         yDirection: "after",
       },
     },
-
     children: [
       {
         match: {

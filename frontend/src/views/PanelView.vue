@@ -2,6 +2,11 @@
   <div id="panel">
     <div class="system-name">
       <span id="system_name">TableTidier</span>
+      <span style="left: 20px; position: absolute;">
+        <span style="font-size: 16px; font-weight: normal; margin-right: 5px">Cases:</span>
+        <a-select ref="select" :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
+          style="width: 124px;"></a-select>
+      </span>
       <span style="right: 20px; position: absolute;">
         <a-button-group>
           <a-button size="small" @click="undo" :disabled="undoFlag">
@@ -57,14 +62,14 @@
                 </template>
                 <CodeView codeType="rootArea" />
               </a-tab-pane>
-              <a-tab-pane key="3">
+              <!-- <a-tab-pane key="3">
                 <template #tab>
                   <span>
                     Transformation Script
                   </span>
                 </template>
                 <CodeView codeType="transformScript" />
-              </a-tab-pane>
+              </a-tab-pane> -->
             </a-tabs>
           </div>
         </div>
@@ -87,18 +92,17 @@ import DraggableModal from "@/components/DraggableModal.vue";
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
 
+// let caseOption: Ref<{ value: string; label: string; }[]> = ref([]);
+let caseOption = ref<{ value: string; label: string }[]>([]);
+
+caseOption.value = tableStore.caseList.map((v) => {
+  return { value: v, label: v };
+});
+
+let currentCase = ref(tableStore.caseList[0]);
+
 const codePanel = ref("1");
 const loading = ref<boolean>(false);
-
-const mode = ref(false);
-
-function chooseTargetType(a: any) { // 选择目标类型
-  console.log(a);
-}
-
-function changeMode() {
-  tableStore.specMode = mode.value;
-}
 
 const undoFlag = computed(() => tableStore.spec.undoHistory.length === 0);
 const redoFlag = computed(() => tableStore.spec.redoHistory.length === 0);
@@ -139,8 +143,15 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
+function handleCaseChange(value: string) {
+  currentCase.value = value;
+  // fileList.value = [];
+  tableStore.loadCaseData(value);
+}
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
+  handleCaseChange(currentCase.value);
 });
 
 </script>
