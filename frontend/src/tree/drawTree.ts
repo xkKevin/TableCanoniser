@@ -3,9 +3,8 @@ import * as d3 from 'd3';
 // import { useTableStore } from '@/store/table';  // 不能在还没有激活pinia store前就使用，可以传参进来
 
 import {
-  typeMapColor,
+  typeMapColor, TypeColor,
   typeNodeStyle,
-  edgeTextStyle,
   nodeTextStyle,
 } from './style';
 import {
@@ -14,12 +13,13 @@ import {
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, TblCell } from "@/store/table";
 
-type TransformTypes = keyof typeof typeMapColor;
+
 type NodeData = {
   [key: string]: any,
   children: NodeData[],
   parent: NodeData | null,
-  data: VisTreeNode
+  data: VisTreeNode,
+  type?: TypeColor,
 }
 
 /** 创建一个新的Escape键盘事件，指定事件类型和相关参数 */
@@ -271,7 +271,7 @@ export function nodeDrawData(dataWithId: Array<TypeNode>, orient: 'h' | 'v') {
   });
   return dataWithId.map((data: TypeNode) => {
     const nodeFillColor = data.type.map(
-      (t: string) => typeMapColor[t as keyof typeof typeMapColor],
+      (t: string) => typeMapColor[t as TypeColor],
     );
 
     const maxFreq = data.currentLevelMaxFreq;
@@ -599,6 +599,7 @@ export class TreeChart {
       this.root.each((node: any) => {
         node.id = idCounter++;
         const spec: VisTreeNode = node.data;
+        spec.id = node.id;
         if (spec.extract === undefined || spec.extract === null) {
           node.type = "null";
         } else {
@@ -613,8 +614,6 @@ export class TreeChart {
           }
         }
       });
-
-
 
       this.root.path = [];
       // this.root.id = "root";
@@ -668,6 +667,7 @@ export class TreeChart {
   }
 
   private update(data: any) {
+    const tableStore = this.store;
     const treeData = this.treeLayout(this.root);
     const linksData = treeData.descendants()
       .slice(1);
@@ -806,10 +806,6 @@ export class TreeChart {
     // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
-
-    const tableStore = this.store;
-
-
     nodeGroups.each(function (this: any, dataBindToThis: NodeData) {
       const current = d3.select(this);
       /** 绘制节点（circle + rect） */
@@ -819,7 +815,7 @@ export class TreeChart {
         nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
           .attr('class', `node-circle-${dataBindToThis.id} type-node`)
           .attr('r', typeNodeStyle.nodeCircleRadius)
-          .attr('fill', ({ type }: { type: TransformTypes }) => typeMapColor[type])
+          .attr('fill', ({ type }: { type: TypeColor }) => typeMapColor[type])
           .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
           // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
           .attr('cursor', 'pointer')
@@ -841,7 +837,7 @@ export class TreeChart {
       nodeGroups.select(`.node-rect-${dataBindToThis.id}`)
         .attr('class', `node-rect-${dataBindToThis.id} type-node`)
         .attr('d', customRectCorner(nodeRectData as RectDef))
-        .attr('fill', ({ type }: { type: TransformTypes }) => typeMapColor[type])
+        .attr('fill', ({ type }: { type: TypeColor }) => typeMapColor[type])
         // .attr('fill', nodeRectData.rectColor)
         // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
         .attr('cursor', 'pointer')
@@ -886,11 +882,11 @@ export class TreeChart {
       });
     });
 
-    const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
-    nodeRectText.patternify({ tag: 'text', selector: 'node-text' });
-    nodeRectText.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+    // const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
+    nodeUpdate.patternify({ tag: 'text', selector: 'node-text' });
+    nodeGroups.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
 
-    nodeRectText.select('.node-text')
+    nodeUpdate.select('.node-text')
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'middle')
       .attr('fill', nodeTextStyle.color)
@@ -898,11 +894,11 @@ export class TreeChart {
       // .attr('y', ({ data: info }: any) => nodeTextStyle.yAxisAdjust + info.shiftFromEndCenter)
       .attr('y', () => nodeTextStyle.yAxisAdjust)
       .attr('cursor', 'pinter')
-      .attr('pointer-events', 'auto')  // .style('pointer-events', 'none');
+      .attr('pointer-events', 'none')  // .style('pointer-events', 'auto');
       .text((d: NodeData) => {
         if (d.id === 0) {
           // console.log(d.data.size);
-          return "0";
+          return "";
         } else {
           let width: number | null = d.data.width!;
           let height: number | null = d.data.height!;
@@ -921,65 +917,81 @@ export class TreeChart {
     // })
     // .append("svg:title").text("(d: any) => d.data.id");
 
-    nodeRectText.select('.node-tooltip')
+    nodeGroups.select('.node-tooltip')
       // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
       .text((d: NodeData) => "Path: " + JSON.stringify(d.path));
 
-
     // 为所有circle和rect绑定展开收起交互事件
-    d3.selectAll('.type-node, .node-text-g')
+    // d3.selectAll('.type-node, .node-text-g')
+    d3.selectAll('.type-node')
       .on('contextmenu', this.declareContextMenu.bind(this))
-      .on('click', (event: any, d: any) => {
+      /*
+      .on('mouseover', function () {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
+        // console.log('mouseover', event, node);  // event: any, node: any
+        // d3.select(this).attr("stroke-width", 3).attr("stroke", typeMapColor.tblSelect);  // typeMapColor[(node as NodeData).type!]
+        d3.select(this).classed('selection', true);
+      })
+      .on('mouseout', function (event: any, node: any) {
+        // console.log('mouseout', event, node);
+        // d3.select(this).attr("stroke-width", 0).attr("stroke", "none");
+        if (tableStore.tree.clickNodeId === node.id) return;
+        d3.select(this).classed('selection', false);
+      })
+        */
+      .on('click', function (event: any, node: any) {
         event.stopPropagation();
+        const d = node as NodeData;
+        d3.selectAll('.type-node').classed('selection', false);
         if (d.id) {
-          this.store.editor.mappingSpec.instance?.setValue(this.store.editor.mappingSpec.codePref + this.store.stringifySpec(null, "even", false));
+          tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
+          d3.select(this).classed('selection', true);
           // console.log(event, d);
           // [startRow, startCol, endRow, endCol]
           const visData = d.data as VisTreeNode;
-          const matchSelected: Array<[number, number, number, number]> = [];
+          const matchArea: Array<[number, number, number, number]> = [];
           visData.matchs?.forEach((match) => {
             const { x, y, width, height } = match;
-            matchSelected.push([y, x, y + height - 1, x + width - 1]);
+            matchArea.push([y, x, y + height - 1, x + width - 1]);
           })
           let allHightedInCells: TblCell[] = [];
           let allHightedOutCells: TblCell[] = [];
-          let allHightedMiniCells: TblCell[] = [];
-          if (matchSelected.length > 0) {
-            const { selectedCoords, hightedCells } = this.store.getHightlightedCells(matchSelected, "posi-mapping-shallow");
+          if (matchArea.length > 0) {
+            const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(matchArea, `${d.type!}Shallow`);
             allHightedInCells = allHightedInCells.concat(hightedCells);
-            const cells = this.store.in_out_mapping(selectedCoords, "input_tbl", "posi-mapping-shallow");
+            const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", `${d.type!}Shallow`);
             allHightedOutCells = allHightedOutCells.concat(cells);
-            allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
+            tableStore.highlightMinimapCells(hightedCells);
           }
 
           const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
-          const { selectedCoords, hightedCells } = this.store.getHightlightedCells(selected);
+          const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected, d.type!);
           allHightedInCells = allHightedInCells.concat(hightedCells);
-          this.store.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
-          const cells = this.store.in_out_mapping(selectedCoords, "input_tbl");
+          tableStore.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
+          const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", d.type!);
           allHightedOutCells = allHightedOutCells.concat(cells);
-          this.store.highlightTblCells("output_tbl", allHightedOutCells);
-          allHightedMiniCells = allHightedMiniCells.concat(hightedCells);
-          this.store.highlightMinimapCells(allHightedMiniCells);
+          tableStore.highlightTblCells("output_tbl", allHightedOutCells);
+          tableStore.highlightMinimapCells(hightedCells, matchArea.length === 0);
+          // 在 D3.js 中，使用 .classed() 方法为元素添加类时，如果一个元素同时拥有多个类，CSS 样式的优先级依赖于 CSS 样式表中的定义顺序，而不是你通过 D3.js 添加类的顺序。
 
-          this.store.input_tbl.instance.deselectCell();
-          this.store.output_tbl.instance.deselectCell();
+          tableStore.input_tbl.instance.deselectCell();
+          tableStore.output_tbl.instance.deselectCell();
 
           /************** 与 monaco editor 交互 ***************/
-          const subTemplate = this.store.getNodebyPath(this.store.spec.rawSpecs, d.path);
-          const subTemplateStr = this.store.stringifySpec(subTemplate, "all", false)
-          const specsStr = this.store.stringifySpec(this.store.spec.rawSpecs, "all", false)
+          const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
+          const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
+          const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
           const startIndex = specsStr.indexOf(subTemplateStr);
 
           const strBefore = specsStr.slice(0, startIndex);
 
           const startLine = (strBefore.match(/\n/g) || []).length + 1;
           const endLine = startLine + (subTemplateStr.match(/\n/g) || []).length;
-          this.store.highlightCode(startLine, endLine);
+          tableStore.highlightCode(startLine, endLine);
         } else {
-          // this.store.editor.mappingSpec.decorations?.clear();
+          // tableStore.editor.mappingSpec.decorations?.clear();
           // 将事件分发到目标元素或整个文档
           document.dispatchEvent(escapeEvent);
+          // d3.select(this).classed('selection', true);
         }
         return;
         // this.handleCircleClick(event, d);  // 收缩节点

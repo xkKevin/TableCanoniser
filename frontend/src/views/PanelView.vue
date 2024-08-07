@@ -29,7 +29,7 @@
 
         <div style="flex: 1; display: flex;">
           <Minimap />
-          <TemplateVis />
+          <PatternVis />
         </div>
       </div>
 
@@ -49,7 +49,7 @@
               <a-tab-pane key="1">
                 <template #tab>
                   <span>
-                    Mapping Specification
+                    Specification
                   </span>
                 </template>
                 <CodeView codeType="mappingSpec" />
@@ -85,9 +85,14 @@ import { computed, onMounted, ref } from "vue";
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
 import Minimap from "@/components/Minimap.vue";
-import TemplateVis from "@/components/TemplateVis.vue";
+import PatternVis from "@/components/PatternVis.vue";
 import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
+
+import { typeMapColor, TypeColor } from '@/tree/style';
+for (const key in typeMapColor) {
+  document.documentElement.style.setProperty(`--color-${key}`, typeMapColor[key as TypeColor]);
+}
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -140,6 +145,11 @@ function handleKeydown(event: KeyboardEvent) {
     tableStore.input_tbl.instance.updateSettings({ cell: [] });
     tableStore.output_tbl.instance.updateSettings({ cell: [] });
     tableStore.highlightMinimapCells([]);
+
+    const typeNodes = document.querySelectorAll('.type-node');
+    typeNodes.forEach((node) => {
+      (node as HTMLElement).classList.remove('selection');
+    });
   }
 }
 
@@ -295,5 +305,10 @@ onMounted(() => {
   svg path {
     stroke: rgba(0, 0, 0, 0.25);
   }
+}
+
+p {
+  color: rgba(146, 110, 184);
+  background-color: rgba(9, 132, 227, 0.8)
 }
 </style>

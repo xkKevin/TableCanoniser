@@ -1,7 +1,7 @@
 <template>
-    <div class="view" style="flex: 4">
+    <div class="view" style="flex: 4.5">
         <div class="view-title">
-            <span>Template Visualization</span>
+            <span>Pattern Visualization</span>
             <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                 <span>Reset</span>
@@ -355,6 +355,8 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
         // console.log(rootArea, tableStore.spec.visTree);
         drawTree(tableStore.spec.visTree);
         drawTblTemplate();
+        tableStore.input_tbl.in2nodes = {};
+        tableStore.traverseTree4UpdateIn2Nodes(tableStore.spec.visTree.children!);
     } catch (e) {
         message.error(`Failed to parse the specification:\n ${e}`);
     }
@@ -381,10 +383,20 @@ onMounted(() => {
 
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 .tree-container {
     width: 100%;
     height: 100%;
+
+    .type-node:hover {
+        stroke: var(--color-selection);
+        stroke-width: 3px;
+    }
+
+    .type-node.selection {
+        stroke: var(--color-selection);
+        stroke-width: 3px;
+    }
 }
 
 .tbl-container {

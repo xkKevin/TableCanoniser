@@ -55,7 +55,7 @@ import { HotTable } from "@handsontable/vue3";
 import "handsontable/dist/handsontable.full.css";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
-import { useTableStore } from "@/store/table";
+import { useTableStore, Selection } from "@/store/table";
 // import Papa from 'papaparse';  // parse csv data
 import * as XLSX from 'xlsx';  // parse excel data
 import { Table2D } from "@/grammar/grammar"
@@ -187,6 +187,24 @@ const handleDownload = () => {
   message.success('The output table has been downloaded successfully.');
 };
 
+function normalizeSelection(selections: Selection[]): Selection[] {
+  return selections.map(([row1, col1, row2, col2]) => {
+    // 修正负数坐标为0
+    if (row1 < 0) row1 = 0;
+    if (col1 < 0) col1 = 0;
+    if (row2 < 0) row2 = 0;
+    if (col2 < 0) col2 = 0;
+
+    // 确保startRow <= endRow 和 startCol <= endCol
+    const startRow = Math.min(row1, row2);
+    const endRow = Math.max(row1, row2);
+    const startCol = Math.min(col1, col2);
+    const endCol = Math.max(col1, col2);
+
+    return [startRow, startCol, endRow, endCol];
+  });
+}
+
 function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   let tblInst1: Handsontable, tblInst2: Handsontable;
   const tbl2 = tbl === "input_tbl" ? "output_tbl" : "input_tbl";
@@ -204,6 +222,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       } else {
         tblInst2.updateSettings({ cell: [] });
         tableStore.highlightMinimapCells([]);
+        const typeNodes = document.querySelectorAll('.type-node');
+        typeNodes.forEach((node) => {
+          (node as HTMLElement).classList.remove('selection');
+        });
         if (tbl === "input_tbl") {
           if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
             tableStore.editor.mappingSpec.decorations?.clear();
@@ -217,7 +239,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   });
   tblInst1.addHook("afterOnCellMouseUp", (event, coords, TD) => {
     if (tableStore.specMode) return;
-    const selected = tblInst1.getSelected() || [];
+    const selected = normalizeSelection(tblInst1.getSelected() || []);
     // key 表示所选区域，value 表示所选区域所有单元格的坐标
     const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected);
 
@@ -233,41 +255,45 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       tableStore.highlightMinimapCells(hightedCells);
     }
 
-    if (tbl === "input_tbl" && tableStore.spec.selectAreaFlag) {
-      // 说明需要重新为某个节点选择区域
-      const areaConfig = tableStore.spec.areaConfig;
-      areaConfig.match!.startCell = {
-        referenceAreaLayer: "root",
-        referenceAreaPosi: "topLeft",
-        xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
-        yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
-      }
-      areaConfig.match!.size = {
-        width: selected[0][3] - selected[0][1] + 1,
-        height: selected[0][2] - selected[0][0] + 1
-      }
-      areaConfig.match!.traverse = {
-        xDirection: "after",
-        yDirection: "after"
-      }
-      const areaFormData = tableStore.spec.areaFormData;
-      areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
-      areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
-      areaFormData.position = {
-        x: areaConfig.match!.startCell?.xOffset,
-        y: areaConfig.match!.startCell?.yOffset
-      }
-      areaFormData.traverse = {
-        xDirection: areaConfig.match!.traverse?.xDirection,
-        yDirection: areaConfig.match!.traverse?.yDirection
-      }
-      areaFormData.size = {
-        width: areaConfig.match!.size?.width,
-        height: areaConfig.match!.size?.height
-      }
-      tableStore.spec.dragConfigOpen = true;
-    }
+    if (tbl === "input_tbl") {
 
+      tableStore.highlightNodes(selected);
+
+      if (tableStore.spec.selectAreaFlag) {
+        // 说明需要重新为某个节点选择区域
+        const areaConfig = tableStore.spec.areaConfig;
+        areaConfig.match!.startCell = {
+          referenceAreaLayer: "root",
+          referenceAreaPosi: "topLeft",
+          xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
+          yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
+        }
+        areaConfig.match!.size = {
+          width: selected[0][3] - selected[0][1] + 1,
+          height: selected[0][2] - selected[0][0] + 1
+        }
+        areaConfig.match!.traverse = {
+          xDirection: "after",
+          yDirection: "after"
+        }
+        const areaFormData = tableStore.spec.areaFormData;
+        areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
+        areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
+        areaFormData.position = {
+          x: areaConfig.match!.startCell?.xOffset,
+          y: areaConfig.match!.startCell?.yOffset
+        }
+        areaFormData.traverse = {
+          xDirection: areaConfig.match!.traverse?.xDirection,
+          yDirection: areaConfig.match!.traverse?.yDirection
+        }
+        areaFormData.size = {
+          width: areaConfig.match!.size?.width,
+          height: areaConfig.match!.size?.height
+        }
+        tableStore.spec.dragConfigOpen = true;
+      }
+    }
   });
 }
 
@@ -330,25 +356,54 @@ onMounted(() => {
     background-color: #3498db;
   }
 
-  td.posi-mapping {
+  td.position {
     color: #fff !important;
-    background-color: #0984e3 // #37bc6c;
+    background-color: var(--color-position);
   }
 
-  td.posi-mapping-shallow {
+  td.positionShallow {
     color: #fff !important;
-    background-color: #74b9ff //  #37bc6c;
+    background-color: var(--color-positionShallow);
   }
 
-  td.ambiguous-cell {
-    color: #e91010 !important;
-    background-color: #83e4aa;
+  td.context {
+    color: #fff !important;
+    background-color: var(--color-context);
   }
 
-  td.determined-cell {
-    color: #e91010 !important;
-    font-weight: bold;
-    background-color: #37bc6c;
+  td.contextShallow {
+    color: #fff !important;
+    background-color: var(--color-contextShallow);
+  }
+
+  td.value {
+    color: #fff !important;
+    background-color: var(--color-value);
+  }
+
+  td.valueShallow {
+    color: #fff !important;
+    background-color: var(--color-valueShallow);
+  }
+
+  td.null {
+    color: #fff !important;
+    background-color: var(--color-null);
+  }
+
+  td.nullShallow {
+    color: #fff !important;
+    background-color: var(--color-nullShallow);
+  }
+
+  td.selection {
+    color: #fff !important;
+    background-color: var(--color-selection);
+  }
+
+  td.selectionShallow {
+    color: #fff !important;
+    background-color: var(--color-selectionShallow);
   }
 }
 </style>

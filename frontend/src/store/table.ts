@@ -12,7 +12,7 @@ import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
-import { colorConfig } from '@/tree/style';
+// import { colorConfig } from '@/tree/style';
 // import { cloneDeep } from 'lodash';
 
 function replaceEvenSpaces(str: string) {
@@ -45,6 +45,8 @@ export interface TblCell {
   className?: string;
 }
 
+export type Selection = [number, number, number, number];
+
 interface TreeNode {
   [key: string]: any,
   children?: TreeNode[];
@@ -57,8 +59,11 @@ interface AreaBox {
   y: number,
 }
 
+// type CoordinateMap = Map<number, Map<number, any>>;  // 根据坐标获取某值
+
 export interface VisTreeNode extends TableTidierTemplate, AreaBox {
-  matchs?: AreaBox[]
+  id: number,
+  matchs?: AreaBox[],
   children?: VisTreeNode[]
 }
 
@@ -91,7 +96,7 @@ export const useTableStore = defineStore('table', {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
-        visTree: shallowRef<VisTreeNode>({ width: 0, height: 0, x: 0, y: 0, children: [] }),
+        visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<any>(null),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
@@ -154,6 +159,7 @@ export const useTableStore = defineStore('table', {
         // cells: [] as [number, number][],  // highlighted cells
         tbl: shallowRef<Table2D>([]),
         in2out: shallowRef<{ [key: string]: string[] }>({}),
+        in2nodes: shallowRef<{ [key: string]: Set<number> }>({}),  // 'x-y-width-height' -> {node.id} 的映射
       },
       output_tbl: {
         instance: {} as Handsontable,
@@ -267,7 +273,7 @@ export const useTableStore = defineStore('table', {
       return prompt;
     },
 
-    traverseTree(nodes: AreaInfo[]) {
+    traverseTree4UpdateMatchs(nodes: AreaInfo[]) {
       let visNode: VisTreeNode | null = null;
       nodes.forEach((node) => {
         const path = node.templateRef.toString()
@@ -289,7 +295,29 @@ export const useTableStore = defineStore('table', {
             height: node.height
           });
         }
-        this.traverseTree(node.children)
+        this.traverseTree4UpdateMatchs(node.children)
+      })
+    },
+
+    traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[]) {
+      const in2nodes = this.input_tbl.in2nodes;
+      nodes.forEach((node) => {
+        const areaKey = `${node.x}-${node.y}-${node.width}-${node.height}`;
+        if (in2nodes.hasOwnProperty(areaKey)) {
+          in2nodes[areaKey].add(node.id);
+        } else {
+          in2nodes[areaKey] = new Set([node.id]);
+        }
+        node.matchs?.forEach((match) => {
+          const { x, y, width, height } = match;
+          const areaKey = `${x}-${y}-${width}-${height}`;
+          if (in2nodes.hasOwnProperty(areaKey)) {
+            in2nodes[areaKey].add(node.id);
+          } else {
+            in2nodes[areaKey] = new Set([node.id]);
+          }
+        })
+        if (node.children) this.traverseTree4UpdateIn2Nodes(node.children)
       })
     },
 
@@ -299,7 +327,9 @@ export const useTableStore = defineStore('table', {
       this.editor.rootArea.object = rootArea;
       this.editor.rootArea.code = serialize(rootArea);
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
-      this.traverseTree(rootArea.children);
+      this.traverseTree4UpdateMatchs(rootArea.children);
+      this.input_tbl.in2nodes = {};
+      this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
       return tidyData;
     },
 
@@ -322,23 +352,17 @@ export const useTableStore = defineStore('table', {
       }
     },
 
-    highlightMinimapCells(cells: TblCell[]) {
-      d3.selectAll('g.matrix rect.grid-cell').attr('fill', colorConfig.default.fill).attr('stroke', colorConfig.default.stroke);
-      d3.selectAll('g.matrix text.grid-text').attr('fill', colorConfig.default.text).attr('font-weight', 'normal');
+    highlightMinimapCells(cells: TblCell[], clear = true) {
+      if (clear) d3.selectAll('g.matrix rect.grid-cell').attr('class', 'grid-cell');
       cells.forEach((cell) => {
         if (cell.className) {
           d3.select(`g.matrix #grid-${cell.row}-${cell.col}`).raise()
-            // @ts-ignore
-            .attr('fill', colorConfig[cell.className].fill).attr('stroke', colorConfig[cell.className].stroke);
-          // @ts-ignore
-          d3.select(`g.matrix #text-${cell.row}-${cell.col}`).attr('fill', colorConfig[cell.className].text).attr('font-weight', colorConfig[cell.className].weight || 'normal');
+            .classed(cell.className, true)
         }
-
       });
-
     },
 
-    in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl", className: string = "posi-mapping") {
+    in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl", className: string = "selection") {
       const posi_mapping = type === "input_tbl" ? this.input_tbl.in2out : this.output_tbl.out2in;
       if (Object.keys(posi_mapping).length === 0) {
         return [];
@@ -362,22 +386,86 @@ export const useTableStore = defineStore('table', {
       return cells;
     },
 
-    getHightlightedCells(selected: Array<[number, number, number, number]>, className: string = "posi-mapping") {
-      let selectedCoords: { [key: string]: [number, number][] } = {};
-      let hightedCells: { row: number, col: number, className: string }[] = [];
-      // 遍历选定区域
+    doRectanglesIntersect(rect1: AreaBox, rect2: AreaBox): boolean {
+      return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+      );
+    },
+
+    highlightNodes(selected: Selection[]) {
+      const highlightNodesId: Set<number> = new Set();
+      selected.forEach(range => {
+        const y = range[0];
+        const x = range[1];
+        const height = range[2] - range[0] + 1;
+        const width = range[3] - range[1] + 1;
+
+        const rect1: AreaBox = { x, y, width, height };
+
+        for (let keyArea in this.input_tbl.in2nodes) {
+          const [x, y, width, height] = keyArea.split('-').map((n) => Number(n));
+          console.log(rect1, keyArea, this.doRectanglesIntersect(rect1, { x, y, width, height }));
+          if (this.doRectanglesIntersect(rect1, { x, y, width, height })) {
+            this.input_tbl.in2nodes[keyArea].forEach((id) => {
+              highlightNodesId.add(id);
+            })
+          }
+        }
+      });
+      d3.selectAll('.type-node').classed('selection', false);
+      for (let id of highlightNodesId) {
+        console.log(`.type-node.node-rect-${id}`);
+        d3.select(`.type-node.node-rect-${id}`).classed("selection", true);
+      }
+    },
+
+    /*
+    highlightNodes(selected: Selection[]) {
+      const highlightNodesId: Set<number> = new Set();
       selected.forEach(range => {
         let startRow = range[0] < 0 ? 0 : range[0];
         let startCol = range[1] < 0 ? 0 : range[1];
         let endRow = range[2];
         let endCol = range[3];
 
-        if (startRow > endRow) {
-          [startRow, endRow] = [endRow, startRow];
+        // 遍历行
+        for (let row = startRow; row <= endRow; row++) {
+          // 遍历列
+          for (let col = startCol; col <= endCol; col++) {
+            // 遍历 visTree
+            const nodes = JSON.parse(JSON.stringify(this.spec.visTree.children!));
+            while (nodes.length) {
+              const node = nodes.shift()
+              if (!node) continue;
+              console.log(row, col, node.y, node.height, node.x, node.width);
+              if (row >= node.y && row < node.y + node.height && col >= node.x && col < node.x + node.width) {
+                highlightNodesId.add(node.id);
+              }
+              if (node.children) nodes.push(...node.children);
+            }
+          }
         }
-        if (startCol > endCol) {
-          [startCol, endCol] = [endCol, startCol];
-        }
+      })
+      d3.selectAll('.type-node').classed('selection', false);
+      for (let id of highlightNodesId) {
+        console.log(`.type-node.node-rect-${id}`);
+        d3.select(`.type-node.node-rect-${id}`).classed("selection", true);
+      }
+    },
+    */
+
+    getHightlightedCells(selected: Selection[], className: string = "selection") {
+      let selectedCoords: { [key: string]: [number, number][] } = {};
+      let hightedCells: { row: number, col: number, className: string }[] = [];
+      // 遍历选定区域
+      selected.forEach(range => {
+        const startRow = range[0];
+        const startCol = range[1];
+        const endRow = range[2];
+        const endCol = range[3];
 
         selectedCoords[range.toString()] = [];
         // 遍历行
@@ -393,18 +481,11 @@ export const useTableStore = defineStore('table', {
       return { selectedCoords, hightedCells };
     },
 
-    grid_cell_click(cell: TblCell, className: string = "posi-mapping") {
+    grid_cell_click(cell: TblCell, className: string = "selection") {
       let cells: TblCell[] = [{ ...cell, className }];
       this.highlightTblCells("input_tbl", cells);
       let outTblCells = this.in_out_mapping({ "0": [[cell.row, cell.col]] }, "input_tbl", className);
       this.highlightTblCells("output_tbl", outTblCells);
-      // const tbl_cell = this.input_tbl.instance.getCell(cell.row, cell.col);
-      // console.log(381, tbl_cell);
-      // if (tbl_cell) {
-      //   let cells: TblCell[] = [{ ...cell, className }];
-      //   this.highlightTblCells("input_tbl", cells);
-      //   tbl_cell.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-      // }
     },
 
     startPoint(points: [number, number][]) {
@@ -448,7 +529,7 @@ export const useTableStore = defineStore('table', {
         const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
         const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
         this.spec.rawSpecs = specs;
-        this.spec.visTree.children = JSON.parse(JSON.stringify(specs)); // cloneDeep(specs);
+        this.spec.visTree.children = JSON.parse(JSON.stringify(specs, (key, value) => typeof value === 'function' ? 'function' : value)); // cloneDeep(specs);
         // this.spec.visTree.children!.forEach((spec) => {
         //   if (!spec.hasOwnProperty('children')) {
         //     spec.children = [];

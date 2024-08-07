@@ -64,7 +64,7 @@ const drawGrid = (rows: number, cols: number) => {
             // svg.attr('transform', event.transform);  // 直接设置svg的transform属性会导致缩放后的坐标系不正确（导致的问题是：用鼠标平移（pan）矩形的时候，矩形会抖动，导致矩形实际平移的距离小于鼠标平移的距离），因此需要在svg内部再添加一个g元素
             // d3.select('g.matrix').attr('transform', event.transform);
             d3.select('g.matrix').attr('transform', `translate(${offsetX + event.transform.x}, ${offsetY + event.transform.y}) scale(${event.transform.k})`); // Update the matrix transform based on the zoom event
-            updateCellTextVisibility(event.transform.k); // Update cell text visibility based on the current scale
+            // updateCellTextVisibility(event.transform.k); // Update cell text visibility based on the current scale
             // transformStatue = event.transform;
         })
 
@@ -87,36 +87,29 @@ const drawGrid = (rows: number, cols: number) => {
         .attr('id', d => `grid-${d.row}-${d.col}`)
         .attr('width', cellWidth)
         .attr('height', cellHeight)
-        .attr('fill', '#f9f7ff')
-        .attr('stroke', '#cccccc')
-        .on('mouseover', function (this: SVGRectElement) {
-            d3.select(this).raise() // Bring the cell to the front 
-                // .attr('fill', '#ece9e6')
-                // .attr('stroke', '#4b8aff')
-                .attr('stroke-width', 2);
-            if (texts) {
-                texts.raise();
-            }
-        })
-        .on('mouseout', function () {
-            d3.select(this)
-                // .attr('fill', '#f9f7ff')
-                // .attr('stroke', '#cccccc')
-                .attr('stroke-width', 1);
-        })
+        // .on('mouseover', function () {
+        //     d3.select(this).raise() // Bring the cell to the front 
+        //         // .attr('fill', '#ece9e6')
+        //         // .attr('stroke', '#4b8aff')
+        //         .attr('stroke-width', 2);
+        //     if (texts) {
+        //         texts.raise();
+        //     }
+        // })
+        // .on('mouseout', function () {
+        //     d3.select(this)
+        //         // .attr('fill', '#f9f7ff')
+        //         // .attr('stroke', '#cccccc')
+        //         .attr('stroke-width', 1);
+        // })
         .on('click', function (event, d: TblCell) {
-            // console.log(`Clicked on cell: (${d.row}, ${d.col})`);
-            // const input_tbl_cell = d3.select('#input-tbl tbody').select(`tr:nth-child(${d.row + 1})`).select(`td:nth-child(${d.col + 2})`) as d3.Selection<HTMLElement, unknown, HTMLElement, any>;
-
-            // input_tbl_cell.node()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); // Dispatch a click event on the corresponding cell in the input table
-            // input_tbl_cell.dispatch('mouseup')
-            // console.log(d3.select(this).attr('width'), d3.select(this).attr('height'), d);
-            d3.selectAll('rect.grid-cell').attr('fill', '#f9f7ff').attr('stroke', '#cccccc');
-            d3.select(this).attr('fill', '#74b9ff');
+            d3.selectAll('rect.grid-cell').attr('class', 'grid-cell');
+            d3.select(this).raise().classed('selection', true);
             tableStore.grid_cell_click({ row: d.row, col: d.col })
             tableStore.input_tbl.instance.deselectCell();
             tableStore.output_tbl.instance.deselectCell();
-        });
+        })
+        .append('title').text(d => `Position: (${d.row}, ${d.col})`);
 
     // Calculate the offset to center the matrix in the SVG container
     offsetX = Math.max((containerWidth - matrix.node()!.getBBox().width) / 2, 0);
@@ -124,8 +117,7 @@ const drawGrid = (rows: number, cols: number) => {
     matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
     transformStatue = d3.zoomIdentity;
 
-
-
+    /*
     const updateCellTextVisibility = (scale: number) => {
         const scaledCellWidth = cellWidth * scale;
         const scaledCellHeight = cellHeight * scale;
@@ -156,6 +148,7 @@ const drawGrid = (rows: number, cols: number) => {
     };
 
     updateCellTextVisibility(1); // Initial update for default scale 1
+    */
 };
 
 /*
@@ -183,9 +176,6 @@ onMounted(() => {
     }
 });
 
-// watch(() => tableStore.currentCase, (newVal) => {
-//     drawGrid(tableStore.caseData.input_tbl.length, tableStore.caseData.input_tbl[0].length);
-// });
 
 watch(() => tableStore.input_tbl.tbl, (newVal) => {
     // console.log('watch: tbl changed: start');
@@ -194,16 +184,6 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
     } else {
         drawGrid(newVal.length, newVal[0].length);
     }
-    // const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
-    // tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
-    // tableStore.tree.visInst?.render();
-
-
-    // tableStore.setSpec();
-    // const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
-    // tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
-    // tableStore.tree.visInst?.render();
-    // console.log('watch: tbl changed: end');
 });
 
 </script>
@@ -212,6 +192,67 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
 .grid-container {
     width: 100%;
     height: 100%;
+
+    rect.positionShallow {
+        fill: var(--color-positionShallow);
+        stroke: var(--color-positionShallow);
+    }
+
+    rect.position {
+        fill: var(--color-position);
+        stroke: var(--color-position);
+    }
+
+    rect.contextShallow {
+        fill: var(--color-contextShallow);
+        stroke: var(--color-contextShallow);
+    }
+
+    rect.context {
+        fill: var(--color-context);
+        stroke: var(--color-context);
+    }
+
+    rect.valueShallow {
+        fill: var(--color-valueShallow);
+        stroke: var(--color-valueShallow);
+    }
+
+    rect.value {
+        fill: var(--color-value);
+        stroke: var(--color-value);
+    }
+
+    rect.nullShallow {
+        fill: var(--color-nullShallow);
+        stroke: var(--color-nullShallow);
+    }
+
+    rect.null {
+        fill: var(--color-null);
+        stroke: var(--color-null);
+    }
+
+    rect.selectionShallow {
+        fill: var(--color-selectionShallow);
+        stroke: var(--color-selectionShallow);
+    }
+
+    rect.selection {
+        fill: var(--color-selection);
+        stroke: var(--color-selection);
+    }
+
+    .grid-cell {
+        // 不写 rect.grid-cell 是让此选择器的优先级低于 rect.selection 等选择器
+        fill: var(--color-cellFill);
+        stroke: var(--color-cellStroke);
+        stroke-width: 1px;
+    }
+
+    .grid-cell:hover {
+        stroke-width: 2px;
+    }
 
     /*
     rect.cell-grid {

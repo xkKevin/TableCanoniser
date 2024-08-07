@@ -1,9 +1,23 @@
 export const typeMapColor = {
-  position: '#83b5ed',
-  context: '#7EAA55',
-  value: '#D07C94',
-  null: '#EEB189',
+  // Pattern selection
+  position: '#f0932b',  // 'rgba(126, 170, 85)',  // '#7EAA55',
+  positionShallow: '#ffbe76', // 'rgba(126, 170, 85, 0.8)',
+  context: '#6ab04c',    // 'rgba(238, 177, 137)',  // '#EEB189',
+  contextShallow: '#badc58', // 'rgba(238, 177, 137, 0.8)',
+  value: '#22a6b3', // 'rgba(146, 110, 184)',    // '#926EB8',
+  valueShallow: '#7ed6df', // 'rgba(146, 110, 184, 0.8)',
+  null: '#8395a7',
+  nullShallow: '#c8d6e5',
+  // Table selection
+  selection: 'rgba(9, 132, 227)',  // '#0984e3',
+  selectionShallow: 'rgba(9, 132, 227, 0.8)',
+
+  // Minimap
+  cellFill: '#f9f7ff',
+  cellStroke: '#cccccc',
 };
+
+export type TypeColor = keyof typeof typeMapColor;
 
 // Dictionary: '#83b5ed',
 // Array: '#7EAA55',
@@ -12,6 +26,7 @@ export const typeMapColor = {
 // Boolean: '#926EB8',
 // Null: '#E7D6D6',
 
+/*
 export const colorConfig = {
   "posi-mapping": {
     fill: '#0984e3',
@@ -40,7 +55,7 @@ export const colorConfig = {
     text: '#000',
   }
 }
-
+*/
 
 export const typeNodeStyle = {
   nodeWidth: 100,
@@ -62,10 +77,4 @@ export const nodeTextStyle = {
   color: 'white',
   fontSize: 15,
   yAxisAdjust: 2,
-};
-
-export const edgeTextStyle = {
-  fontSize: 18,
-  color: 'red',
-  distFromEdge: 4,
 };
