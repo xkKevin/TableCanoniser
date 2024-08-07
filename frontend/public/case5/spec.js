@@ -18,7 +18,7 @@ const option: TableTidierTemplate[] = [
         {
           referenceAreaPosi: "bottomLeft",
           xOffset: 0,
-          yOffset: -1,
+          yOffset: 1,
           valueCstr: (value) => {
             if (typeof value === "string")
               return value.startsWith("ACME Payroll");

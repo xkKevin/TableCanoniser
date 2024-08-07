@@ -48,7 +48,7 @@ const option: TableTidierTemplate[] = [
   },
 ];
 
-const case2_2: TableTidierTemplate[] = [
+const option2: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
