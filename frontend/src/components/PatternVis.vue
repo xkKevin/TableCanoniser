@@ -1,7 +1,7 @@
 <template>
     <div class="view" style="flex: 4.5">
         <div class="view-title">
-            <span>Pattern Visualization</span>
+            <span>Pattern Panel</span>
             <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                 <span>Reset</span>
@@ -11,7 +11,7 @@
             <div style="flex: 1;">
                 <div class="tbl-container" ref="tblContainer"></div>
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1; margin-left: 5px">
                 <a-dropdown :trigger="['contextmenu']" :open="contextMenuVisible"
                     @openChange="contextMenuVisibleChange">
                     <template #overlay>
@@ -145,15 +145,17 @@ const drawTblTemplate = () => {
     // Clear any existing SVG
     d3.select(tblContainer.value).selectAll('svg').remove();
 
+    const visChildren = tableStore.spec.visTree.children
+    if (visChildren === undefined || visChildren.length === 0 || visChildren[0].width === 0 || visChildren[0].height === 0) return;
+
     const containerWidth = tblContainer.value.clientWidth;
     const containerHeight = tblContainer.value.clientHeight;
 
-    // const rows = tableStore.spec.visTree.children![0].width;
-    // const cols = tableStore.spec.visTree.children![0].height;
-    // let cellWidth = Math.max(5, Math.min(90, Math.floor(containerWidth / cols)));
-    // let cellHeight = Math.max(5, Math.min(30, Math.floor(containerHeight / rows)));
-    const cellWidth = 90;
-    const cellHeight = 30;
+
+    let cellWidth = Math.max(5, Math.min(90, Math.floor(containerWidth / visChildren[0].width)));
+    let cellHeight = Math.max(5, Math.min(30, Math.floor(containerHeight / visChildren[0].height)));
+    // const cellWidth = 90;
+    // const cellHeight = 30;
 
     zoom = d3.zoom<SVGSVGElement, unknown>()
         // .scaleExtent([0.5, 3.5])  // set the zoom scale range
@@ -173,6 +175,7 @@ const drawTblTemplate = () => {
     const matrix = svg.append('g').classed("tbl-template", true);  // Append a 'g' element for better transform management to avoid jittering
     let texts: any = null;
 
+    /*
     const grids = [{
         row: 0,
         col: 0,
@@ -249,6 +252,9 @@ const drawTblTemplate = () => {
         row: 4,
         col: 3
     },];
+        */
+
+    const grids = tableStore.computeTblPatternGrid();
 
     const cells = matrix.selectAll('rect')
         .data(grids)
@@ -258,7 +264,7 @@ const drawTblTemplate = () => {
         .attr('id', d => `grid-${d.row}-${d.col}`)
         .attr('width', cellWidth)
         .attr('height', cellHeight)
-        .attr('fill', (d) => d.color ? d.color : '#f9f7ff')
+        .attr('fill', (d) => d.bgColor ? d.bgColor : '#f9f7ff')
         .attr('stroke', '#cccccc')
         .on('mouseover', function (this: SVGRectElement) {
             d3.select(this).raise() // Bring the cell to the front 
@@ -276,18 +282,11 @@ const drawTblTemplate = () => {
                 .attr('stroke-width', 1);
         })
         .on('click', function (event, d: TblCell) {
-            // console.log(`Clicked on cell: (${d.row}, ${d.col})`);
-            // const input_tbl_cell = d3.select('#input-tbl tbody').select(`tr:nth-child(${d.row + 1})`).select(`td:nth-child(${d.col + 2})`) as d3.Selection<HTMLElement, unknown, HTMLElement, any>;
-
-            // input_tbl_cell.node()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); // Dispatch a click event on the corresponding cell in the input table
-            // input_tbl_cell.dispatch('mouseup')
-            // console.log(d3.select(this).attr('width'), d3.select(this).attr('height'), d);
-            // d3.selectAll('rect.tbl-template-cell').attr('fill', '#f9f7ff').attr('stroke', '#cccccc');
-            // d3.select(this).attr('fill', '#74b9ff');
-            tableStore.grid_cell_click({ row: d.row + 1, col: d.col })
+            tableStore.grid_cell_click({ row: d.row + visChildren[0].y, col: d.col + visChildren[0].x });
             tableStore.input_tbl.instance.deselectCell();
             tableStore.output_tbl.instance.deselectCell();
-        });
+        })
+        .append('title').text(d => d.text ? 'Target Col: ' + d.text : null);
 
     // Calculate the offset to center the matrix in the SVG container
     offsetX = Math.max((containerWidth - matrix.node()!.getBBox().width) / 2, 0);
@@ -301,7 +300,7 @@ const drawTblTemplate = () => {
         const scaledCellWidth = cellWidth * scale;
         const scaledCellHeight = cellHeight * scale;
         // const cellArea = scaledCellWidth * scaledCellHeight;
-        if (scaledCellWidth >= 45 && scaledCellHeight >= 20) {
+        if (scaledCellWidth >= 90 || scaledCellHeight >= 30) {
             if (texts) {
                 texts.style('display', 'block');
             } else {
@@ -316,6 +315,17 @@ const drawTblTemplate = () => {
                     .attr('fill', (d) => d.textColor ? d.textColor : '#f9f7ff')
                     .attr('text-anchor', 'middle')
                     .text(d => d.text ? d.text : '')
+                    .each(function (d) {
+                        const textElement = d3.select(this);
+                        let text = textElement.text();
+                        let textLength = this.getComputedTextLength();
+                        // 如果文本超出最大宽度，进行截断
+                        while (textLength > cellWidth && text.length > 0) {
+                            text = text.slice(0, -1);
+                            textElement.text(text + '…');
+                            textLength = this.getComputedTextLength();
+                        }
+                    })
                     .style('display', 'block')
                     .style('pointer-events', 'none'); // Ensure text does not capture mouse events, in order to allow clicking on the cells
             }
@@ -402,5 +412,12 @@ onMounted(() => {
 .tbl-container {
     width: 100%;
     height: 100%;
+}
+
+.truncated {
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>

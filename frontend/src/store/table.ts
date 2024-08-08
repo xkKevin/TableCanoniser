@@ -12,6 +12,7 @@ import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
+import { typeMapColor, TypeColor } from '@/tree/style';
 // import { colorConfig } from '@/tree/style';
 // import { cloneDeep } from 'lodash';
 
@@ -43,6 +44,14 @@ export interface TblCell {
   row: number;
   col: number;
   className?: string;
+}
+
+export interface TblPatternGrid {
+  row: number;
+  col: number;
+  text?: any; // string
+  textColor?: string;
+  bgColor?: string;
 }
 
 export type Selection = [number, number, number, number];
@@ -620,6 +629,56 @@ export const useTableStore = defineStore('table', {
         }
         this.output_tbl.tbl.push(row);
       }
+    },
+
+    generateGrid(rows: number, cols: number): TblPatternGrid[] {
+      const grid: TblPatternGrid[] = [];
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          grid.push({ row: i, col: j });
+        }
+      }
+      return grid;
+    },
+
+    computeTblPatternGrid() {
+      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0]));
+      const grids = this.generateGrid(firstNode.height, firstNode.width);
+      const nodes = [firstNode];
+      // const box: AreaBox = { width: firstNode.width, height: firstNode.height, x: firstNode.x, y: firstNode.y };
+      // const box: AreaBox = (({ width, height, x, y }) => ({ width, height, x, y }))(firstNode); // { ...firstNode };
+      const box: Selection = [firstNode.x, firstNode.y, firstNode.x + firstNode.width, firstNode.y + firstNode.height];
+
+      while (nodes.length) {
+        const node = nodes.shift()
+        if (!node) continue;
+        const xOffset = node.x - box[0];
+        const yOffset = node.y - box[1];
+        if (xOffset >= 0 && yOffset >= 0 && node.x + node.width <= box[2] && node.y + node.height <= box[3]) {
+          let index = 0;
+          for (let i = 0; i < node.height; i++) {
+            for (let j = 0; j < node.width; j++) {
+              const cell = grids[(yOffset + i) * firstNode.width + (xOffset + j)]
+              if (node.type === "position") {
+                const text = node.extract!.byPositionToTargetCols![index];
+                if (!(text === undefined || text === null || text === '')) {
+                  cell.bgColor = typeMapColor.position;
+                  cell.text = text;
+                } else {
+                  cell.bgColor = typeMapColor.null;
+                }
+              } else {
+                cell.bgColor = typeMapColor[node.type!];
+              }
+              index++;
+            }
+          }
+          grids[(node.y - box[1]) * firstNode.width + (node.x - box[0])].bgColor = typeMapColor[node.type!];
+        }
+        if (node.children) nodes.push(...node.children);
+      }
+
+      return grids; // { grids, box: (({ width, height, x, y }) => ({ width, height, x, y }))(firstNode) };
     },
 
     initTblInfo(inputFlag = true) {

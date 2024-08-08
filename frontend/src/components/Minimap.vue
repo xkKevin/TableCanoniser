@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
-import { useTableStore, TblCell } from "@/store/table";
+import { useTableStore } from "@/store/table";
 
 const tableStore = useTableStore();
 
@@ -34,16 +34,6 @@ function resetZoom() {
         d3.select(container.value).select('svg').transition().duration(750)
             .call(zoom.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
     }
-}
-
-function generateGrid(rows: number, cols: number) {
-    const grid: TblCell[] = [];
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-            grid.push({ row: i, col: j });
-        }
-    }
-    return grid;
 }
 
 const drawGrid = (rows: number, cols: number) => {
@@ -75,9 +65,9 @@ const drawGrid = (rows: number, cols: number) => {
         .call(zoom)  // 注意，这里添加zoom的是svg元素，而不是g.matrix元素，所以当resetZoom时，需要对svg元素进行transform操作
 
     const matrix = svg.append('g').classed("matrix", true);  // Append a 'g' element for better transform management to avoid jittering
-    let texts: any = null;
+    // let texts: any = null;
 
-    const grids = generateGrid(rows, cols);
+    const grids = tableStore.generateGrid(rows, cols);
 
     const cells = matrix.selectAll('rect')
         .data(grids)
@@ -102,7 +92,7 @@ const drawGrid = (rows: number, cols: number) => {
         //         // .attr('stroke', '#cccccc')
         //         .attr('stroke-width', 1);
         // })
-        .on('click', function (event, d: TblCell) {
+        .on('click', function (event, d) {
             d3.selectAll('rect.grid-cell').attr('class', 'grid-cell');
             d3.select(this).raise().classed('selection', true);
             tableStore.grid_cell_click({ row: d.row, col: d.col })
