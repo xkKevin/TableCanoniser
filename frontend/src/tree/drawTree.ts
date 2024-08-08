@@ -18,8 +18,7 @@ type NodeData = {
   [key: string]: any,
   children: NodeData[],
   parent: NodeData | null,
-  data: VisTreeNode,
-  type?: TypeColor,
+  data: VisTreeNode
 }
 
 /** 创建一个新的Escape键盘事件，指定事件类型和相关参数 */
@@ -218,120 +217,6 @@ function customRectCorner(rectInfo: RectDef) {
   }
 
   return path;
-}
-
-function typeFeatureMapIcon(feature: string): string {
-  switch (feature) {
-    case edgeType.KeyOptional: return '?';
-    case edgeType.TypeAggr: return '*';
-    case edgeType.ValueMultipleType: return '+';
-    default: return '';
-  }
-}
-
-function AincludeB(A: Array<any>, B: Array<any>): boolean {
-  return B.every((val: any) => A.includes(val));
-}
-
-// assign id to each node in the tree
-export function dataProcessWithId(originalData: TypeNode): Array<TypeNode> {
-  // need further update
-  function customAccessChildren({ children }: { children: any, type: any }) {
-    if (children.every((ele: any) => ele == null)) return null;
-    return children.filter((ele: any) => ele !== null);
-  }
-  return d3.hierarchy(originalData, customAccessChildren)
-    .descendants()
-    .map((d, i) => Object.assign(d, { id: i }))
-    .map((d) => Object.assign(d.data, {
-      id: d.id,
-      parentId: d.parent && d.parent.id,
-    }));
-}
-
-export function nodeDrawData(dataWithId: Array<TypeNode>, orient: 'h' | 'v') {
-  // assign max proportion to each level of chilren
-  dataWithId.forEach((data: TypeNode) => {
-    if (data.parentId == null) { // 根节点直接赋值
-      Object.assign(data, { currentLevelMaxFreq: 1 });
-    }
-
-    let childrenMaxFreq = -1;
-    data.children.forEach((cd: TypeNode | null) => {
-      if (cd == null) return;
-      childrenMaxFreq = Math.max(
-        cd.typeProportion.reduce((a, b) => a + b, 0),
-        childrenMaxFreq,
-      );
-    });
-    data.children.forEach((cd: TypeNode | null) => {
-      if (cd == null) return;
-      Object.assign(cd, { currentLevelMaxFreq: childrenMaxFreq });
-    });
-  });
-  return dataWithId.map((data: TypeNode) => {
-    const nodeFillColor = data.type.map(
-      (t: string) => typeMapColor[t as TypeColor],
-    );
-
-    const maxFreq = data.currentLevelMaxFreq;
-    // 当前层的最大频率如何获取
-    const heightRaitio = typeNodeStyle.nodeHeight / maxFreq;
-    const sz = data.typeProportion.length;
-
-    let prevStart = 0;
-    const typeMapStartShift = new Map();
-    const nodeMultipleRectInfo = nodeFillColor.map((color: string, i: number) => {
-      const rectHeight = data.typeProportion[i] * heightRaitio;
-      const currentStart = prevStart;
-      prevStart += rectHeight;
-      let rounded;
-      if (i === 0 && i === sz - 1) rounded = 'all';
-      else if (i === 0 && i !== sz - 1) rounded = orient === 'h' ? 'top' : 'left';
-      else if (i !== 0 && i === sz - 1) rounded = orient === 'h' ? 'bottom' : 'right';
-      else rounded = 'no';
-
-      const shiftFromStartCenter = (currentStart + rectHeight / 2) - typeNodeStyle.nodeHeight / 2;
-      // 当前rect的中心减去原本的中心 就是当前rect的位移，用于后续link计算偏移
-      const currentType = data.type[i];
-      typeMapStartShift.set(currentType, shiftFromStartCenter);
-
-      return {
-        rectColor: color,
-        rectHeight,
-        rectWidth: typeNodeStyle.nodeWidth,
-        starty: currentStart,
-        startx: 0,
-        radius: typeNodeStyle.nodeBorderRadius,
-        rounded,
-      };
-    });
-
-    // 记录当前节点整体的高度，用于from - to link的终点
-    const currentNodeAllHeight = prevStart;
-    const shiftFromEndCenter = (currentNodeAllHeight - typeNodeStyle.nodeHeight) / 2;
-
-    return {
-      nodeId: data.id,
-      parentNodeId: data.parentId,
-      parentType: data.parentType,
-      nodeWidth: typeNodeStyle.nodeWidth,
-      nodeHeight: typeNodeStyle.nodeHeight,
-      nodeCircleRadius: typeNodeStyle.nodeCircleRadius,
-      nodeBorderRadius: typeNodeStyle.nodeBorderRadius,
-      nodeMultipleRectInfo,
-      shiftFromEndCenter,
-      shiftFromStartCenter: typeMapStartShift,
-      connectorLineColor: typeNodeStyle.connectorLineColor,
-      connectorLineWidth: typeNodeStyle.connectorLineWidth,
-      dataType: data.type,
-      nodeFillColor,
-      dataTypeFeature: data.typeFeature,
-      dataTypeText: data.typeValue,
-      dataTypeTextTruncated: data.typeValue
-        && fittingString(data.typeValue, typeNodeStyle.nodeWidth, nodeTextStyle.fontSize),
-    };
-  });
 }
 
 export class TreeChart {
@@ -596,21 +481,21 @@ export class TreeChart {
       // 初始化 id 计数器
       let idCounter = 0;
       // 为每个节点分配唯一的 id
-      this.root.each((node: any) => {
+      this.root.each((node: NodeData) => {
         node.id = idCounter++;
-        const spec: VisTreeNode = node.data;
+        const spec = node.data;
         spec.id = node.id;
         if (spec.extract === undefined || spec.extract === null) {
-          node.type = "null";
+          spec.type = "null";
         } else {
           if (spec.extract.byPositionToTargetCols !== undefined) {
-            node.type = "position";
+            spec.type = "position";
           } else if (spec.extract.byContext !== undefined) {
-            node.type = "context";
+            spec.type = "context";
           } else if (spec.extract.byValue !== undefined) {
-            node.type = "value";
+            spec.type = "value";
           } else {
-            node.type = "null";
+            spec.type = "null";
           }
         }
       });
@@ -806,20 +691,25 @@ export class TreeChart {
     // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
-    nodeGroups.each(function (this: any, dataBindToThis: NodeData) {
+    nodeGroups.each(function (this: any, node: NodeData) {
       const current = d3.select(this);
       /** 绘制节点（circle + rect） */
-      if (dataBindToThis.parent === null) { // 提前处理圆形节点，array下的元素
+      if (node.parent === null) { // 提前处理圆形节点，array下的元素
         // @ts-ignore
-        current.patternify({ tag: 'circle', selector: `node-circle-${dataBindToThis.id}` });
-        nodeGroups.select(`.node-circle-${dataBindToThis.id}`)
-          .attr('class', `node-circle-${dataBindToThis.id} type-node`)
+        current.patternify({ tag: 'circle', selector: `node-circle-${node.id}` });
+        nodeGroups.select(`.node-circle-${node.id}`)
+          .attr('class', `node-circle-${node.id} type-node`)
           .attr('r', typeNodeStyle.nodeCircleRadius)
-          .attr('fill', ({ type }: { type: TypeColor }) => typeMapColor[type])
+          .attr('fill', typeMapColor[node.data.type!])
           .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
           // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
           .attr('cursor', 'pointer')
         // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
+        // @ts-ignore
+        current.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+        current.select('.node-tooltip')
+          // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
+          .text("Path: " + JSON.stringify(node.path));
         return;
       }
 
@@ -833,24 +723,45 @@ export class TreeChart {
         "rounded": "all"
       }
       // @ts-ignore
-      current.patternify({ tag: 'path', selector: `node-rect-${dataBindToThis.id}` });
-      nodeGroups.select(`.node-rect-${dataBindToThis.id}`)
-        .attr('class', `node-rect-${dataBindToThis.id} type-node`)
+      const singleNodeG = current.patternify({ tag: 'g', selector: `single-node-g`, targetData: (d: any) => [d] });
+      singleNodeG.patternify({ tag: 'path', selector: `node-rect-${node.id}` });
+      singleNodeG.select(`.node-rect-${node.id}`)
+        .attr('class', `node-rect-${node.id} type-node`)
         .attr('d', customRectCorner(nodeRectData as RectDef))
-        .attr('fill', ({ type }: { type: TypeColor }) => typeMapColor[type])
+        .attr('fill', typeMapColor[node.data.type!])
         // .attr('fill', nodeRectData.rectColor)
         // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
         .attr('cursor', 'pointer')
       // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
 
+      let tooltipText: any = node.data.matchs?.length;
+      tooltipText = tooltipText === undefined ? '' : `\nMatch: ${tooltipText} instances`;
+
+      singleNodeG.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+      singleNodeG.select('.node-tooltip')
+        // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
+        .text("Path: " + JSON.stringify(node.path) + tooltipText);
+
       /** 绘制节点的constraints */
-      dataBindToThis.data.match?.constraints?.forEach((constraint, i) => {
+      node.data.match?.constraints?.forEach((constraint, i) => {
         // console.log('hhh', constraint, i, dataBindToThis.id, dataBindToThis);
         const iconsz = typeNodeStyle.iconsize;
         // @ts-ignore
-        current.patternify({ tag: 'image', selector: `node-constraint-icon-${dataBindToThis.id}-${i}` });
-        nodeGroups.select(`.node-constraint-icon-${dataBindToThis.id}-${i}`)
-          .attr('transform', `translate(${2 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 1})`)
+        current.patternify({ tag: 'rect', selector: `node-constraint-rect-${node.id}-${i}` });
+        const constrNodeRect = nodeGroups.select(`.node-constraint-rect-${node.id}-${i}`)
+        constrNodeRect.classed('node-constraint-rect', true)
+          .attr('transform', `translate(${(iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 3})`)
+          .attr("visibility", "hidden")
+          .attr('width', iconsz + 2)
+          .attr('height', iconsz + 2)
+          .attr("stroke", typeMapColor.selection)
+          .attr("stroke-width", 1.5)
+          .attr("fill", "none")
+
+        // @ts-ignore
+        current.patternify({ tag: 'image', selector: `node-constraint-icon-${node.id}-${i}` });
+        nodeGroups.select(`.node-constraint-icon-${node.id}-${i}`)
+          .attr('transform', `translate(${1 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 2})`)
           .attr('xlink:xlink:href', () => {
             // eslint-disable-next-line
             const iconPath = require(`@/assets/constraint.png`);
@@ -858,9 +769,17 @@ export class TreeChart {
           })
           .attr('width', iconsz)
           .attr('height', iconsz)
+          .on('mouseover', (_e: any, d: NodeData) => {
+            constrNodeRect.attr('visibility', 'visible');
+          })
+          .on('mouseout', (_e: any, d: NodeData) => {
+            constrNodeRect.attr('visibility', 'hidden');
+          })
           .on('click', (_e: any, d: NodeData) => {
             // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
             tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
+            // 先清空其他样式
+            document.dispatchEvent(escapeEvent);
 
             const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
             const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
@@ -876,7 +795,7 @@ export class TreeChart {
             const startLine = (strBefore.match(/\n/g) || []).length + startConstLine;
 
             const endLine = startLine + (constraintStr.match(/\n/g) || []).length;
-            tableStore.highlightCode(startLine, endLine);
+            tableStore.highlightCode(startLine, endLine, `${d.data.type}Shallow`);
           });
 
       });
@@ -884,7 +803,7 @@ export class TreeChart {
 
     // const nodeRectText = nodeUpdate.patternify({ tag: 'g', selector: 'node-text-g', targetData: (d: any) => [d] });
     nodeUpdate.patternify({ tag: 'text', selector: 'node-text' });
-    nodeGroups.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+
 
     nodeUpdate.select('.node-text')
       .attr('text-anchor', 'middle')
@@ -917,9 +836,7 @@ export class TreeChart {
     // })
     // .append("svg:title").text("(d: any) => d.data.id");
 
-    nodeGroups.select('.node-tooltip')
-      // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-      .text((d: NodeData) => "Path: " + JSON.stringify(d.path));
+
 
     // 为所有circle和rect绑定展开收起交互事件
     // d3.selectAll('.type-node, .node-text-g')
@@ -956,18 +873,18 @@ export class TreeChart {
           let allHightedInCells: TblCell[] = [];
           let allHightedOutCells: TblCell[] = [];
           if (matchArea.length > 0) {
-            const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(matchArea, `${d.type!}Shallow`);
+            const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(matchArea, `${visData.type}Shallow`);
             allHightedInCells = allHightedInCells.concat(hightedCells);
-            const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", `${d.type!}Shallow`);
+            const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", `${visData.type}Shallow`);
             allHightedOutCells = allHightedOutCells.concat(cells);
             tableStore.highlightMinimapCells(hightedCells);
           }
 
           const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
-          const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected, d.type!);
+          const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected, visData.type!);
           allHightedInCells = allHightedInCells.concat(hightedCells);
           tableStore.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
-          const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", d.type!);
+          const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", visData.type);
           allHightedOutCells = allHightedOutCells.concat(cells);
           tableStore.highlightTblCells("output_tbl", allHightedOutCells);
           tableStore.highlightMinimapCells(hightedCells, matchArea.length === 0);
@@ -986,7 +903,7 @@ export class TreeChart {
 
           const startLine = (strBefore.match(/\n/g) || []).length + 1;
           const endLine = startLine + (subTemplateStr.match(/\n/g) || []).length;
-          tableStore.highlightCode(startLine, endLine);
+          tableStore.highlightCode(startLine, endLine, `${visData.type}Shallow`);
         } else {
           // tableStore.editor.mappingSpec.decorations?.clear();
           // 将事件分发到目标元素或整个文档

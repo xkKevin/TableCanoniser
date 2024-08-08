@@ -63,6 +63,7 @@ interface AreaBox {
 
 export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   id: number,
+  type?: "position" | "value" | "context" | "null",
   matchs?: AreaBox[],
   children?: VisTreeNode[]
 }
@@ -96,7 +97,7 @@ export const useTableStore = defineStore('table', {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
-        visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, children: [] }),
+        visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<any>(null),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
@@ -555,6 +556,7 @@ export const useTableStore = defineStore('table', {
         this.spec.visTreeMatchPath = {};
         const tidyData = this.transformTblUpdateRootArea(specs);
         this.initTblInfo(false);
+        this.tree.visInst?.render();
 
         if (Object.keys(tidyData).length === 0) {
           message.warning('The output table is empty based on the specification.');
@@ -788,7 +790,7 @@ export const useTableStore = defineStore('table', {
         }
       }
     },
-    highlightCode(startLine: number, endLine: number = startLine) {
+    highlightCode(startLine: number, endLine: number = startLine, className: string = "nullShallow") {
       const editor = this.editor.mappingSpec.instance
       const decorationsCollection = this.editor.mappingSpec.decorations
       if (editor && decorationsCollection) {
@@ -798,7 +800,7 @@ export const useTableStore = defineStore('table', {
             range,
             options: {
               isWholeLine: true,
-              className: 'myLineDecoration',
+              className: className  // 'myLineDecoration',
             },
           },
         ];

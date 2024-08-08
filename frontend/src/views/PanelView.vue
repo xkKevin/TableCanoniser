@@ -279,12 +279,6 @@ onMounted(() => {
   max-width: 700px;
 }
 
-.myLineDecoration {
-  // background-color: rgba(255, 255, 0, 0.3);
-  // background-color: #74b9ff;
-  background-color: rgba(116, 185, 255, 0.5);
-}
-
 .ant-btn-default {
   transition: 0s;
 }
@@ -305,10 +299,5 @@ onMounted(() => {
   svg path {
     stroke: rgba(0, 0, 0, 0.25);
   }
-}
-
-p {
-  color: rgba(146, 110, 184);
-  background-color: rgba(9, 132, 227, 0.8)
 }
 </style>

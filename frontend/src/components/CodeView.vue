@@ -168,10 +168,31 @@ onUnmounted(() => {
 </script>
 
 
-<style scoped lang="less">
+<style lang="less">
 .editor-container {
     width: 100%;
     height: 100%;
     /* You can adjust the height as needed */
+
+    .nullShallow {
+        // background-color: var(--color-null);
+        background-color: var(--color-nullShallow);
+    }
+
+    .positionShallow {
+        // background-color: var(--color-position);
+        background-color: var(--color-positionShallow);
+    }
+
+    .valueShallow {
+        // background-color: var(--color-value);
+        background-color: var(--color-valueShallow);
+    }
+
+    .contextShallow {
+        // background-color: var(--color-context);
+        background-color: var(--color-contextShallow);
+    }
+
 }
 </style>
