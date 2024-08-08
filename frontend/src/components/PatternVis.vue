@@ -261,7 +261,7 @@ const drawTblTemplate = () => {
         .enter().append('rect').classed('tbl-template-cell', true)
         .attr('x', d => d.col * cellWidth)
         .attr('y', d => d.row * cellHeight)
-        .attr('id', d => `grid-${d.row}-${d.col}`)
+        // .attr('id', d => `tbl-template-${d.row}-${d.col}`)
         .attr('width', cellWidth)
         .attr('height', cellHeight)
         .attr('fill', (d) => d.bgColor ? d.bgColor : '#f9f7ff')
@@ -282,7 +282,11 @@ const drawTblTemplate = () => {
                 .attr('stroke-width', 1);
         })
         .on('click', function (event, d: TblCell) {
-            tableStore.grid_cell_click({ row: d.row + visChildren[0].y, col: d.col + visChildren[0].x });
+            // tableStore.grid_cell_click({ row: d.row + visChildren[0].y, col: d.col + visChildren[0].x });
+            const row = d.row + visChildren[0].y;
+            const col = d.col + visChildren[0].x;
+            d3.select(`#grid-${row}-${col}`).dispatch('click');
+            tableStore.highlightNodes([[row, col, row, col]]);
             tableStore.input_tbl.instance.deselectCell();
             tableStore.output_tbl.instance.deselectCell();
         })
@@ -309,7 +313,6 @@ const drawTblTemplate = () => {
                     .enter().append('text').classed('tbl-template-text', true)
                     .attr('x', d => d.col * cellWidth + cellWidth / 2)
                     .attr('y', d => d.row * cellHeight + cellHeight / 2)
-                    .attr('id', d => `text-${d.row}-${d.col}`)
                     .attr('dy', '.30em')
                     .attr('font-size', 15 / scale)
                     .attr('fill', (d) => d.textColor ? d.textColor : '#f9f7ff')
@@ -412,12 +415,10 @@ onMounted(() => {
 .tbl-container {
     width: 100%;
     height: 100%;
-}
 
-.truncated {
-    max-width: 140px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    .tbl-template-cell:hover {
+        stroke: var(--color-selection);
+        stroke-width: 2px;
+    }
 }
 </style>
