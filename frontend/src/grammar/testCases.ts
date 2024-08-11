@@ -3,8 +3,8 @@
 
 // 使用 ts-node testCases.ts 来测试当前ts
 
-import { Table2D, TableTidierTemplate, ValueType } from "./grammar";
-import { transformTable, sortWithCorrespondingArray, serialize } from "./handleSpec";
+import { Table2D, TableTidierTemplate, TableTidierKeyWords } from "./grammar";
+import { transformTable, serialize } from "./handleSpec";
 
 
 const example1_mt: Table2D = [
@@ -23,7 +23,7 @@ const example1_spec: TableTidierTemplate = {
     match: {
         startCell: { xOffset: 0, yOffset: 1 },
         size: { width: 'toParentX', height: 2 },
-        constraints: [{ xOffset: 0, yOffset: 0, valueCstr: ValueType.Number }],
+        constraints: [{ xOffset: 0, yOffset: 0, valueCstr: TableTidierKeyWords.Number }],
         traverse: { yDirection: 'after' },
     },
     children: [
@@ -99,7 +99,7 @@ const case1_spec: TableTidierTemplate = {
             {
                 xOffset: 0,
                 yOffset: 0,
-                valueCstr: ValueType.Number,
+                valueCstr: TableTidierKeyWords.Number,
             },
         ],
         traverse: {
@@ -133,12 +133,12 @@ const case1_spec: TableTidierTemplate = {
                     {
                         xOffset: 0,
                         yOffset: 0,
-                        valueCstr: ValueType.Number,
+                        valueCstr: TableTidierKeyWords.Number,
                     },
                     {
                         xOffset: 0,
                         yOffset: -1,
-                        valueCstr: ValueType.String,
+                        valueCstr: TableTidierKeyWords.String,
                     },
                 ],
                 traverse: {
@@ -245,7 +245,7 @@ const case2_2_spec: TableTidierTemplate = {
             },
         },
     ],
-    // fill: "forward"
+    // fill: TableTidierKeyWords.Forward
 };
 
 const case2_3_spec: TableTidierTemplate = {
@@ -264,7 +264,7 @@ const case2_3_spec: TableTidierTemplate = {
         constraints: [
             {
                 referenceAreaPosi: "topRight",
-                valueCstr: ValueType.None
+                valueCstr: TableTidierKeyWords.None
             }
         ]
     },
@@ -299,7 +299,7 @@ const case2_3_spec: TableTidierTemplate = {
             },
         },
     ],
-    // fill: "forward"
+    // fill: TableTidierKeyWords.Forward
 };
 
 
@@ -387,7 +387,7 @@ const case3_spec: TableTidierTemplate = {
                 referenceAreaPosi: "bottomLeft",
                 xOffset: 0,
                 yOffset: 1,
-                valueCstr: ValueType.None,
+                valueCstr: TableTidierKeyWords.None,
             },
         ],
         traverse: {
@@ -420,12 +420,12 @@ const case3_spec: TableTidierTemplate = {
                     {
                         xOffset: -1,
                         yOffset: 0,
-                        valueCstr: ValueType.String,
+                        valueCstr: TableTidierKeyWords.String,
                     },
                     {
                         xOffset: 1,
                         yOffset: 0,
-                        valueCstr: ValueType.None,
+                        valueCstr: TableTidierKeyWords.None,
                     },
                 ],
                 traverse: {
@@ -524,7 +524,7 @@ const case3_spec: TableTidierTemplate = {
             extract: {
                 byValue: (currentAreaTbl) => {
                     // console.log(currentAreaTbl[0].map(Number));
-                    return sortWithCorrespondingArray(
+                    return TableTidierKeyWords.pairSort(
                         currentAreaTbl[0].map(Number),
                         ["Front Camera", "Rear Camera"],
                         "asc"
@@ -621,7 +621,7 @@ const case5_spec: TableTidierTemplate = {
             yDirection: "after",
         }
     },
-    fill: "forward",
+    fill: TableTidierKeyWords.Forward,
     children: [
         {
             match: {

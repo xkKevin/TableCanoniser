@@ -13,7 +13,7 @@ const option: TableTidierTemplate[] = [
         {
           xOffset: 0,
           yOffset: 0,
-          valueCstr: ValueType.Number,
+          valueCstr: TableTidierKeyWords.Number,
         },
       ],
       traverse: {
@@ -46,12 +46,12 @@ const option: TableTidierTemplate[] = [
             {
               xOffset: 0,
               yOffset: 0,
-              valueCstr: ValueType.Number,
+              valueCstr: TableTidierKeyWords.Number,
             },
             {
               xOffset: 0,
               yOffset: -1,
-              valueCstr: ValueType.String,
+              valueCstr: TableTidierKeyWords.String,
             },
           ],
           traverse: {

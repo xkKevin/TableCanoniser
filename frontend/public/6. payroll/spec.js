@@ -30,7 +30,7 @@ const option: TableTidierTemplate[] = [
         yDirection: "after",
       },
     },
-    // fill: "forward",
+    fill: "", // TableTidierKeyWords.Forward,
     children: [
       {
         match: {

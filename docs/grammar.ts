@@ -2,10 +2,11 @@
 
 type CellValueType = string | number | undefined;
 
-enum ValueType {
-    String = 'TableTidier.String',
-    Number = 'TableTidier.Number',
-    None = 'TableTidier.None',
+enum TableTidierKeyWords {
+    String = 'TableTidierKeyWords.String',
+    Number = 'TableTidierKeyWords.Number',
+    None = 'TableTidierKeyWords.None',
+    NotNone = 'TableTidierKeyWords.NotNone',
 }
 
 /**
@@ -221,17 +222,17 @@ interface CellSelection {
  * Represents a constraint on a cell's value
  * - `valueCstr`: The value constraint.
  *   - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
- *   - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
+ *   - `TableTidierKeyWords`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
  *   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
  */
 interface CellConstraint extends CellSelection {
     /**
      * The value constraint.
      * - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
-     * - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
+     * - `TableTidierKeyWords`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
      * - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
      */
-    valueCstr: CellValueType | ValueType | checkValueFn;
+    valueCstr: CellValueType | TableTidierKeyWords | checkValueFn;
 }
 
 /**
@@ -345,7 +346,7 @@ interface TableTidierTemplate {
     /**
      * Fill value for the cells within the selection area to ensure all columns have the same number of cells
      */
-    fill?: CellValueType | 'forward' | null;
+    fill?: CellValueType | TableTidierKeyWords.Forward | null;
     /**
      * The child templates for nested selections
      */

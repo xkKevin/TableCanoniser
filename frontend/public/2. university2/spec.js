@@ -13,13 +13,14 @@ const option: TableTidierTemplate[] = [
         {
           xOffset: 0,
           yOffset: 0,
-          valueCstr: ValueType.Number,
+          valueCstr: TableTidierKeyWords.Number,
         },
       ],
       traverse: {
         yDirection: "after",
       },
     },
+    fill: "",
     children: [
       {
         match: {
@@ -46,12 +47,12 @@ const option: TableTidierTemplate[] = [
             {
               xOffset: 0,
               yOffset: 0,
-              valueCstr: ValueType.Number,
+              valueCstr: TableTidierKeyWords.Number,
             },
             {
               xOffset: 0,
               yOffset: -1,
-              valueCstr: ValueType.String,
+              valueCstr: TableTidierKeyWords.String,
             },
           ],
           traverse: {
@@ -65,7 +66,6 @@ const option: TableTidierTemplate[] = [
             toTargetCols: "cellValue",
           },
         },
-        fill: "",
       },
     ],
   },

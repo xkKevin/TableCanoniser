@@ -1,25 +1,6 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, ValueType, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification } from "./grammar";
+import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification } from "./grammar";
 
 import { CustomError } from "../types";
-
-export function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
-    // 创建一个数组包含元素及其对应的索引
-    let indexedArray = A.map((value, index) => ({ value, index }));
-
-    // 按照A数组的值进行排序
-    indexedArray.sort((a, b) => {
-        if (sortOrder === 'asc') {
-            return a.value - b.value;
-        } else {
-            return b.value - a.value;
-        }
-    });
-
-    // 根据排序后的索引重新排列B数组
-    let sortedB = indexedArray.map(item => B[item.index]);
-
-    return sortedB;
-}
 
 export function serialize(obj: any): string {
     const seen = new WeakSet();
@@ -41,14 +22,17 @@ const evaluateConstraint = (cellValue: CellValueType, constraint: CellConstraint
     if (typeof constraint.valueCstr === 'function') {
         return constraint.valueCstr(cellValue);
     }
-    if (constraint.valueCstr === ValueType.String) {
+    if (constraint.valueCstr === TableTidierKeyWords.String) {
         return typeof cellValue === 'string' && cellValue !== '' && isNaN(Number(cellValue));
     }
-    if (constraint.valueCstr === ValueType.Number) {
+    if (constraint.valueCstr === TableTidierKeyWords.Number) {
         return typeof cellValue === 'number' || (typeof cellValue === 'string' && cellValue !== '' && !isNaN(Number(cellValue)));
     }
-    if (constraint.valueCstr === ValueType.None) {
-        return cellValue === null || cellValue === '';
+    if (constraint.valueCstr === TableTidierKeyWords.None) {
+        return cellValue === null || cellValue === '' || cellValue === undefined;
+    }
+    if (constraint.valueCstr === TableTidierKeyWords.NotNone) {
+        return cellValue !== null && cellValue !== '' && cellValue !== undefined;
     }
     return cellValue === constraint.valueCstr;
 };
@@ -124,14 +108,14 @@ const getSubArea = (table: Table2D, x: number, y: number, width: number, height:
 }
 
 // 如果tidyData中的列长短不一样，则使用 template.fill 填充所有短的列，使每一列都有相同的长度
-const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueType | 'forward' | null) => {
+const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueType | null) => {
     if (fill === null) return;
     // 获取所有列的最大长度
     const maxLength = Math.max(...Object.values(tidyData).map(column => column.length));
     // 对每一列进行填充处理
     for (const key in tidyData) {
         const column = tidyData[key];
-        const fillValue = fill === 'forward' ? column[column.length - 1] : {
+        const fillValue = fill === TableTidierKeyWords.Forward ? column[column.length - 1] : {
             x: -1,
             y: -1,
             value: fill
@@ -240,13 +224,14 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
         children: []
     }
     for (let cstr of template.match.constraints) {
-        try {  // constraint 里的数组超界不会报错，只会返回 null，即不符合约束
+        try {  // constraint 里的数组超界不会报错，而是根据 ignoreOutOfBounds 来判断
             const cellInfo = getCellBySelect(cstr, tmpArea, rootArea);
             if (cellInfo === null) {
                 return null;
             }
             if (!evaluateConstraint(cellInfo.value, cstr)) return null;
         } catch (e) {
+            if (cstr.ignoreOutOfBounds) continue;
             return null;
         }
     }
@@ -440,12 +425,13 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
                 template.children.forEach((templateChild, ti) => {
                     processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
-                // fillColumns(tidyData, template.fill);
-                if (template.fill === null && template.children.length > 1) {
-                    fillColumns(tidyData, "");
-                } else {
-                    fillColumns(tidyData, template.fill);
-                }
+                fillColumns(tidyData, template.fill);
+                // if (template.fill === null && template.children.length > 1) {
+                // if (template.fill === undefined && template.children.length > 1) {
+                //     fillColumns(tidyData, "");
+                // } else {
+                //     fillColumns(tidyData, template.fill);
+                // }
             }
         } else {
             // 父区域有 transform
@@ -453,12 +439,13 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
                 currentArea.children.forEach((areaChild) => {
                     processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
-                // fillColumns(tidyData, template.fill);
-                if (template.fill === null) {
-                    fillColumns(tidyData, "");
-                } else {
-                    fillColumns(tidyData, template.fill);
-                }
+                fillColumns(tidyData, template.fill);
+                // if (template.fill === null) {
+                // if (template.fill === undefined) {
+                //     fillColumns(tidyData, "");
+                // } else {
+                //     fillColumns(tidyData, template.fill);
+                // }
             })
         }
     }
@@ -494,12 +481,12 @@ export function transformTable(table: Table2D, specs: TableTidierTemplate[], tra
     specs.forEach((template, ti) => {
         const specWithDefaults = completeSpecification(template);
         processTemplate(specWithDefaults, rootArea, rootArea, tidyData, ti, traverseFlag);
-        // fillColumns(tidyData, specWithDefaults.fill);
-        if (specWithDefaults.fill === null && specWithDefaults.children.length > 1) {
-            fillColumns(tidyData, "");
-        } else {
-            fillColumns(tidyData, specWithDefaults.fill);
-        }
+        fillColumns(tidyData, specWithDefaults.fill);
+        // if (specWithDefaults.fill === undefined && specWithDefaults.children.length > 1) {
+        //     fillColumns(tidyData, "");
+        // } else {
+        //     fillColumns(tidyData, specWithDefaults.fill);
+        // }
     });
 
     return { rootArea, tidyData };

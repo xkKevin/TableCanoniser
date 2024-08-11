@@ -1,11 +1,54 @@
-// The Declarative Grammar v0.4.0
+// The Declarative Grammar v0.4.1
 
 type CellValueType = string | number | undefined;
 
-enum ValueType {
-    String = 'TableTidier.String',
-    Number = 'TableTidier.Number',
-    None = 'TableTidier.None',
+/**
+ * Defines a set of keywords used in the TableTidier Grammar.
+ * 
+ * - `String`: Used in `valueCstr` of `constraints` to specify that a cell must contain a string value.
+ * - `Number`: Used in `valueCstr` of `constraints` to specify that a cell must contain a numeric value.
+ * - `None`: Used in `valueCstr` of `constraints` to specify that a cell must be empty, null, or undefined.
+ * - `NotNone`: Used in `valueCstr` of `constraints` to specify that a cell must not be empty, null, or undefined.
+ * - `Forward`: Used in the `fill` property to indicate that the column should be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+ * - `pairSort`: Used in user-defined functions to sort array `A` according to the specified order (`asc` or `desc`) and reorders array `B`, so that its elements correspond to the newly sorted order of `A`.
+ */
+const TableTidierKeyWords = {
+    /**
+     * Used in `valueCstr` of `constraints` to specify that a cell must contain a string value.
+     */
+    String: 'TableTidierKeyWords.String',
+    /**
+     * Used in `valueCstr` of `constraints` to specify that a cell must contain a numeric value.
+     */
+    Number: 'TableTidierKeyWords.Number',
+    /**
+     * Used in `valueCstr` of `constraints` to specify that a cell must be empty, null, or undefined.
+     */
+    None: 'TableTidierKeyWords.None',
+    /**
+     * Used in `valueCstr` of `constraints` to specify that a cell must not be empty, null, or undefined.
+     */
+    NotNone: 'TableTidierKeyWords.NotNone',
+    /**
+     * Used in the `fill` property to indicate that the column should be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+     */
+    Forward: 'TableTidierKeyWords.Forward',
+    /**
+     * Used in user-defined functions to sort array `A` according to the specified order (`asc` or `desc`) and reorders array `B`
+     * so that its elements correspond to the newly sorted order of `A`.
+     * 
+     * @param {any[]} A - The array whose elements determine the sort order.
+     * @param {any[]} B - The array to be reordered based on the sorted order of `A`.
+     * @param {'asc' | 'desc'} sortOrder - The sorting order: 'asc' for ascending, 'desc' for descending.
+     * @returns {any[]} - The reordered array `B` with elements corresponding to the sorted order of `A`.
+     * 
+     * @example
+     * const A = [3, 1, 2];
+     * const B = ['Col1', 'Col2', 'Col3'];
+     * const correspondingB_Asc = TableTidierKeyWords.pairSort(A, B, 'asc');  // ['Col3', 'Col1', 'Col2']
+     * const correspondingB_Desc = TableTidierKeyWords.pairSort(A, B, 'desc'); // ['Col1', 'Col3', 'Col2']
+     */
+    pairSort: sortWithCorrespondingArray,
 }
 
 /**
@@ -219,39 +262,54 @@ interface CellSelection {
 
 /**
  * Represents a constraint on a cell's value
- * - `valueCstr`: The value constraint.
+ * - `valueCstr`: The value constraint
+ *   - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
+ *   - `TableTidierKeyWords.Number`: Specifies that the cell's value must be a number.
+ *   - `TableTidierKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
+ *   - `TableTidierKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
  *   - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
- *   - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
  *   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
+ * - `ignoreOutOfBounds` - Determines whether to ignore the constraint when the specified cell exceeds the table boundaries.
+ *   - `true` (default) means that if the specified cell is out of bounds, the constraint will be ignored, and the search will continue with other checks.
+ *   - `false` means that if the specified cell is out of bounds, the pattern will be considered as not matching, even if other conditions are satisfied.
  */
 interface CellConstraint extends CellSelection {
     /**
-     * The value constraint.
+     * The value constraint
+     * - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
+     * - `TableTidierKeyWords.Number`: Specifies that the cell's value must be a number.
+     * - `TableTidierKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
+     * - `TableTidierKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
      * - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
-     * - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
      * - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
      */
-    valueCstr: CellValueType | ValueType | checkValueFn;
+    valueCstr?: CellValueType | checkValueFn;
+    /**
+     * Determines whether to ignore the constraint when the specified cell exceeds the table boundaries.
+     * - `true` (default) means that if the specified cell is out of bounds, the constraint will be ignored, and the search will continue with other checks.
+     * - `false` means that if the specified cell is out of bounds, the pattern will be considered as not matching, even if other conditions are satisfied.
+     */
+    ignoreOutOfBounds?: boolean;
 }
 
 /**
  * ContextTransform specifies how to derive the target column for a cell based on its context cell.
  * 
  * - `position`: Defines the location of the context cell relative to the current cell.
- *   - 'above': The context cell is located directly above the current cell.
+ *   - 'above' (default): The context cell is located directly above the current cell.
  *   - 'below': The context cell is located directly below the current cell.
  *   - 'left': The context cell is located directly to the left of the current cell.
  *   - 'right': The context cell is located directly to the right of the current cell.
  *   - `contextPosiFn`: A custom function to determine the position of the context cell.
  * 
  * - `toTargetCols`: Determines how to derive the target column based on the context cell's value.
- *   - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+ *   - 'cellValue' (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
  *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
 interface ContextTransform {
     /**
      * Defines the location of the context cell relative to the current cell.
-     * - 'above': The context cell is located directly above the current cell.
+     * - 'above' (default): The context cell is located directly above the current cell.
      * - 'below': The context cell is located directly below the current cell.
      * - 'left': The context cell is located directly to the left of the current cell.
      * - 'right': The context cell is located directly to the right of the current cell.
@@ -260,7 +318,7 @@ interface ContextTransform {
     position: 'above' | 'below' | 'left' | 'right' | contextPosiFn;
     /**
      * Determines how to derive the target column based on the context cell's value.
-     * - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+     * - 'cellValue' (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
      * - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
      */
     toTargetCols: 'cellValue' | mapColbyContextFn;
@@ -271,18 +329,33 @@ interface ContextTransform {
  * The main template for defining the transformation rules
  * - `match`: The matching criteria for a selecting area
  *   - `startCell`: The starting cell for the selection
+ *     - `referenceAreaLayer`: The reference area layer for selection, default is 'current'
+ *     - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
+ *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
+ *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
  *   - `size`: The size of the selection area
  *     - `width`: The width of the selection area; 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
  *     - `height`: The height of the selection area; 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
  *   - `constraints`: Constraints to apply to the cells within the selection area
+ *     - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
+ *     - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
+ *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
+ *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
+ *     - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
+ *     - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
  *   - `traverse`: The traversal direction for the selection area
  *     - `xDirection`: The x-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
  *     - `yDirection`: The y-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
  * - `extract`: The extraction rules for transforming the selection area
  *   - `byContext`: The context-based transformation for the selection area
+ *     - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
+ *     - `toTargetCols`: Determines how to derive the target column based on the context cell's value, default is 'cellValue'
  *   - `byPositionToTargetCols`: The target columns for the transformation, which is an array (position-based transformation)
  *   - `byValue`: The custom function for value-based transformation
- * - `fill`: Fill value for the cells within the selection area to ensure all columns have the same number of cells
+ * - `fill`: Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
+ *   - `null` (default) means no filling will occur, and columns can have different lengths.
+ *   - `TableTidierKeyWords.Forward` means that the column will be filled with the previous value until all columns have equal lengths.
+ *   - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
  * - `children`: The child templates for nested selections
  */
 interface TableTidierTemplate {
@@ -292,6 +365,10 @@ interface TableTidierTemplate {
     match?: {
         /**
          * The starting cell for the selection
+         * - `referenceAreaLayer`: The reference area layer for selection, default is 'current'
+         * - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
+         * - `xOffset`: The x-axis offset relative to the reference area, default is 0
+         * - `yOffset`: The y-axis offset relative to the reference area, default is 0
          */
         startCell?: CellSelection;
         /**
@@ -309,6 +386,12 @@ interface TableTidierTemplate {
         };
         /**
          * Constraints to apply to the cells within the selection area
+         * - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
+         * - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
+         * - `xOffset`: The x-axis offset relative to the reference area, default is 0
+         * - `yOffset`: The y-axis offset relative to the reference area, default is 0
+         * - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
+         * - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
          */
         constraints?: CellConstraint[];
         /**
@@ -331,6 +414,8 @@ interface TableTidierTemplate {
     extract?: {
         /**
          * The context-based transformation for the selection area
+         * - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
+         * - `toTargetCols`: Determines how to derive the target column based on the context cell's value, default is 'cellValue'
          */
         byContext?: ContextTransform;
         /**
@@ -343,30 +428,44 @@ interface TableTidierTemplate {
         byValue?: mapColsFn;
     } | null;
     /**
-     * Fill value for the cells within the selection area to ensure all columns have the same number of cells
+     * Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
+     * - `null` (default) means no filling will occur, and columns can have different lengths.
+     * - `TableTidierKeyWords.Forward` means that the column will be filled with the previous value until all columns have equal lengths.
+     * - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
      */
-    fill?: CellValueType | 'forward' | null;
+    fill?: CellValueType | null;
     /**
      * The child templates for nested selections
      */
     children?: TableTidierTemplate[];
 }
 
-function sortWithCorrespondingArray(A: any[], B: string[], sortOrder: 'asc' | 'desc'): string[] {
-    // 创建一个数组包含元素及其对应的索引
-    let indexedArray = A.map((value, index) => ({ value, index }));
 
-    // 按照A数组的值进行排序
-    indexedArray.sort((a, b) => {
+/**
+ * Sorts array `A` according to the specified order (`asc` or `desc`) and reorders array `B`
+ * so that its elements correspond to the newly sorted order of `A`.
+ * 
+ * @param {any[]} A - The array whose elements determine the sort order.
+ * @param {any[]} B - The array to be reordered based on the sorted order of `A`.
+ * @param {'asc' | 'desc'} sortOrder - The sorting order: 'asc' for ascending, 'desc' for descending.
+ * @returns {any[]} - The reordered array `B` with elements corresponding to the sorted order of `A`.
+ * 
+ * @example
+ * const A = [3, 1, 2];
+ * const B = ['Col1', 'Col2', 'Col3'];
+ * const correspondingB_Asc = sortWithCorrespondingArray(A, B, 'asc');  // ['Col3', 'Col1', 'Col2']
+ * const correspondingB_Desc = sortWithCorrespondingArray(A, B, 'desc'); // ['Col1', 'Col3', 'Col2']
+ */
+function sortWithCorrespondingArray(A: any[], B: any[], sortOrder: 'asc' | 'desc'): any[] {
+    let indexedA = A.map((value, index) => ({ value, index }));
+    indexedA.sort((a, b) => {
         if (sortOrder === 'asc') {
-            return a.value - b.value;
+            return (a.value < b.value ? -1 : (a.value > b.value ? 1 : 0));
         } else {
-            return b.value - a.value;
+            return (a.value > b.value ? -1 : (a.value < b.value ? 1 : 0));
         }
     });
-
-    // 根据排序后的索引重新排列B数组
-    let sortedB = indexedArray.map(item => B[item.index]);
-
+    const sortedB = new Array(B.length);
+    indexedA.forEach((e, i) => sortedB[e.index] = B[i]);
     return sortedB;
 }

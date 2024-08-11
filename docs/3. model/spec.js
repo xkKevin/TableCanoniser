@@ -44,7 +44,7 @@ const option: TableTidierTemplate[] = [
         },
       },
     ],
-    fill: "forward",
+    fill: TableTidierKeyWords.Forward,
   },
 ];
 

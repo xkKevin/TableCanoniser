@@ -80,7 +80,7 @@ interface TableTidierMapping {
 
 type cellValueType = string | number;
 
-enum ValueType {
+enum TableTidierKeyWords {
     String,
     Number,
     None
@@ -168,12 +168,12 @@ interface CellSelection {
 * Represents a constraint on a cell's value
 * - `valueCstr`: The value constraint.
 *   - `cellValueType`: Specifies that the cell's value must be equal to the provided value.
-*   - `ValueType`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
+*   - `TableTidierKeyWords`: Specifies that the cell's value must be of the specified type (`String` or `Number`).
 *   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
 */
 interface CellConstraint extends CellSelection {
     // The value constraint can be a specific value, a type (string or number), or a custom check function
-    valueCstr: cellValueType | ValueType | checkValueFn;
+    valueCstr: cellValueType | TableTidierKeyWords | checkValueFn;
 }
 
 /**

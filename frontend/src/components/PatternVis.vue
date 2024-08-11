@@ -4,7 +4,7 @@
             <span>Pattern Panel</span>
             <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
-                <span>Reset</span>
+                <span>Reset View</span>
             </a-button>
         </div>
         <div class="view-content" style="display: flex;">

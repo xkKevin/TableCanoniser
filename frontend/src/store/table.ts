@@ -3,8 +3,8 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, ValueType, CellInfo, CellValueType, AreaInfo, CellConstraint } from "@/grammar/grammar"
-import { transformTable, serialize, sortWithCorrespondingArray } from "@/grammar/handleSpec"
+import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, CellConstraint } from "@/grammar/grammar"
+import { transformTable, serialize } from "@/grammar/handleSpec"
 import { TreeChart } from '@/tree/drawTree';
 import { CustomError } from "@/types";
 
@@ -33,6 +33,16 @@ function replaceEvenSpaces(str: string) {
 // 去除所有空格
 function removeWhitespace(str: string) {
   return str.replace(/ /g, '') // .replace(/\s+/g, '');  这个会把换行符也去掉
+}
+
+function csvToMatrix(csvText: string) {
+  // 首先将文本按行分割
+  const rows = csvText.trim().split('\n');
+
+  // 然后将每行按逗号分割成数组
+  const matrix: Table2D = rows.map(row => row.split(','));
+
+  return matrix;
 }
 
 const removeSpaceType = {
@@ -100,7 +110,7 @@ export const useTableStore = defineStore('table', {
   state() {
     return {
       specMode: false,
-      caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll"],
+      caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"],
       currentCase: '', // caseList[0],
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
@@ -235,7 +245,7 @@ export const useTableStore = defineStore('table', {
       try {
         // Parallel processing of all fetch requests ==> faster: 0.678s vs 0.275s
         const [data_res, spec_res] = await Promise.all([   // , script_res
-          fetch(case_path + 'data.json'),
+          fetch(case_path + 'data.csv'),  // 'data.json'
           fetch(case_path + 'spec.js'),
           // fetch(case_path + 'script.py')
         ]);
@@ -250,7 +260,7 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo();
 
         if (dataText !== null) {
-          this.input_tbl.tbl = JSON.parse(dataText).input_tbl;
+          this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
           this.input_tbl.instance.updateData(this.input_tbl.tbl);
           // 每次都是页面刷新后，所有单元格/列的宽度为50，只有点击一下界面之后，才会突然自动列大小，变成有的列width大一点，有的列width小一点，这是为什么呢
           // 通常是由于Handsontable在初始化时还没有正确计算出表格容器的尺寸，或者在Vue组件生命周期的某个阶段，Handsontable的重新渲染没有正确触发。这个问题可能与表格渲染的时机有关。
@@ -536,8 +546,8 @@ export const useTableStore = defineStore('table', {
         })
         // console.log(result.outputText);
         // const specification: TableTidierTemplate = eval(code);
-        const evalFunction = new Function('ValueType', 'sortWithCorrespondingArray', result.outputText);
-        const specs: TableTidierTemplate[] = evalFunction(ValueType, sortWithCorrespondingArray);
+        const evalFunction = new Function('TableTidierKeyWords', result.outputText);
+        const specs: TableTidierTemplate[] = evalFunction(TableTidierKeyWords);
         this.spec.rawSpecs = specs;
         this.spec.visTree.children = JSON.parse(JSON.stringify(specs, (key, value) => typeof value === 'function' ? 'function' : value)); // cloneDeep(specs);
         // this.spec.visTree.children!.forEach((spec) => {
@@ -759,8 +769,8 @@ export const useTableStore = defineStore('table', {
       const removeQuotesFromKeysRegex = /"(\w+)":/g;
       strSpec = strSpec.replace(removeQuotesFromKeysRegex, '$1:');
 
-      const replaceTableTidierKeyWordsRegex = /"TableTidier\.(\w+)"/g;
-      strSpec = strSpec.replace(replaceTableTidierKeyWordsRegex, 'ValueType.$1');
+      const replaceTableTidierKeyWordsRegex = /"TableTidierKeyWords\.(\w+)"/g;
+      strSpec = strSpec.replace(replaceTableTidierKeyWordsRegex, 'TableTidierKeyWords.$1');
 
       if (replaceSpace === "all") {
         strSpec = removeSpaceType.all(strSpec);

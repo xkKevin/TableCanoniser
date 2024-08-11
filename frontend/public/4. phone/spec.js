@@ -22,7 +22,7 @@ const option: TableTidierTemplate[] = [
           referenceAreaPosi: "bottomLeft",
           xOffset: 0,
           yOffset: 1,
-          valueCstr: ValueType.None,
+          valueCstr: TableTidierKeyWords.None,
         },
       ],
       traverse: {
@@ -55,12 +55,12 @@ const option: TableTidierTemplate[] = [
             {
               xOffset: -1,
               yOffset: 0,
-              valueCstr: ValueType.String,
+              valueCstr: TableTidierKeyWords.String,
             },
             {
               xOffset: 1,
               yOffset: 0,
-              valueCstr: ValueType.None,
+              valueCstr: TableTidierKeyWords.None,
             },
           ],
           traverse: {
@@ -159,7 +159,7 @@ const option: TableTidierTemplate[] = [
         extract: {
           byValue: (currentAreaTbl) => {
             // console.log(currentAreaTbl[0].map(Number));
-            return sortWithCorrespondingArray(
+            return TableTidierKeyWords.pairSort(
               currentAreaTbl[0].map(Number),
               ["Front Camera", "Rear Camera"],
               "asc"
