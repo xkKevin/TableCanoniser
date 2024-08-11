@@ -20,6 +20,7 @@ const option: TableTidierTemplate[] = [
         yDirection: "after",
       },
     },
+    fill: "",
     children: [
       {
         match: {
@@ -65,7 +66,6 @@ const option: TableTidierTemplate[] = [
             toTargetCols: "cellValue",
           },
         },
-        fill: "",
       },
     ],
   },
