@@ -64,6 +64,7 @@ export interface TblPatternGrid {
   bgColor?: string;
 }
 
+/** startRow, startCol, endRow, endCol */
 export type Selection = [number, number, number, number];
 
 interface TreeNode {
@@ -81,7 +82,7 @@ interface AreaBox {
 // type CoordinateMap = Map<number, Map<number, any>>;  // 根据坐标获取某值
 
 export interface VisTreeNode extends TableTidierTemplate, AreaBox {
-  id: number,
+  id?: number,
   type?: "position" | "value" | "context" | "null",
   matchs?: AreaBox[],
   children?: VisTreeNode[]
@@ -120,7 +121,10 @@ export const useTableStore = defineStore('table', {
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<any>(null),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
-        selectAreaFlag: 0 as 0 | 1 | 2 | 3 | 4,
+        selectAreaFromNode: 0 as 0 | 1 | 2 | 3 | 4,
+        /** 1表示no extraction, 2-4表示extract by position, context, value */
+        selectAreaFromLegend: shallowRef<TypeColor[]>([]),
+        selectionsAreaFromLegend: shallowRef<Selection[]>([]),
         dragConfigOpen: false,
         areaConfig: shallowRef<TableTidierTemplate>({
           match: {
@@ -258,6 +262,7 @@ export const useTableStore = defineStore('table', {
         ]);
 
         this.initTblInfo();
+        this.clearStatus("matchArea");
 
         if (dataText !== null) {
           this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
@@ -324,17 +329,17 @@ export const useTableStore = defineStore('table', {
       nodes.forEach((node) => {
         const areaKey = `${node.x}-${node.y}-${node.width}-${node.height}`;
         if (in2nodes.hasOwnProperty(areaKey)) {
-          in2nodes[areaKey].add(node.id);
+          in2nodes[areaKey].add(node.id!);
         } else {
-          in2nodes[areaKey] = new Set([node.id]);
+          in2nodes[areaKey] = new Set([node.id!]);
         }
         node.matchs?.forEach((match) => {
           const { x, y, width, height } = match;
           const areaKey = `${x}-${y}-${width}-${height}`;
           if (in2nodes.hasOwnProperty(areaKey)) {
-            in2nodes[areaKey].add(node.id);
+            in2nodes[areaKey].add(node.id!);
           } else {
-            in2nodes[areaKey] = new Set([node.id]);
+            in2nodes[areaKey] = new Set([node.id!]);
           }
         })
         if (node.children) this.traverseTree4UpdateIn2Nodes(node.children)
@@ -351,6 +356,21 @@ export const useTableStore = defineStore('table', {
       this.input_tbl.in2nodes = {};
       this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
       return tidyData;
+    },
+
+    generateHighlightCells(selected: Selection[], classNames: string[] = []): TblCell[] {
+      const cells: TblCell[] = [];
+      if (classNames.length === 0) {
+        classNames = Array(selected.length).fill("null");
+      }
+      selected.forEach((range, ri) => {
+        for (let row = range[0]; row <= range[2]; row++) {
+          for (let col = range[1]; col <= range[3]; col++) {
+            cells.push({ row, col, className: classNames[ri] });
+          }
+        }
+      });
+      return cells;
     },
 
     highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[], coords: [number, number][] | null = null) {
@@ -415,6 +435,117 @@ export const useTableStore = defineStore('table', {
       );
     },
 
+    // 判断区域 A 是否包含区域 B
+    isRectanglesContained(parent: Selection, child: Selection): boolean {
+      const [pStartRow, pStartCol, pEndRow, pEndCol] = parent;
+      const [cStartRow, cStartCol, cEndRow, cEndCol] = child;
+
+      return (
+        pStartRow <= cStartRow &&
+        pStartCol <= cStartCol &&
+        pEndRow >= cEndRow &&
+        pEndCol >= cEndCol
+      );
+    },
+
+    buildTree(selections: Selection[], types: string[]) {
+      const rootNodes: TreeNode[] = [];
+
+      const insertNode = (parent: TreeNode, child: TreeNode): boolean => {
+        if (!parent.children) {
+          parent.children = [];
+        }
+        // 检查子节点是否已经包含了当前节点
+        for (const existingChild of parent.children) {
+          if (this.isRectanglesContained(existingChild.selection, child.selection)) {
+            return insertNode(existingChild, child);
+          }
+        }
+        // 如果没有包含的子节点，将其添加为直接子节点
+        parent.children.push(child);
+        return true;
+      }
+
+      for (let i = 0; i < selections.length; i++) {
+        const selection = selections[i];
+        const newNode: TreeNode = { type: types[i], selection };
+
+        let added = false;
+        for (const rootNode of rootNodes) {
+          if (this.isRectanglesContained(rootNode.selection, selection)) {
+            added = insertNode(rootNode, newNode);
+            break;
+          }
+        }
+
+        if (!added) {
+          rootNodes.push(newNode);
+        }
+      }
+      const specs: TableTidierTemplate[] = [];
+      this.traverseTree4buildSpecs(rootNodes, specs, [0, 0, this.input_tbl.tbl.length - 1, this.input_tbl.tbl[0].length - 1]);
+      return { rootNodes, specs };
+    },
+
+    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection, colCount: number = 0) {
+      const px = pSelection[1], py = pSelection[0];
+      const pw = pSelection[3] - px + 1, ph = pSelection[2] - py + 1;
+      nodes.forEach((node) => {
+        const { selection, type } = node;
+        const [startRow, startCol, endRow, endCol] = selection;
+        const width = endCol - startCol + 1;
+        const height = endRow - startRow + 1;
+        const traverse = {
+          xDirection: pw >= 2 * width ? 'after' as const : undefined,
+          yDirection: ph >= 2 * height ? 'after' as const : undefined
+        }
+        const newSpec: TableTidierTemplate = {
+          match: {
+            startCell: { xOffset: startCol - px, yOffset: startRow - py },
+            size: { width, height },
+            traverse
+          }
+        }
+        switch (type) {
+          case "position":
+            newSpec.extract = {
+              byPositionToTargetCols: Array.from({ length: width }, (_, _i) => `C${++colCount}`)
+            }
+            if (nodes.length > 1) {
+              traverse.xDirection = undefined;
+              traverse.yDirection = undefined;
+            }
+            break;
+          case "context":
+            newSpec.extract = {
+              byContext: {
+                position: 'above',
+                toTargetCols: 'cellValue'
+              }
+            }
+            break;
+          case "value":
+            newSpec.extract = {
+              byValue: (currentAreaTbl: Table2D) => {
+                // Please replace the default code with the necessary implementation to complete the function.
+                return currentAreaTbl.flat();
+              }
+            };
+            break;
+          // case "null": 
+          // default:
+          //   break;
+        }
+        if (node.children) {
+          newSpec.children = [];
+          this.traverseTree4buildSpecs(node.children, newSpec.children, selection, colCount)
+        }
+        specs.push(newSpec);
+      })
+    },
+
+
+
     highlightNodes(selected: Selection[]) {
       const highlightNodesId: Set<number> = new Set();
       selected.forEach(range => {
@@ -427,7 +558,7 @@ export const useTableStore = defineStore('table', {
 
         for (let keyArea in this.input_tbl.in2nodes) {
           const [x, y, width, height] = keyArea.split('-').map((n) => Number(n));
-          console.log(rect1, keyArea, this.doRectanglesIntersect(rect1, { x, y, width, height }));
+          // console.log(rect1, keyArea, this.doRectanglesIntersect(rect1, { x, y, width, height }));
           if (this.doRectanglesIntersect(rect1, { x, y, width, height })) {
             this.input_tbl.in2nodes[keyArea].forEach((id) => {
               highlightNodesId.add(id);
@@ -437,7 +568,7 @@ export const useTableStore = defineStore('table', {
       });
       d3.selectAll('.type-node').classed('selection', false);
       for (let id of highlightNodesId) {
-        console.log(`.type-node.node-rect-${id}`);
+        // console.log(`.type-node.node-rect-${id}`);
         d3.select(`.type-node.node-rect-${id}`).classed("selection", true);
       }
     },
@@ -450,7 +581,7 @@ export const useTableStore = defineStore('table', {
         let startCol = range[1] < 0 ? 0 : range[1];
         let endRow = range[2];
         let endCol = range[3];
-
+    
         // 遍历行
         for (let row = startRow; row <= endRow; row++) {
           // 遍历列
@@ -881,7 +1012,17 @@ export const useTableStore = defineStore('table', {
         // editor.setSelection(range);  // 选择范围
         editor.revealRangeAtTop(range);
       }
-    }
+    },
+    clearStatus(type: string) {
+      switch (type) {
+        case "matchArea":
+          document.body.style.cursor = 'default';
+          document.documentElement.style.setProperty('--custom-cursor', 'default');
+          this.spec.selectAreaFromLegend = []
+          this.spec.selectionsAreaFromLegend = []
+          break;
+      }
+    },
   },
   // computed
   getters: {}

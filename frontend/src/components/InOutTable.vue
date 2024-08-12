@@ -220,7 +220,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       if (targetEle?.className === "wtHolder") {
         return false;
       } else {
-        tblInst2.updateSettings({ cell: [] });
+        // tblInst2.updateSettings({ cell: [] });
         tableStore.highlightMinimapCells([]);
         const typeNodes = document.querySelectorAll('.type-node');
         typeNodes.forEach((node) => {
@@ -229,6 +229,14 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         if (tbl === "input_tbl") {
           if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
             tableStore.editor.mappingSpec.decorations?.clear();
+
+          if (tableStore.spec.selectAreaFromLegend.length === 0) {
+            tblInst1.updateSettings({ cell: [] });
+          }
+          tblInst2.updateSettings({ cell: [] });
+        } else {
+          // tblInst1.updateSettings({ cell: [] });
+          // tblInst2.updateSettings({ cell: [] });
         }
         return true;
       }
@@ -259,7 +267,25 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
 
       tableStore.highlightNodes(selected);
 
-      if (tableStore.spec.selectAreaFlag) {
+      if (tableStore.spec.selectAreaFromLegend.length) {
+        // 说明从legend处选择区域
+        inHotInst.updateSettings({ cell: [] });
+        const selectFromLegend = tableStore.spec.selectAreaFromLegend;
+        tableStore.spec.selectionsAreaFromLegend.push(selected[0]);
+        if (selectFromLegend.length < tableStore.spec.selectionsAreaFromLegend.length) {
+          selectFromLegend.push(selectFromLegend[selectFromLegend.length - 1])
+        }
+        const cells = tableStore.generateHighlightCells(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
+        tableStore.highlightTblCells(tbl, cells);
+        // document.body.style.cursor = 'default';
+        // document.documentElement.style.setProperty('--custom-cursor', 'default');
+
+        const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
+
+        tableStore.stringifySpec(specs);
+      }
+
+      if (tableStore.spec.selectAreaFromNode) {
         // 说明需要重新为某个节点选择区域
         const areaConfig = tableStore.spec.areaConfig;
         areaConfig.match!.startCell = {
@@ -350,6 +376,11 @@ onMounted(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  div.relative,
+  td {
+    cursor: var(--custom-cursor) !important;
   }
 
   td.htRight {

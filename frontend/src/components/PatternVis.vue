@@ -2,10 +2,30 @@
     <div class="view" style="flex: 4.5">
         <div class="view-title">
             <span>Pattern Panel</span>
-            <a-button id="draw_tree" size="small" style="float: right; margin-right: 20px" @click="drawTree2">
-                <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
-                <span>Reset View</span>
-            </a-button>
+            <span style="float: right; margin-right: 20px; ">
+                <span style="font-size: 15px">
+                    <!-- <span>Match:</span>
+                    <a-button class="legend legend-null" size="small">No Extration</a-button>
+                    <span>Extract by:</span> -->
+                    <span>Match + Extract by:</span>
+                    <a-button-group style="margin: 0 20px 0 8px;">
+                        <a-button class="legend legend-null" size="small" @click="selectMatchExtractArea('null')"
+                            title="Click to select a starting area in the input table for matching without extraction. Press 'Esc' to cancel the selection mode.">No
+                            Extration</a-button>
+                        <a-button class="legend legend-position" size="small"
+                            @click="selectMatchExtractArea('position')"
+                            title="Click to select a starting area in the input table for matching and extracting by position. Press 'Esc' to cancel the selection mode.">Position</a-button>
+                        <a-button class="legend legend-context" size="small" @click="selectMatchExtractArea('context')"
+                            title="Click to select a starting area in the input table for matching and extracting by context. Press 'Esc' to cancel the selection mode.">Context</a-button>
+                        <a-button class="legend legend-value" size="small" @click="selectMatchExtractArea('value')"
+                            title="Click to select a starting area in the input table for matching and extracting by value. Press 'Esc' to cancel the selection mode.">Value</a-button>
+                    </a-button-group>
+                </span>
+                <a-button id="draw_tree" size="small" @click="drawTree2">
+                    <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
+                    <span>Reset View</span>
+                </a-button>
+            </span>
         </div>
         <div class="view-content" style="display: flex;">
             <div style="flex: 1;">
@@ -34,6 +54,7 @@ import { message } from 'ant-design-vue';
 import { TblCell, useTableStore } from "@/store/table";
 import { transformTable } from '@/grammar/handleSpec';
 import * as d3 from 'd3';
+import { TypeColor } from '@/tree/style';
 const tableStore = useTableStore();
 
 /*
@@ -77,12 +98,12 @@ const closeContextMenu = (e: any) => {
         case "0":
             // Reset Area Logic
             message.info("Please reselect the template's area in the input table.");
-            tableStore.spec.selectAreaFlag = 2;
+            tableStore.spec.selectAreaFromNode = 2;
             break;
         case "1":
             // Add Constraints Logic
             message.info("Please select the constrained cell in the input table.");
-            tableStore.spec.selectAreaFlag = 3;
+            tableStore.spec.selectAreaFromNode = 3;
             break;
         case "2-0":
             // Target Cols - Position Based Logic
@@ -97,7 +118,7 @@ const closeContextMenu = (e: any) => {
             // Add Sub-Template Logic
             // console.log(node.path, tableStore.getSpecbyPath(node.path));
             message.info("Please select an area in the input table.");
-            tableStore.spec.selectAreaFlag = 1;
+            tableStore.spec.selectAreaFromNode = 1;
             break;
         case "4":
             // Delete Template Logic
@@ -131,6 +152,22 @@ const drawTree = (data: any) => {
     treeInstance.render();
     tableStore.tree.visInst = treeInstance;
 };
+
+const typeMap = {
+    "null": "No Extration",
+    "position": "Position Based",
+    "context": "Context Based",
+    "value": "Value Based",
+}
+const selectMatchExtractArea = (type: TypeColor) => {
+
+    tableStore.spec.selectAreaFromLegend.push(type);
+    document.body.style.cursor = 'cell';
+    document.documentElement.style.setProperty('--custom-cursor', 'cell');
+    message.info("Now is " + typeMap[type as keyof typeof typeMap] + " mode. Please select the starting area in the input table.\n Press ESC to cancel the selection mode.");
+    // tableStore.input_tbl.instance.rootElement.style.cursor = "cell";
+    // (document.querySelector('.truncated') as HTMLElement).style.cursor = "cell"
+}
 
 
 
@@ -174,85 +211,6 @@ const drawTblTemplate = () => {
 
     const matrix = svg.append('g').classed("tbl-template", true);  // Append a 'g' element for better transform management to avoid jittering
     let texts: any = null;
-
-    /*
-    const grids = [{
-        row: 0,
-        col: 0,
-        text: "Rank",
-        textColor: "#ffffff",
-        color: "#83b5ed"
-    }, {
-        row: 0,
-        col: 1,
-        text: "Name",
-        textColor: "#ffffff",
-        color: "#83b5ed"
-    }, {
-        row: 0,
-        col: 2,
-        text: "Location",
-        textColor: "#ffffff",
-        color: "#83b5ed"
-    }, {
-        row: 0,
-        col: 3,
-        text: "Total Score",
-        textColor: "#ffffff",
-        color: "#83b5ed"
-    }, {
-        row: 1,
-        col: 0
-    }, {
-        row: 1,
-        col: 1,
-        text: "Context",
-        textColor: "#878787",
-    }, {
-        row: 1,
-        col: 2
-    }, {
-        row: 1,
-        col: 3
-    }, {
-        row: 2,
-        col: 0
-    }, {
-        row: 2,
-        col: 1,
-        color: "#7EAA55"
-    }, {
-        row: 2,
-        col: 2
-    }, {
-        row: 2,
-        col: 3
-    }, {
-        row: 3,
-        col: 0
-    }, {
-        row: 3,
-        col: 1
-    }, {
-        row: 3,
-        col: 2
-    }, {
-        row: 3,
-        col: 3
-    }, {
-        row: 4,
-        col: 0
-    }, {
-        row: 4,
-        col: 1
-    }, {
-        row: 4,
-        col: 2
-    }, {
-        row: 4,
-        col: 3
-    },];
-        */
 
     const grids = tableStore.computeTblPatternGrid();
 
@@ -370,6 +328,7 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
         drawTblTemplate();
         tableStore.input_tbl.in2nodes = {};
         tableStore.traverseTree4UpdateIn2Nodes(tableStore.spec.visTree.children!);
+        tableStore.transformTablebyCode();  // auto run
     } catch (e) {
         message.error(`Failed to parse the specification:\n ${e}`);
     }
@@ -420,5 +379,29 @@ onMounted(() => {
         stroke: var(--color-selection);
         stroke-width: 2px;
     }
+}
+
+.legend-null {
+    background: var(--color-null);
+}
+
+.legend-position {
+    background: var(--color-position);
+}
+
+.legend-context {
+    background: var(--color-context);
+}
+
+.legend-value {
+    background: var(--color-value);
+}
+
+.legend {
+    color: white !important;
+}
+
+.legend:hover {
+    color: white !important;
 }
 </style>

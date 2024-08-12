@@ -4,7 +4,8 @@
       <span id="system_name">TableTidier</span>
       <span style="left: 20px; position: absolute;">
         <span style="font-size: 16px; font-weight: normal; margin-right: 5px">Cases:</span>
-        <a-select ref="select" :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
+        <!-- @mouseenter="selectEnter" @mouseleave="selectLeave"  :open="isDropdownOpen" -->
+        <a-select :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
           style="width: 124px;"></a-select>
       </span>
       <span style="right: 20px; position: absolute;">
@@ -93,6 +94,7 @@ import { typeMapColor, TypeColor } from '@/tree/style';
 for (const key in typeMapColor) {
   document.documentElement.style.setProperty(`--color-${key}`, typeMapColor[key as TypeColor]);
 }
+document.documentElement.style.setProperty('--custom-cursor', 'default');
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -150,18 +152,39 @@ function handleKeydown(event: KeyboardEvent) {
     typeNodes.forEach((node) => {
       (node as HTMLElement).classList.remove('selection');
     });
+
+    tableStore.clearStatus("matchArea");
   }
 }
 
 function handleCaseChange(value: string) {
   currentCase.value = value;
+  // isDropdownOpen.value = false;
   // fileList.value = [];
   tableStore.loadCaseData(value);
 }
 
+// const isDropdownOpen = ref(false);
+
+// function selectEnter(e: any, v: any) {
+//   isDropdownOpen.value = true;
+// }
+
+// function selectLeave(e: any, v: any) {
+//   // isDropdownOpen.value = false;
+//   console.log(e, v);
+// }
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   handleCaseChange(currentCase.value);
+  // const select = document.querySelector(".rc-virtual-list-holder-inner")
+  // select?.addEventListener('mouseenter', (event) => {
+  //   isDropdownOpen.value = true;
+  // })
+  // select?.addEventListener('mouseleave', (event) => {
+  //   isDropdownOpen.value = false;
+  // })
 });
 
 </script>
