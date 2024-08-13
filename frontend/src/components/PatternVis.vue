@@ -55,6 +55,7 @@ import { TblCell, useTableStore } from "@/store/table";
 import { transformTable } from '@/grammar/handleSpec';
 import * as d3 from 'd3';
 import { TypeColor } from '@/tree/style';
+import { Table2D } from '@/grammar/grammar';
 const tableStore = useTableStore();
 
 /*
@@ -86,51 +87,79 @@ const contextMenuVisibleChange = (value: boolean) => {
     // if (store.state.selectedNode.length === 0 && value === true) return;
     // store.commit('setContextMenuVisibility', value);
     tableStore.tree.contextMenuVisible = value;
-    setTimeout(() => {
-        tableStore.tree.menuList = [];
-    }, 200)
+    tableStore.tree.menuList = [];
+    // setTimeout(() => {
+    //     tableStore.tree.menuList = [];
+    // }, 0)
 };
 
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
     const node = tableStore.spec.selectNode;
+    tableStore.spec.selectAreaFromNode = e.key;
+    let extract: any = null, extractColor: string = '';
     switch (e.key) {
         case "0":
             // Reset Area Logic
-            message.info("Please reselect the template's area in the input table.");
-            tableStore.spec.selectAreaFromNode = 2;
+            message.info("Please reselect the template's area in the input table.\n Press ESC to cancel the selection mode.");
+            document.body.style.cursor = 'cell';
+            document.documentElement.style.setProperty('--custom-cursor', 'cell');
             break;
         case "1":
             // Add Constraints Logic
-            message.info("Please select the constrained cell in the input table.");
-            tableStore.spec.selectAreaFromNode = 3;
+            message.info("Please select the constrained cell in the input table.\n Press ESC to cancel the selection mode.");
+            document.body.style.cursor = 'cell';
+            document.documentElement.style.setProperty('--custom-cursor', 'cell');
             break;
         case "2-0":
             // Target Cols - Position Based Logic
+            let colCount = 0;
+            extract = {
+                byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, _i) => `C${++colCount}`)
+            }
+            extractColor = 'positionShallow';
             break;
         case "2-1":
             // Target Cols - Context Based Logic
+            extract = {
+                byContext: {
+                    position: 'above',
+                    toTargetCols: 'cellValue'
+                }
+            }
+            extractColor = 'contextShallow';
             break;
         case "2-2":
             // Target Cols - Value Based Logic
+            extract = {
+                byValue: (currentAreaTbl: Table2D) => {
+                    // Please replace the default code with the necessary implementation to complete the function.
+                    return currentAreaTbl.flat();
+                }
+            };
+            extractColor = 'valueShallow';
+            break;
+        case "2-3":
+            // Target Cols - No Extract Logic
+            tableStore.insertNodeOrPropertyIntoSpecs(undefined, "extract")
             break;
         case "3":
             // Add Sub-Template Logic
             // console.log(node.path, tableStore.getSpecbyPath(node.path));
-            message.info("Please select an area in the input table.");
-            tableStore.spec.selectAreaFromNode = 1;
+            message.info("Please select an area in the input table.\n Press ESC to cancel the selection mode.");
+
+            document.body.style.cursor = 'cell';
+            document.documentElement.style.setProperty('--custom-cursor', 'cell');
             break;
         case "4":
-            // Delete Template Logic
-            // let rootNode = node.parent;
-            // while (rootNode.parent) {
-            //     rootNode = rootNode.parent;
-            // }
-            // // console.log(node, rootNode); //, JSON.stringify(rootNode)
-            // console.log(rootNode.data.children);
-            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, node.path);
+            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, node.path!);
             tableStore.stringifySpec();
             break;
+    }
+
+    if (extract !== null) {
+        tableStore.insertNodeOrPropertyIntoSpecs(extract, "extract")
+        tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(extract, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), extractColor];
     }
     tableStore.tree.contextMenuVisible = false;
 }
@@ -320,6 +349,11 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     const setFlag = tableStore.setSpec();
     if (!setFlag) return;
     try {
+        if (tableStore.editor.mappingSpec.highlightCode) {
+            tableStore.highlightCode(...tableStore.editor.mappingSpec.highlightCode);
+            tableStore.editor.mappingSpec.highlightCode = null;
+        }
+
         const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
         // console.log(rootArea, tableStore.spec.visTree, tableStore.spec.rawSpecs, tableStore.input_tbl.tbl[0]);
         tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
@@ -388,6 +422,10 @@ onMounted(() => {
 .legend-position {
     background: var(--color-position);
 }
+
+// .legend-position:hover {
+//     background: var(--color-position) !important;
+// }
 
 .legend-context {
     background: var(--color-context);

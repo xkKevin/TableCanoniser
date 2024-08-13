@@ -58,8 +58,9 @@ import Handsontable from "handsontable";
 import { useTableStore, Selection } from "@/store/table";
 // import Papa from 'papaparse';  // parse csv data
 import * as XLSX from 'xlsx';  // parse excel data
-import { Table2D } from "@/grammar/grammar"
+import { Table2D, TableTidierKeyWords, TableTidierTemplate } from "@/grammar/grammar"
 import { message } from "ant-design-vue";
+import { NodeData } from "@/tree/drawTree";
 
 // import { ArrowUpTrayIcon } from '@heroicons/vue/24/solid'
 
@@ -264,9 +265,6 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     }
 
     if (tbl === "input_tbl") {
-
-      tableStore.highlightNodes(selected);
-
       if (tableStore.spec.selectAreaFromLegend.length) {
         // 说明从legend处选择区域
         inHotInst.updateSettings({ cell: [] });
@@ -287,6 +285,61 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
 
       if (tableStore.spec.selectAreaFromNode) {
         // 说明需要重新为某个节点选择区域
+        const selectType = tableStore.spec.selectAreaFromNode;
+        const node = selectType === "0" ? tableStore.spec.selectNode.parent as NodeData : tableStore.spec.selectNode;
+        const nx = node.data.x, ny = node.data.y, nw = node.data.width, nh = node.data.height;
+        const [startRow, startCol, endRow, endCol] = selected[0];
+        const xOffset = startCol - nx, yOffset = startRow - ny;
+        let match: TableTidierTemplate["match"] = {};
+        switch (selectType) {
+          case "0":
+          // Reset Area Logic
+          case "3":
+            // Add Sub-Template Logic
+            const width = endCol - startCol + 1;
+            const height = endRow - startRow + 1;
+            const traverse = {
+              xDirection: nw >= 2 * width ? 'after' as const : undefined,
+              yDirection: nh >= 2 * height ? 'after' as const : undefined
+            }
+            match = {
+              startCell: {
+                // referenceAreaLayer: "current",
+                // referenceAreaPosi: "topLeft",
+                xOffset,
+                yOffset
+              },
+              size: { width, height },
+              traverse
+            }
+            if (selectType === "0") {
+              tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
+              const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.path!) as TableTidierTemplate;
+              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode.data.type}Shallow`];
+            } else {
+              tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
+              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine({ match: match }), 'nullShallow'];
+            }
+            break;
+          case "1":
+            // Add Constraints Logic
+            const cellValue = inHotInst.getDataAtCell(startRow, startCol);
+            match = {
+              constraints: [{
+                xOffset,
+                yOffset,
+                valueCstr: tableStore.getCellDataType(cellValue) // TableTidierKeyWords.String,
+              }]
+            }
+            const constraint = match.constraints![0]
+            tableStore.insertNodeOrPropertyIntoSpecs(constraint, "constraints");
+            tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(constraint, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), `${node.data.type}Shallow`];
+            break;
+        }
+        tableStore.spec.selectAreaFromNode = "";
+        document.body.style.cursor = 'default';
+        document.documentElement.style.setProperty('--custom-cursor', 'default');
+        /*
         const areaConfig = tableStore.spec.areaConfig;
         areaConfig.match!.startCell = {
           referenceAreaLayer: "root",
@@ -318,7 +371,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           height: areaConfig.match!.size?.height
         }
         tableStore.spec.dragConfigOpen = true;
+        */
       }
+
+      tableStore.highlightNodes(selected);
     }
   });
 }

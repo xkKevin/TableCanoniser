@@ -33,14 +33,14 @@
                         <a-radio-group v-model:value="formData.position.x">
                             <a-radio-button :value="areaConfig.match!.startCell!.xOffset">{{
                                 areaConfig.match!.startCell!.xOffset
-                            }}</a-radio-button>
+                                }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
                         <span>y (row):</span>
                         <a-radio-group v-model:value="formData.position.y">
                             <a-radio-button :value="areaConfig.match!.startCell!.yOffset">{{
                                 areaConfig.match!.startCell!.yOffset
-                            }}</a-radio-button>
+                                }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
                     </a-col>
@@ -151,7 +151,7 @@ const modalTitleRef = ref<HTMLElement>();
 const { x, y, isDragging } = useDraggable(modalTitleRef);
 const handleCancel = () => {
     tableStore.spec.dragConfigOpen = false;
-    tableStore.spec.selectAreaFromNode = 0;
+    tableStore.spec.selectAreaFromNode = "";
 };
 const startX = ref<number>(0);
 const startY = ref<number>(0);

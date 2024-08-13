@@ -5,7 +5,7 @@ import { shallowRef } from 'vue';
 
 import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, CellConstraint } from "@/grammar/grammar"
 import { transformTable, serialize } from "@/grammar/handleSpec"
-import { TreeChart } from '@/tree/drawTree';
+import { TreeChart, NodeData } from '@/tree/drawTree';
 import { CustomError } from "@/types";
 
 import { message } from 'ant-design-vue';
@@ -119,10 +119,9 @@ export const useTableStore = defineStore('table', {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
         visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
-        selectNode: shallowRef<any>(null),
+        selectNode: shallowRef<NodeData>({} as NodeData),
         /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
-        selectAreaFromNode: 0 as 0 | 1 | 2 | 3 | 4,
-        /** 1表示no extraction, 2-4表示extract by position, context, value */
+        selectAreaFromNode: "" as "" | "0" | "1" | "2-0" | "2-1" | "2-2" | "3" | "4",
         selectAreaFromLegend: shallowRef<TypeColor[]>([]),
         selectionsAreaFromLegend: shallowRef<Selection[]>([]),
         dragConfigOpen: false,
@@ -161,7 +160,7 @@ export const useTableStore = defineStore('table', {
           codeSuff: '\nreturn option;',
           errorMark: null as monaco.editor.IMarker | null,
           decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
-          // highlightCode: null as [number, number] | null,
+          highlightCode: null as [number, number, string] | null,  // [startLine, endLine, color]
           language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
@@ -212,16 +211,25 @@ export const useTableStore = defineStore('table', {
           title: "Set Target Cols",
           children: [{
             key: "2-0",
-            label: "Position Based",
-            title: "Position Based",
+            label: "Position",
+            title: "Match and Extract by Position",
+            // class: "legend-position",
+            style: { color: typeMapColor['position'] },  // 使用 style 设置样式
           }, {
             key: "2-1",
-            label: "Context Based",
-            title: "Context Based",
+            label: "Context",
+            title: "Match and Extract by Context",
+            style: { color: typeMapColor['context'] },
           }, {
             key: "2-2",
-            label: "Value Based",
-            title: "Value Based",
+            label: "Value",
+            title: "Match and Extract by Value",
+            style: { color: typeMapColor['value'] },
+          }, {
+            key: "2-3",
+            label: "No Extraction",
+            title: "Match without Extraction",
+            style: { color: typeMapColor['null'] },
           }],
         }, {
           key: "3",
@@ -499,6 +507,10 @@ export const useTableStore = defineStore('table', {
           xDirection: pw >= 2 * width ? 'after' as const : undefined,
           yDirection: ph >= 2 * height ? 'after' as const : undefined
         }
+        if (nodes.length > 1) {
+          traverse.xDirection = undefined;
+          traverse.yDirection = undefined;
+        }
         const newSpec: TableTidierTemplate = {
           match: {
             startCell: { xOffset: startCol - px, yOffset: startRow - py },
@@ -509,11 +521,7 @@ export const useTableStore = defineStore('table', {
         switch (type) {
           case "position":
             newSpec.extract = {
-              byPositionToTargetCols: Array.from({ length: width }, (_, _i) => `C${++colCount}`)
-            }
-            if (nodes.length > 1) {
-              traverse.xDirection = undefined;
-              traverse.yDirection = undefined;
+              byPositionToTargetCols: Array.from({ length: width * height }, (_, _i) => `C${++colCount}`)
             }
             break;
           case "context":
@@ -571,6 +579,7 @@ export const useTableStore = defineStore('table', {
         // console.log(`.type-node.node-rect-${id}`);
         d3.select(`.type-node.node-rect-${id}`).classed("selection", true);
       }
+      return highlightNodesId;
     },
 
     /*
@@ -888,7 +897,7 @@ export const useTableStore = defineStore('table', {
     /**
      * 默认根据rawSpecs更新editor.mappingSpec.code
      */
-    stringifySpec(specs: TableTidierTemplate[] | TableTidierTemplate | CellConstraint | null = null, replaceSpace: "even" | "all" = "even", replaceCode = true) {
+    stringifySpec(specs: any = null, replaceSpace: "even" | "all" = "even", replaceCode = true) {
       let fnList: string[] = [];
       if (specs === null) specs = this.spec.rawSpecs;
       let strSpec = JSON.stringify(specs, replacer, 2);
@@ -949,11 +958,11 @@ export const useTableStore = defineStore('table', {
           }
         }
       }
-      if (node.path.length === 0) {
+      if (node.path!.length === 0) {
         // 当前节点为根节点
         this.spec.rawSpecs.push(newSpec);
       } else {
-        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path);
+        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path!);
         if (currentSpec === null) {
           message.error("The node path is invalid");
           return;
@@ -966,6 +975,57 @@ export const useTableStore = defineStore('table', {
       }
       this.stringifySpec();
     },
+
+    insertNodeOrPropertyIntoSpecs(nodeOrProperty: any, property: "children" | "match" | "constraints" | "extract", node: NodeData | null = null) {
+      if (node === null) {
+        node = this.spec.selectNode;
+      }
+      if (node.path!.length === 0) {
+        // 当前节点为根节点
+        this.spec.rawSpecs.push({ match: nodeOrProperty });
+      } else {
+        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path!);
+        if (currentSpec === null) {
+          message.error("The node path is invalid");
+          return;
+        }
+        switch (property) {
+          case "children":
+            if (currentSpec.hasOwnProperty('children') && currentSpec.children != undefined) {
+              currentSpec.children.push({ match: nodeOrProperty });
+            } else {
+              currentSpec.children = [{ match: nodeOrProperty }];
+            }
+            break;
+          case "match":
+            if (currentSpec.hasOwnProperty('match') && currentSpec.match != undefined) {
+              Object.assign(currentSpec.match, nodeOrProperty);
+            } else {
+              currentSpec.match = nodeOrProperty;
+            }
+            break;
+          case "constraints":
+            if (currentSpec.hasOwnProperty('match') && currentSpec.match != undefined) {
+              if (currentSpec.match.hasOwnProperty('constraints') && currentSpec.match.constraints != undefined) {
+                currentSpec.match.constraints.push(nodeOrProperty);
+              } else {
+                currentSpec.match.constraints = [nodeOrProperty];
+              }
+            } else {
+              currentSpec.match = {
+                constraints: [nodeOrProperty]
+              };
+            }
+            break;
+          case "extract":
+            currentSpec.extract = nodeOrProperty;
+            break;
+        }
+      }
+      this.stringifySpec();
+    },
+
+
     // 复制属性的函数
     copyAttributes(source: TreeNode, target: TreeNode, attributes: string[]) {
       for (const attr of attributes) {
@@ -990,6 +1050,29 @@ export const useTableStore = defineStore('table', {
         }
       }
     },
+
+    getHighlightCodeStartEndLine(sonData: any, sonParentData: any = null, rootData: any = null): [number, number] {
+      if (rootData === null) {
+        rootData = this.spec.rawSpecs
+      }
+      const rootStr = this.stringifySpec(rootData, "all", false)
+      const sonStr = this.stringifySpec(sonData, "all", false)
+
+      if (sonParentData === null) {
+        const startIndex = rootStr.indexOf(sonStr);
+        const strBefore = rootStr.slice(0, startIndex);
+        const startLine = (strBefore.match(/\n/g) || []).length + 1;
+        const endLine = startLine + (sonStr.match(/\n/g) || []).length;
+        return [startLine, endLine]
+      } else {
+        const [startParentLine, _] = this.getHighlightCodeStartEndLine(sonParentData);
+        const [startConstLine, endConstLine] = this.getHighlightCodeStartEndLine(sonData, null, sonParentData);
+        const startLine = startParentLine + startConstLine - 1;
+        const endLine = startParentLine + endConstLine - 1;
+        return [startLine, endLine]
+      }
+    },
+
     highlightCode(startLine: number, endLine: number = startLine, className: string = "nullShallow") {
       const editor = this.editor.mappingSpec.instance
       const decorationsCollection = this.editor.mappingSpec.decorations
@@ -1012,6 +1095,18 @@ export const useTableStore = defineStore('table', {
         // editor.setSelection(range);  // 选择范围
         editor.revealRangeAtTop(range);
       }
+    },
+    getCellDataType(value: CellValueType) {
+      if (value === '' || value === null || value === undefined) {
+        return TableTidierKeyWords.None;
+      }
+      if (!isNaN(Number(value))) {
+        return TableTidierKeyWords.Number;
+      }
+      if (typeof value === 'string') {
+        return TableTidierKeyWords.String;
+      }
+      return TableTidierKeyWords.NotNone;
     },
     clearStatus(type: string) {
       switch (type) {

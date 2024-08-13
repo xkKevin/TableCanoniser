@@ -8,17 +8,18 @@ import {
   nodeTextStyle,
 } from './style';
 import {
-  Point, TypeNode, RectDef, edgeType, KV,
+  Point, RectDef, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, TblCell } from "@/store/table";
 
 
-type NodeData = {
+export type NodeData = {
   [key: string]: any,
   children: NodeData[],
   parent: NodeData | null,
-  data: VisTreeNode
+  data: VisTreeNode,
+  path?: number[],
 }
 
 /** 创建一个新的Escape键盘事件，指定事件类型和相关参数 */
@@ -781,7 +782,8 @@ export class TreeChart {
             // 先清空其他样式
             document.dispatchEvent(escapeEvent);
 
-            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
+            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path!);
+            /*
             const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
             const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
             const constraintStr = tableStore.stringifySpec(subTemplate!.match.constraints![i], "all", false) //这里不能用 constraint，如果是自定义函数的话会出现问题
@@ -793,8 +795,14 @@ export class TreeChart {
             const startIndex = specsStr.indexOf(subTemplateStr);
             const strBefore = specsStr.slice(0, startIndex);
             const startLine = (strBefore.match(/\n/g) || []).length + startConstLine;
-
             const endLine = startLine + (constraintStr.match(/\n/g) || []).length;
+            */
+
+            // const [startTemplateLine, _] = tableStore.getHighlightCodeStartEndLine(subTemplate);
+            // const [startConstLine, endConstLine] = tableStore.getHighlightCodeStartEndLine(subTemplate!.match.constraints![i], subTemplate);
+            // const startLine = startTemplateLine + startConstLine;
+            // const endLine = startTemplateLine + endConstLine;
+            const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(subTemplate!.match.constraints![i], subTemplate);
             tableStore.highlightCode(startLine, endLine, `${d.data.type}Shallow`);
           });
 
@@ -894,7 +902,8 @@ export class TreeChart {
           tableStore.output_tbl.instance.deselectCell();
 
           /************** 与 monaco editor 交互 ***************/
-          const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path);
+          const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path!);
+          /*
           const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
           const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
           const startIndex = specsStr.indexOf(subTemplateStr);
@@ -903,6 +912,9 @@ export class TreeChart {
 
           const startLine = (strBefore.match(/\n/g) || []).length + 1;
           const endLine = startLine + (subTemplateStr.match(/\n/g) || []).length;
+          */
+
+          const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(subTemplate);
           tableStore.highlightCode(startLine, endLine, `${visData.type}Shallow`);
         } else {
           // tableStore.editor.mappingSpec.decorations?.clear();
