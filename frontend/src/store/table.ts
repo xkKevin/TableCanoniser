@@ -1179,10 +1179,10 @@ export const useTableStore = defineStore('table', {
       this.copyAttributes(tree1, tree2, attributes);
 
       if (tree1.children && tree2.children) {
-        if (tree1.children.length > tree2.children.length) {
-          console.log(tree1.children);
-          console.log(tree2.children);
-        }
+        // if (tree1.children.length > tree2.children.length) {
+        //   console.log(tree1.children);
+        //   console.log(tree2.children);
+        // }
         for (let i = 0; i < tree1.children.length; i++) {
           // console.log(tree1.children[i], tree2.children[i]);
           this.copyTreeAttributes(tree1.children[i], tree2.children[i], attributes);

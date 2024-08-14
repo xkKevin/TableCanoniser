@@ -224,7 +224,7 @@ function customRectCorner(rectInfo: RectDef) {
 function declareContextMenu(tableStore: TableStore, node: NodeData, constrIndex: number, event: MouseEvent) {
   event.preventDefault();
   // event.stopPropagation();
-  console.log(tableStore, node, constrIndex, event);  // 第一个参数为 this，可以不写
+  // console.log(tableStore, node, constrIndex, event);  // 第一个参数为 this，可以不写
   event.preventDefault();
 
   if (node.parent === null) {
@@ -381,35 +381,6 @@ export class TreeChart {
       return mergedSelection;
     };
   }
-  /*
-  private addPathToNodes(nodes: NodeData[], parentPath: number[] = []) {
-    if (!nodes) return;
-    nodes.forEach((node, index) => {
-      // 构建当前节点的 path
-      const currentPath = [...parentPath, index];
-      node.path = currentPath;
-      // node.id = currentPath.join('-');
-      /*
-      const { size } = completeSpecification({ size: node.data.size });
-      const parent = node.parent!.data;
-      let parentX = 0, parentY = 0;
-      node.data.width = size.width;
-      node.data.height = size.height;
-      if (parent.hasOwnProperty('startCell')) {
-        parentX = parent.startCell!.xOffset as number;
-        parentY = parent.startCell!.yOffset as number;
-      }
-      if (size.height === 'toParentY') {
-        node.data.height = parent.height! - parentY;
-      }
-      if (size.width === 'toParentX') {
-        node.data.width = parent.width! - parentX;
-      }
-      //
-      // 如果当前节点有子节点，递归处理子节点
-      this.addPathToNodes(node.children, currentPath);
-    });
-  }*/
 
   public render() {
     // 获取当前svg所在容器，使svg长度高度匹配容器
@@ -467,27 +438,7 @@ export class TreeChart {
       this.root.each((node: NodeData) => {
         node.id = idCounter++;
         node.data.id = node.id;
-        /*
-        const spec = node.data;
-        spec.id = node.id;
-        if (spec.extract === undefined || spec.extract === null) {
-          spec.type = "null";
-        } else {
-          if (spec.extract.byPositionToTargetCols !== undefined) {
-            spec.type = "position";
-          } else if (spec.extract.byContext !== undefined) {
-            spec.type = "context";
-          } else if (spec.extract.byValue !== undefined) {
-            spec.type = "value";
-          } else {
-            spec.type = "null";
-          }
-        }*/
       });
-
-      // this.root.path = [];
-      // this.root.id = "root";
-      // this.addPathToNodes(this.root.children);
     }
 
     this.root.x0 = 0;
@@ -751,7 +702,7 @@ export class TreeChart {
           .attr('transform', `translate(${1 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 2})`)
           .attr('xlink:xlink:href', () => {
             // eslint-disable-next-line
-            const iconPath = require(`@/assets/constraint.png`);
+            const iconPath = require('@/assets/constraint.png');
             return iconPath;
           })
           .attr('width', iconsz)
