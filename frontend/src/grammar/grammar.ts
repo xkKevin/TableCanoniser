@@ -530,13 +530,13 @@ function completeCellSelection(selection: CellSelection | undefined): CellSelect
     };
 }
 
-function completeCellConstraint(constraint: CellConstraint): CellConstraint {
+function completeCellConstraint(constraint: CellConstraint): AllParams<CellConstraint> {
     const completedSelection = completeCellSelection(constraint);
     return {
         ...completedSelection,
         valueCstr: constraint.valueCstr === undefined ? DEFAULT_VALUE_CSTR : constraint.valueCstr,
         ignoreOutOfBounds: constraint.ignoreOutOfBounds === undefined ? DEFAULT_IGNORE_OUT_OF_BOUNDS : constraint.ignoreOutOfBounds
-    };
+    } as AllParams<CellConstraint>;
 }
 
 function completeContextTransform(transform: ContextTransform): ContextTransform {
@@ -604,5 +604,5 @@ function completeSpecification(template: TableTidierTemplate): AllParams<TableTi
 
 
 export {
-    Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeSpecification, completeCellSelection
+    Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeSpecification, completeCellSelection, completeCellConstraint
 }

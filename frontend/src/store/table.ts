@@ -86,6 +86,7 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   type?: "position" | "value" | "context" | "null",
   path?: number[],
   matchs?: AreaBox[],
+  currentArea?: AreaInfo,
   children?: VisTreeNode[]
 }
 
@@ -325,6 +326,7 @@ export const useTableStore = defineStore('table', {
             width: node.width,
             height: node.height
           }];
+          visNode.currentArea = node;
         } else {
           this.spec.visTreeMatchPath[path].matchs!.push({
             x: node.x,
@@ -836,6 +838,7 @@ export const useTableStore = defineStore('table', {
         })
 
         if (Object.keys(tidyData).length === 0) {
+          if (messageContent) messageContent += '\n';
           messageContent += 'The output table is empty based on the specification.';
           // return;
         }
@@ -1056,7 +1059,7 @@ export const useTableStore = defineStore('table', {
     },
 
     selectArea() {
-      const node = this.spec.selectNode;
+      const visNode = this.spec.selectNode.data;
       const formData = this.spec.areaFormData
       const newSpec: TableTidierTemplate = {
         match: {
@@ -1076,11 +1079,11 @@ export const useTableStore = defineStore('table', {
           }
         }
       }
-      if (node.path!.length === 0) {
+      if (visNode.path!.length === 0) {
         // 当前节点为根节点
         this.spec.rawSpecs.push(newSpec);
       } else {
-        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path!);
+        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, visNode.path!);
         if (currentSpec === null) {
           message.error("The node path is invalid");
           return;
@@ -1094,15 +1097,15 @@ export const useTableStore = defineStore('table', {
       this.stringifySpec();
     },
 
-    insertNodeOrPropertyIntoSpecs(nodeOrProperty: any, property: "children" | "match" | "constraints" | "extract", node: NodeData | null = null) {
-      if (node === null) {
-        node = this.spec.selectNode;
+    insertNodeOrPropertyIntoSpecs(nodeOrProperty: any, property: "children" | "match" | "constraints" | "extract", visNode: VisTreeNode | null = null) {
+      if (visNode === null) {
+        visNode = this.spec.selectNode.data;
       }
-      if (node.path!.length === 0) {
+      if (visNode.path!.length === 0) {
         // 当前节点为根节点
         this.spec.rawSpecs.push({ match: nodeOrProperty });
       } else {
-        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, node.path!);
+        const currentSpec = this.getNodebyPath(this.spec.rawSpecs, visNode.path!);
         if (currentSpec === null) {
           message.error("The node path is invalid");
           return;

@@ -194,5 +194,10 @@ onUnmounted(() => {
         background-color: var(--color-contextRGBA); // var(--color-contextShallow);
     }
 
+    .selectionShallow {
+        // background-color: var(--color-selection);
+        background-color: var(--color-selectionRGBA); // var(--color-selectionShallow);
+    }
+
 }
 </style>

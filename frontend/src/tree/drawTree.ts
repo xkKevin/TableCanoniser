@@ -12,6 +12,8 @@ import {
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, TblCell } from "@/store/table";
+import { CellConstraint, completeCellConstraint } from '@/grammar/grammar';
+import { getCellBySelect } from '@/grammar/handleSpec';
 
 
 export type NodeData = {
@@ -772,27 +774,15 @@ export class TreeChart {
             tableStore.spec.constrNodeRectClickId = constrId;
             constrNodeRect.attr('visibility', 'visible');
             const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.data.path!);
-            /*
-            const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
-            const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
-            const constraintStr = tableStore.stringifySpec(subTemplate!.match.constraints![i], "all", false) //这里不能用 constraint，如果是自定义函数的话会出现问题
+            const constraint: CellConstraint = subTemplate!.match.constraints![i];
+            const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(constraint, subTemplate);
+            tableStore.highlightCode(startLine, endLine, 'selectionShallow');   // `${d.data.type}Shallow`
 
-            const startConstIndex = subTemplateStr.indexOf(constraintStr);
-            const strConstBefore = subTemplateStr.slice(0, startConstIndex);
-            const startConstLine = (strConstBefore.match(/\n/g) || []).length + 1;
-
-            const startIndex = specsStr.indexOf(subTemplateStr);
-            const strBefore = specsStr.slice(0, startIndex);
-            const startLine = (strBefore.match(/\n/g) || []).length + startConstLine;
-            const endLine = startLine + (constraintStr.match(/\n/g) || []).length;
-            */
-
-            // const [startTemplateLine, _] = tableStore.getHighlightCodeStartEndLine(subTemplate);
-            // const [startConstLine, endConstLine] = tableStore.getHighlightCodeStartEndLine(subTemplate!.match.constraints![i], subTemplate);
-            // const startLine = startTemplateLine + startConstLine;
-            // const endLine = startTemplateLine + endConstLine;
-            const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(subTemplate!.match.constraints![i], subTemplate);
-            tableStore.highlightCode(startLine, endLine, `${d.data.type}Shallow`);
+            const cellInfo = getCellBySelect(completeCellConstraint(constraint), d.data.currentArea!, tableStore.editor.rootArea.object!);
+            if (cellInfo) {
+              const cells = tableStore.generateHighlightCells([[cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x]], ["selection"]);
+              tableStore.highlightTblCells("input_tbl", cells);
+            }
           });
 
       });

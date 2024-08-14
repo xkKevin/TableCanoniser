@@ -58,9 +58,8 @@ import Handsontable from "handsontable";
 import { useTableStore, Selection } from "@/store/table";
 // import Papa from 'papaparse';  // parse csv data
 import * as XLSX from 'xlsx';  // parse excel data
-import { Table2D, TableTidierKeyWords, TableTidierTemplate } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate } from "@/grammar/grammar"
 import { message } from "ant-design-vue";
-import { NodeData } from "@/tree/drawTree";
 
 // import { ArrowUpTrayIcon } from '@heroicons/vue/24/solid'
 
@@ -218,12 +217,18 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   }
   tblInst1.updateSettings({
     outsideClickDeselects: (targetEle) => {
-      if (tblInst1 === outHotInst && ["relative", "rowHeader", "current", "truncated"].includes(targetEle?.className)) {
+      const targetClassName = targetEle?.className;
+      if (typeof targetClassName !== "string") {
+        tblInst2.updateSettings({ cell: [] });
+        return true;
+      }
+      if (tblInst1 === outHotInst && ["relative", "rowHeader", "current", "truncated"].some((c) => targetClassName.split(" ").includes(c))) {
         // 如果在 input 表格内点击：
         if (document.body.style.cursor !== 'cell') {
           tblInst2.updateSettings({ cell: [] });
         }
       } else {
+        console.log(227, document.body.style.cursor, tblInst1 === outHotInst, targetClassName);
         tableStore.clearStatus("matchArea");
         tblInst2.updateSettings({ cell: [] });
       }
@@ -231,7 +236,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       tableStore.clearStatus("tree");
 
       if (tbl === "input_tbl") {
-        if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
+        if (!(targetClassName.startsWith("mtk") || targetClassName === "view-line"))
           tableStore.editor.mappingSpec.decorations?.clear();
       }
 
@@ -256,14 +261,13 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
 
     if (tbl === "input_tbl") {
       tableStore.highlightMinimapCells(hightedCells);
-
+      // console.log(document.body.style.cursor, tableStore.spec.selectAreaFromNode, tableStore.spec.selectAreaFromLegend.length);
       if (document.body.style.cursor === 'cell') {
-        // console.log(tableStore.spec.selectAreaFromNode, tableStore.spec.selectAreaFromLegend.length);
         if (tableStore.spec.selectAreaFromNode) {
           // 说明需要重新为某个节点选择区域
           const selectType = tableStore.spec.selectAreaFromNode;
-          const node = selectType === "0" ? tableStore.spec.selectNode.parent as NodeData : tableStore.spec.selectNode;
-          const nx = node.data.x, ny = node.data.y, nw = node.data.width, nh = node.data.height;
+          const visNode = selectType === "0" ? tableStore.spec.selectNode.parent!.data : tableStore.spec.selectNode.data;
+          const nx = visNode.x, ny = visNode.y, nw = visNode.width, nh = visNode.height;
           const [startRow, startCol, endRow, endCol] = selected[0];
           const xOffset = startCol - nx, yOffset = startRow - ny;
           let match: TableTidierTemplate["match"] = {};
@@ -290,7 +294,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               }
               if (selectType === "0") {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
-                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.path!) as TableTidierTemplate;
+                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.data.path!) as TableTidierTemplate;
                 tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode.data.type}Shallow`];
               } else {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
@@ -300,6 +304,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
             case "1":
               // Add Constraints Logic
               const cellValue = inHotInst.getDataAtCell(startRow, startCol);
+              console.log("cellValue", cellValue);
               match = {
                 constraints: [{
                   xOffset,
@@ -309,12 +314,11 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               }
               const constraint = match.constraints![0]
               tableStore.insertNodeOrPropertyIntoSpecs(constraint, "constraints");
-              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(constraint, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), `${node.data.type}Shallow`];
+              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(constraint, tableStore.getNodebyPath(tableStore.spec.rawSpecs, visNode.path!)), `${visNode.type}Shallow`];
               break;
           }
           tableStore.spec.selectAreaFromNode = "";
-          document.body.style.cursor = 'default';
-          document.documentElement.style.setProperty('--custom-cursor', 'default');
+          tableStore.clearStatus("matchArea");
           /*
           const areaConfig = tableStore.spec.areaConfig;
           areaConfig.match!.startCell = {

@@ -52,7 +52,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { TreeChart } from '@/tree/drawTree';
 import { message } from 'ant-design-vue';
 import { TblCell, useTableStore } from "@/store/table";
-import { transformTable } from '@/grammar/handleSpec';
 import * as d3 from 'd3';
 import { TypeColor } from '@/tree/style';
 import { Table2D } from '@/grammar/grammar';

@@ -41,7 +41,7 @@ const calculateOffset = (offset: number | offsetFn, currentArea: AreaInfo, rootA
     return typeof offset === 'number' ? offset : offset(currentArea, rootArea);
 };
 
-const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo): CellInfo | null => {
+export const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo): CellInfo | null => {
     let area: AreaInfo = currentArea;
     if (select.referenceAreaLayer === 'current') {
         area = currentArea;
