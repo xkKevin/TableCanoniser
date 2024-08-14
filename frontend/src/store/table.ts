@@ -86,7 +86,7 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   type?: "position" | "value" | "context" | "null",
   path?: number[],
   matchs?: AreaBox[],
-  currentArea?: AreaInfo,
+  currentAreas?: AreaInfo[],
   children?: VisTreeNode[]
 }
 
@@ -122,6 +122,7 @@ export const useTableStore = defineStore('table', {
         visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", path: [], children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<NodeData>({} as NodeData),
+        selectConstrIndex: -1,
         constrNodeRectClickId: "",
         selectAreaFromNode: "" as "" | "0" | "1" | "2-0" | "2-1" | "2-2" | "3" | "4",
         selectAreaFromLegend: shallowRef<TypeColor[]>([]),
@@ -204,8 +205,8 @@ export const useTableStore = defineStore('table', {
           // icon: () => h(MailOutlined),
         }, {
           key: "1",
-          label: "Add Constraints",
-          title: "Add Constraints",
+          label: "Add Constraint",
+          title: "Add Constraint",
           // icon: () => h(MailOutlined),
           // disabled: true
         }, {
@@ -246,6 +247,10 @@ export const useTableStore = defineStore('table', {
           title: "Delete Template",
           // disabled: true
           // icon: () => h(MailOutlined),
+        }, {
+          key: "5",
+          label: "Delete Constraint",
+          title: "Delete Constraint",
         }],
         menuList: [] as Array<{ [key: string]: any }>,
       }
@@ -326,7 +331,7 @@ export const useTableStore = defineStore('table', {
             width: node.width,
             height: node.height
           }];
-          visNode.currentArea = node;
+          visNode.currentAreas = [node];
         } else {
           this.spec.visTreeMatchPath[path].matchs!.push({
             x: node.x,
@@ -334,6 +339,7 @@ export const useTableStore = defineStore('table', {
             width: node.width,
             height: node.height
           });
+          this.spec.visTreeMatchPath[path].currentAreas!.push(node);
         }
         this.traverseTree4UpdateMatchs(node.children)
       })
@@ -967,10 +973,22 @@ export const useTableStore = defineStore('table', {
       this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
     },
 
-    deleteChildByPath(nodes: TreeNode[], path: number[]) {
+    deleteChildByPath(nodes: TreeNode[], path: number[], constrIndex: number = -1) {
       if (path.length === 0) {
         // 如果路径为空，不做任何处理
         return;
+      }
+
+      if (constrIndex !== -1) {
+        // 说明删除的是约束
+        const currentNode = this.getNodebyPath(nodes, path) as TableTidierTemplate;
+        if (currentNode) {
+          currentNode.match!.constraints!.splice(constrIndex, 1);
+          if (currentNode.match!.constraints!.length === 0) {
+            delete currentNode.match!.constraints;
+          }
+        }
+        return
       }
 
       // 获取目标节点的父节点

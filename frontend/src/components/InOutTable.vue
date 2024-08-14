@@ -228,7 +228,6 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           tblInst2.updateSettings({ cell: [] });
         }
       } else {
-        console.log(227, document.body.style.cursor, tblInst1 === outHotInst, targetClassName);
         tableStore.clearStatus("matchArea");
         tblInst2.updateSettings({ cell: [] });
       }

@@ -151,6 +151,9 @@ const closeContextMenu = (e: any) => {
             tableStore.deleteChildByPath(tableStore.spec.rawSpecs, visNode.path!);
             tableStore.stringifySpec();
             break;
+        case "5":
+            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, visNode.path!, tableStore.spec.selectConstrIndex);
+            tableStore.stringifySpec();
     }
 
     if (extract !== null) {

@@ -11,7 +11,7 @@ import {
   Point, RectDef, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
-import { VisTreeNode, TableStore, TblCell } from "@/store/table";
+import { VisTreeNode, TableStore, TblCell, Selection } from "@/store/table";
 import { CellConstraint, completeCellConstraint } from '@/grammar/grammar';
 import { getCellBySelect } from '@/grammar/handleSpec';
 
@@ -221,6 +221,25 @@ function customRectCorner(rectInfo: RectDef) {
   return path;
 }
 
+function declareContextMenu(tableStore: TableStore, node: NodeData, constrIndex: number, event: MouseEvent) {
+  event.preventDefault();
+  // event.stopPropagation();
+  console.log(tableStore, node, constrIndex, event);  // 第一个参数为 this，可以不写
+  event.preventDefault();
+
+  if (node.parent === null) {
+    tableStore.tree.menuList = [tableStore.tree.menuAllList[3]];
+  } else if (constrIndex === -1) {
+    tableStore.tree.menuList = tableStore.tree.menuAllList.slice(0, -1);
+  } else {
+    tableStore.tree.menuList = tableStore.tree.menuAllList.slice(-1);
+    tableStore.spec.selectConstrIndex = constrIndex;
+  }
+  // console.log("node", node);
+  tableStore.spec.selectNode = node;
+  tableStore.tree.contextMenuVisible = true;
+}
+
 export class TreeChart {
   svgWidth: number;
   svgHeight: number;
@@ -336,27 +355,6 @@ export class TreeChart {
     this.update(parent);
   }
     */
-
-  private declareContextMenu(event: any, node: any) {
-    event.preventDefault();
-    // event.stopPropagation();
-    // console.log(event, node);
-    /*
-    if (!this.store.state.selectedNode.length) {
-      event.stopPropagation();
-      return; // 什么都没有选中不显示菜单
-    }
-    this.store.commit('setContextMenuVisibility', true);
-    */
-    if (node.parent === null) {
-      this.store.tree.menuList = [this.store.tree.menuAllList[3]];
-    } else {
-      this.store.tree.menuList = this.store.tree.menuAllList
-    }
-    // console.log("node", node);
-    this.store.spec.selectNode = node;
-    this.store.tree.contextMenuVisible = true;
-  }
 
 
   private batchEnterExitUpdate() {
@@ -765,6 +763,7 @@ export class TreeChart {
             if (tableStore.spec.constrNodeRectClickId !== constrId)
               constrNodeRect.attr('visibility', 'hidden');
           })
+          .on('contextmenu', declareContextMenu.bind(null, tableStore, node, i))  // bind 第一个参数为 this，这种情况下最后一个参数为 event
           .on('click', (_e: any, d: NodeData) => {
             // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
             tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
@@ -778,11 +777,22 @@ export class TreeChart {
             const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(constraint, subTemplate);
             tableStore.highlightCode(startLine, endLine, 'selectionShallow');   // `${d.data.type}Shallow`
 
-            const cellInfo = getCellBySelect(completeCellConstraint(constraint), d.data.currentArea!, tableStore.editor.rootArea.object!);
-            if (cellInfo) {
-              const cells = tableStore.generateHighlightCells([[cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x]], ["selection"]);
-              tableStore.highlightTblCells("input_tbl", cells);
-            }
+
+            const cellInfoSelections: Selection[] = [];
+            const allConstr = completeCellConstraint(constraint);
+            d.data.currentAreas!.forEach((area) => {
+              try {
+                const cellInfo = getCellBySelect(allConstr, area, tableStore.editor.rootArea.object!);
+                if (cellInfo) {
+                  cellInfoSelections.push([cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x]);
+                }
+                const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
+                tableStore.highlightTblCells("input_tbl", cells);
+                tableStore.highlightMinimapCells(cells);
+              } catch (e) {
+                // console.error(e);
+              }
+            })
           });
 
       });
@@ -828,7 +838,9 @@ export class TreeChart {
     // 为所有circle和rect绑定展开收起交互事件
     // d3.selectAll('.type-node, .node-text-g')
     d3.selectAll('.type-node')
-      .on('contextmenu', this.declareContextMenu.bind(this))
+      .on('contextmenu', (e, d) => {
+        declareContextMenu(tableStore, d as NodeData, -1, e);
+      })
       /*
       .on('mouseover', function () {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
         // console.log('mouseover', event, node);  // event: any, node: any
@@ -883,17 +895,6 @@ export class TreeChart {
 
           /************** 与 monaco editor 交互 ***************/
           const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, visData.path!);
-          /*
-          const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
-          const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
-          const startIndex = specsStr.indexOf(subTemplateStr);
-
-          const strBefore = specsStr.slice(0, startIndex);
-
-          const startLine = (strBefore.match(/\n/g) || []).length + 1;
-          const endLine = startLine + (subTemplateStr.match(/\n/g) || []).length;
-          */
-
           const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(subTemplate);
           tableStore.highlightCode(startLine, endLine, `${visData.type}Shallow`);
         } else {

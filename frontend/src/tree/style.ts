@@ -10,7 +10,7 @@ export const typeMapColor = {
   nullShallow: '#c8d6e5',
   // Table selection
   selection: 'rgba(9, 132, 227)',  // '#0984e3',
-  selectionShallow: 'rgba(9, 132, 227, 0.8)',
+  selectionShallow: 'rgba(9, 132, 227, 0.6)',
 
   positionRGBA: 'rgba(106, 176, 76, 0.5)',
   contextRGBA: 'rgba(240, 147, 43, 0.5)',
