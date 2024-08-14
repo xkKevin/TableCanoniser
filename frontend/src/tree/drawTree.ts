@@ -694,6 +694,8 @@ export class TreeChart {
     // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
+    let constrNodeRectClickId = '';
+
     nodeGroups.each(function (this: any, node: NodeData) {
       const current = d3.select(this);
       /** 绘制节点（circle + rect） */
@@ -749,9 +751,11 @@ export class TreeChart {
       node.data.match?.constraints?.forEach((constraint, i) => {
         // console.log('hhh', constraint, i, dataBindToThis.id, dataBindToThis);
         const iconsz = typeNodeStyle.iconsize;
+        const constrId = `${node.id}-${i}`;
         // @ts-ignore
-        current.patternify({ tag: 'rect', selector: `node-constraint-rect-${node.id}-${i}` });
-        const constrNodeRect = nodeGroups.select(`.node-constraint-rect-${node.id}-${i}`)
+        current.patternify({ tag: 'rect', selector: `node-constraint-rect-${constrId}` });
+        const constrNodeRect = nodeGroups.select(`.node-constraint-rect-${constrId}`);
+
         constrNodeRect.classed('node-constraint-rect', true)
           .attr('transform', `translate(${(iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 3})`)
           .attr("visibility", "hidden")
@@ -762,8 +766,8 @@ export class TreeChart {
           .attr("fill", "none")
 
         // @ts-ignore
-        current.patternify({ tag: 'image', selector: `node-constraint-icon-${node.id}-${i}` });
-        nodeGroups.select(`.node-constraint-icon-${node.id}-${i}`)
+        current.patternify({ tag: 'image', selector: `node-constraint-icon-${constrId}` });
+        nodeGroups.select(`.node-constraint-icon-${constrId}`)
           .attr('transform', `translate(${1 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 2})`)
           .attr('xlink:xlink:href', () => {
             // eslint-disable-next-line
@@ -776,7 +780,8 @@ export class TreeChart {
             constrNodeRect.attr('visibility', 'visible');
           })
           .on('mouseout', (_e: any, d: NodeData) => {
-            constrNodeRect.attr('visibility', 'hidden');
+            if (constrNodeRectClickId !== constrId)
+              constrNodeRect.attr('visibility', 'hidden');
           })
           .on('click', (_e: any, d: NodeData) => {
             // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
@@ -784,6 +789,8 @@ export class TreeChart {
             // 先清空其他样式
             document.dispatchEvent(escapeEvent);
 
+            constrNodeRectClickId = constrId;
+            constrNodeRect.attr('visibility', 'visible');
             const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path!);
             /*
             const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)

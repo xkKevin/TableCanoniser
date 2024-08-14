@@ -1,7 +1,7 @@
 export const typeMapColor = {
   // Pattern selection
-  position: '#6ab04c',  // 'rgba(126, 170, 85)',  // '#7EAA55',
-  positionShallow: '#badc58', // 'rgba(126, 170, 85, 0.8)',
+  position: '#6ab04c',  // 'rgba(106, 176, 76, 0.5)' -> 6ab04c, 'rgba(126, 170, 85)',  // '#7EAA55',
+  positionShallow: '#badc58', // 'rgba(186, 220, 88, 0.5)' -> badc58,  'rgba(126, 170, 85, 0.8)',
   context: '#f0932b',    // 'rgba(238, 177, 137)',  // '#EEB189',
   contextShallow: '#ffbe76', // 'rgba(238, 177, 137, 0.8)',
   value: '#22a6b3', // 'rgba(146, 110, 184)',    // '#926EB8',

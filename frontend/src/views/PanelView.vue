@@ -153,6 +153,11 @@ function handleKeydown(event: KeyboardEvent) {
       (node as HTMLElement).classList.remove('selection');
     });
 
+    const constraintRects = document.querySelectorAll('.node-constraint-rect');
+    constraintRects.forEach((rect) => {
+      // (rect as HTMLElement).style.visibility = 'hidden';
+      (rect as HTMLElement).setAttribute('visibility', 'hidden');
+    });
     tableStore.clearStatus("matchArea");
   }
 }
