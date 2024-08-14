@@ -484,6 +484,8 @@ export class TreeChart {
       // 为每个节点分配唯一的 id
       this.root.each((node: NodeData) => {
         node.id = idCounter++;
+        node.data.id = node.id;
+        /*
         const spec = node.data;
         spec.id = node.id;
         if (spec.extract === undefined || spec.extract === null) {
@@ -498,7 +500,7 @@ export class TreeChart {
           } else {
             spec.type = "null";
           }
-        }
+        }*/
       });
 
       this.root.path = [];

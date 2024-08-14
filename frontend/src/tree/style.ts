@@ -12,6 +12,11 @@ export const typeMapColor = {
   selection: 'rgba(9, 132, 227)',  // '#0984e3',
   selectionShallow: 'rgba(9, 132, 227, 0.8)',
 
+  positionRGBA: 'rgba(106, 176, 76, 0.5)',
+  contextRGBA: 'rgba(240, 147, 43, 0.5)',
+  valueRGBA: 'rgba(34, 166, 179, 0.5)',
+  nullRGBA: 'rgba(131, 149, 167, 0.5)',
+
   // Minimap
   cellFill: '#f9f7ff',
   cellStroke: '#cccccc',

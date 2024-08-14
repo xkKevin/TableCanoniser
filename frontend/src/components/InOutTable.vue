@@ -218,29 +218,35 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   }
   tblInst1.updateSettings({
     outsideClickDeselects: (targetEle) => {
-      if (targetEle?.className === "wtHolder") {
-        return false;
-      } else {
-        // tblInst2.updateSettings({ cell: [] });
-        tableStore.highlightMinimapCells([]);
-        const typeNodes = document.querySelectorAll('.type-node');
-        typeNodes.forEach((node) => {
-          (node as HTMLElement).classList.remove('selection');
-        });
-        if (tbl === "input_tbl") {
-          if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
-            tableStore.editor.mappingSpec.decorations?.clear();
-
-          if (tableStore.spec.selectAreaFromLegend.length === 0) {
-            tblInst1.updateSettings({ cell: [] });
-          }
+      if (tblInst1 === outHotInst && ["relative", "rowHeader", "current", "truncated"].includes(targetEle?.className)) {
+        // 如果在 input 表格内点击：
+        if (document.body.style.cursor !== 'cell') {
           tblInst2.updateSettings({ cell: [] });
-        } else {
-          // tblInst1.updateSettings({ cell: [] });
-          // tblInst2.updateSettings({ cell: [] });
         }
-        return true;
+      } else {
+        document.body.style.cursor = 'default';
+        document.documentElement.style.setProperty('--custom-cursor', 'default');
+        tblInst2.updateSettings({ cell: [] });
       }
+      tableStore.highlightMinimapCells([]);
+      const typeNodes = document.querySelectorAll('.type-node');
+      typeNodes.forEach((node) => {
+        (node as HTMLElement).classList.remove('selection');
+      });
+      if (tbl === "input_tbl") {
+        if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
+          tableStore.editor.mappingSpec.decorations?.clear();
+
+        // if (tableStore.spec.selectAreaFromLegend.length === 0) {
+        //   tblInst1.updateSettings({ cell: [] });
+        // }
+        // tblInst2.updateSettings({ cell: [] });
+      } else {
+        // tblInst1.updateSettings({ cell: [] });
+        // tblInst2.updateSettings({ cell: [] });
+      }
+
+      return true;
     },
   });
   tblInst1.addHook("afterOnCellMouseDown", () => {
@@ -258,123 +264,125 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     const cells = tableStore.in_out_mapping(selectedCoords, tbl);
     tableStore.highlightTblCells(tbl2, cells);
     // tableStore.highlightMinimapCells([{ ...coords, className: "posi-mapping" }]);
-    if (tbl === "output_tbl") {
-      tableStore.highlightMinimapCells(cells);
-    } else {
-      tableStore.highlightMinimapCells(hightedCells);
-    }
 
     if (tbl === "input_tbl") {
-      if (tableStore.spec.selectAreaFromLegend.length) {
-        // 说明从legend处选择区域
-        inHotInst.updateSettings({ cell: [] });
-        const selectFromLegend = tableStore.spec.selectAreaFromLegend;
-        tableStore.spec.selectionsAreaFromLegend.push(selected[0]);
-        if (selectFromLegend.length < tableStore.spec.selectionsAreaFromLegend.length) {
-          selectFromLegend.push(selectFromLegend[selectFromLegend.length - 1])
+      tableStore.highlightMinimapCells(hightedCells);
+
+      if (document.body.style.cursor === 'cell') {
+        // console.log(tableStore.spec.selectAreaFromNode, tableStore.spec.selectAreaFromLegend.length);
+        if (tableStore.spec.selectAreaFromNode) {
+          // 说明需要重新为某个节点选择区域
+          const selectType = tableStore.spec.selectAreaFromNode;
+          const node = selectType === "0" ? tableStore.spec.selectNode.parent as NodeData : tableStore.spec.selectNode;
+          const nx = node.data.x, ny = node.data.y, nw = node.data.width, nh = node.data.height;
+          const [startRow, startCol, endRow, endCol] = selected[0];
+          const xOffset = startCol - nx, yOffset = startRow - ny;
+          let match: TableTidierTemplate["match"] = {};
+          switch (selectType) {
+            case "0":
+            // Reset Area Logic
+            case "3":
+              // Add Sub-Template Logic
+              const width = endCol - startCol + 1;
+              const height = endRow - startRow + 1;
+              const traverse = {
+                xDirection: nw >= 2 * width ? 'after' as const : undefined,
+                yDirection: nh >= 2 * height ? 'after' as const : undefined
+              }
+              match = {
+                startCell: {
+                  // referenceAreaLayer: "current",
+                  // referenceAreaPosi: "topLeft",
+                  xOffset,
+                  yOffset
+                },
+                size: { width, height },
+                traverse
+              }
+              if (selectType === "0") {
+                tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
+                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.path!) as TableTidierTemplate;
+                tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode.data.type}Shallow`];
+              } else {
+                tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
+                tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine({ match: match }), 'nullShallow'];
+              }
+              break;
+            case "1":
+              // Add Constraints Logic
+              const cellValue = inHotInst.getDataAtCell(startRow, startCol);
+              match = {
+                constraints: [{
+                  xOffset,
+                  yOffset,
+                  valueCstr: tableStore.getCellDataType(cellValue) // TableTidierKeyWords.String,
+                }]
+              }
+              const constraint = match.constraints![0]
+              tableStore.insertNodeOrPropertyIntoSpecs(constraint, "constraints");
+              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(constraint, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), `${node.data.type}Shallow`];
+              break;
+          }
+          tableStore.spec.selectAreaFromNode = "";
+          document.body.style.cursor = 'default';
+          document.documentElement.style.setProperty('--custom-cursor', 'default');
+          /*
+          const areaConfig = tableStore.spec.areaConfig;
+          areaConfig.match!.startCell = {
+            referenceAreaLayer: "root",
+            referenceAreaPosi: "topLeft",
+            xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
+            yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
+          }
+          areaConfig.match!.size = {
+            width: selected[0][3] - selected[0][1] + 1,
+            height: selected[0][2] - selected[0][0] + 1
+          }
+          areaConfig.match!.traverse = {
+            xDirection: "after",
+            yDirection: "after"
+          }
+          const areaFormData = tableStore.spec.areaFormData;
+          areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
+          areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
+          areaFormData.position = {
+            x: areaConfig.match!.startCell?.xOffset,
+            y: areaConfig.match!.startCell?.yOffset
+          }
+          areaFormData.traverse = {
+            xDirection: areaConfig.match!.traverse?.xDirection,
+            yDirection: areaConfig.match!.traverse?.yDirection
+          }
+          areaFormData.size = {
+            width: areaConfig.match!.size?.width,
+            height: areaConfig.match!.size?.height
+          }
+          tableStore.spec.dragConfigOpen = true;
+          */
+        } else if (tableStore.spec.selectAreaFromLegend.length) {
+          // 说明从legend处选择区域
+          inHotInst.updateSettings({ cell: [] });
+          const selectFromLegend = tableStore.spec.selectAreaFromLegend;
+          tableStore.spec.selectionsAreaFromLegend.push(selected[0]);
+          if (selectFromLegend.length < tableStore.spec.selectionsAreaFromLegend.length) {
+            selectFromLegend.push(selectFromLegend[selectFromLegend.length - 1])
+          }
+          const cells = tableStore.generateHighlightCells(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
+          tableStore.highlightTblCells(tbl, cells);
+          // document.body.style.cursor = 'default';
+          // document.documentElement.style.setProperty('--custom-cursor', 'default');
+
+          const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
+
+          tableStore.stringifySpec(specs);
         }
-        const cells = tableStore.generateHighlightCells(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
-        tableStore.highlightTblCells(tbl, cells);
-        // document.body.style.cursor = 'default';
-        // document.documentElement.style.setProperty('--custom-cursor', 'default');
-
-        const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
-
-        tableStore.stringifySpec(specs);
       }
 
-      if (tableStore.spec.selectAreaFromNode) {
-        // 说明需要重新为某个节点选择区域
-        const selectType = tableStore.spec.selectAreaFromNode;
-        const node = selectType === "0" ? tableStore.spec.selectNode.parent as NodeData : tableStore.spec.selectNode;
-        const nx = node.data.x, ny = node.data.y, nw = node.data.width, nh = node.data.height;
-        const [startRow, startCol, endRow, endCol] = selected[0];
-        const xOffset = startCol - nx, yOffset = startRow - ny;
-        let match: TableTidierTemplate["match"] = {};
-        switch (selectType) {
-          case "0":
-          // Reset Area Logic
-          case "3":
-            // Add Sub-Template Logic
-            const width = endCol - startCol + 1;
-            const height = endRow - startRow + 1;
-            const traverse = {
-              xDirection: nw >= 2 * width ? 'after' as const : undefined,
-              yDirection: nh >= 2 * height ? 'after' as const : undefined
-            }
-            match = {
-              startCell: {
-                // referenceAreaLayer: "current",
-                // referenceAreaPosi: "topLeft",
-                xOffset,
-                yOffset
-              },
-              size: { width, height },
-              traverse
-            }
-            if (selectType === "0") {
-              tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
-              const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.path!) as TableTidierTemplate;
-              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode.data.type}Shallow`];
-            } else {
-              tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
-              tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine({ match: match }), 'nullShallow'];
-            }
-            break;
-          case "1":
-            // Add Constraints Logic
-            const cellValue = inHotInst.getDataAtCell(startRow, startCol);
-            match = {
-              constraints: [{
-                xOffset,
-                yOffset,
-                valueCstr: tableStore.getCellDataType(cellValue) // TableTidierKeyWords.String,
-              }]
-            }
-            const constraint = match.constraints![0]
-            tableStore.insertNodeOrPropertyIntoSpecs(constraint, "constraints");
-            tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(constraint, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), `${node.data.type}Shallow`];
-            break;
-        }
-        tableStore.spec.selectAreaFromNode = "";
-        document.body.style.cursor = 'default';
-        document.documentElement.style.setProperty('--custom-cursor', 'default');
-        /*
-        const areaConfig = tableStore.spec.areaConfig;
-        areaConfig.match!.startCell = {
-          referenceAreaLayer: "root",
-          referenceAreaPosi: "topLeft",
-          xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
-          yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
-        }
-        areaConfig.match!.size = {
-          width: selected[0][3] - selected[0][1] + 1,
-          height: selected[0][2] - selected[0][0] + 1
-        }
-        areaConfig.match!.traverse = {
-          xDirection: "after",
-          yDirection: "after"
-        }
-        const areaFormData = tableStore.spec.areaFormData;
-        areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
-        areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
-        areaFormData.position = {
-          x: areaConfig.match!.startCell?.xOffset,
-          y: areaConfig.match!.startCell?.yOffset
-        }
-        areaFormData.traverse = {
-          xDirection: areaConfig.match!.traverse?.xDirection,
-          yDirection: areaConfig.match!.traverse?.yDirection
-        }
-        areaFormData.size = {
-          width: areaConfig.match!.size?.width,
-          height: areaConfig.match!.size?.height
-        }
-        tableStore.spec.dragConfigOpen = true;
-        */
-      }
+
 
       tableStore.highlightNodes(selected);
+    } else {
+      tableStore.highlightMinimapCells(cells);
     }
   });
 }

@@ -96,26 +96,26 @@ const contextMenuVisibleChange = (value: boolean) => {
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
     const node = tableStore.spec.selectNode;
-    tableStore.spec.selectAreaFromNode = e.key;
     let extract: any = null, extractColor: string = '';
+    let triggerCellCursorFlag = false;
+    let messageInfo = "\n Press ESC to cancel the selection mode.";
     switch (e.key) {
         case "0":
             // Reset Area Logic
-            message.info("Please reselect the template's area in the input table.\n Press ESC to cancel the selection mode.");
-            document.body.style.cursor = 'cell';
-            document.documentElement.style.setProperty('--custom-cursor', 'cell');
+            messageInfo = "Please reselect the template's area in the input table." + messageInfo;
+            triggerCellCursorFlag = true;
             break;
         case "1":
             // Add Constraints Logic
-            message.info("Please select the constrained cell in the input table.\n Press ESC to cancel the selection mode.");
-            document.body.style.cursor = 'cell';
-            document.documentElement.style.setProperty('--custom-cursor', 'cell');
+            messageInfo = "Please select the constrained cell in the input table." + messageInfo;
+            triggerCellCursorFlag = true;
             break;
         case "2-0":
             // Target Cols - Position Based Logic
-            let colCount = 0;
+            // let colCount = 0;
             extract = {
-                byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, _i) => `C${++colCount}`)
+                // byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, _i) => `C${++colCount}`)
+                byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, i) => `C${tableStore.findMaxCNumber() + i + 1}`)
             }
             extractColor = 'positionShallow';
             break;
@@ -145,11 +145,8 @@ const closeContextMenu = (e: any) => {
             break;
         case "3":
             // Add Sub-Template Logic
-            // console.log(node.path, tableStore.getSpecbyPath(node.path));
-            message.info("Please select an area in the input table.\n Press ESC to cancel the selection mode.");
-
-            document.body.style.cursor = 'cell';
-            document.documentElement.style.setProperty('--custom-cursor', 'cell');
+            messageInfo = "Please select an area in the input table." + messageInfo;
+            triggerCellCursorFlag = true;
             break;
         case "4":
             tableStore.deleteChildByPath(tableStore.spec.rawSpecs, node.path!);
@@ -160,6 +157,14 @@ const closeContextMenu = (e: any) => {
     if (extract !== null) {
         tableStore.insertNodeOrPropertyIntoSpecs(extract, "extract")
         tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(extract, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), extractColor];
+    }
+    if (triggerCellCursorFlag) {
+        message.info(messageInfo);
+        tableStore.spec.selectAreaFromNode = e.key;
+        document.body.style.cursor = 'cell';
+        document.documentElement.style.setProperty('--custom-cursor', 'cell');
+        const cells = tableStore.generateHighlightCells(tableStore.spec.selectionsAreaFromLegend, tableStore.spec.selectAreaFromLegend);
+        tableStore.highlightTblCells("input_tbl", cells);
     }
     tableStore.tree.contextMenuVisible = false;
 }
@@ -189,8 +194,16 @@ const typeMap = {
     "value": "Value Based",
 }
 const selectMatchExtractArea = (type: TypeColor) => {
+    const selectionsFromLegend = tableStore.spec.selectionsAreaFromLegend;
+    const selectFromLegend = tableStore.spec.selectAreaFromLegend;
+    const cells = tableStore.generateHighlightCells(selectionsFromLegend, selectFromLegend);
+    tableStore.highlightTblCells("input_tbl", cells);
 
-    tableStore.spec.selectAreaFromLegend.push(type);
+    if (selectFromLegend.length > selectionsFromLegend.length) {
+        selectFromLegend[selectFromLegend.length - 1] = type;
+    } else {
+        selectFromLegend.push(type);
+    }
     document.body.style.cursor = 'cell';
     document.documentElement.style.setProperty('--custom-cursor', 'cell');
     message.info("Now is " + typeMap[type as keyof typeof typeMap] + " mode. Please select the starting area in the input table.\n Press ESC to cancel the selection mode.");
@@ -346,32 +359,18 @@ const resizeObserver = new ResizeObserver(() => {
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
-    const setFlag = tableStore.setSpec();
+    const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
-    try {
-        if (tableStore.editor.mappingSpec.highlightCode) {
-            tableStore.highlightCode(...tableStore.editor.mappingSpec.highlightCode);
-            tableStore.editor.mappingSpec.highlightCode = null;
-        }
+    drawTree(tableStore.spec.visTree);
+    drawTblTemplate();
+    tableStore.transformTablebyCode();  // auto run
 
-        const { rootArea } = transformTable(tableStore.input_tbl.tbl, tableStore.spec.rawSpecs, false);
-        // console.log(rootArea, tableStore.spec.visTree, tableStore.spec.rawSpecs, tableStore.input_tbl.tbl[0]);
-        tableStore.copyTreeAttributes(rootArea, tableStore.spec.visTree);
-        // console.log(rootArea, tableStore.spec.visTree);
-        drawTree(tableStore.spec.visTree);
-        drawTblTemplate();
-        tableStore.input_tbl.in2nodes = {};
-        tableStore.traverseTree4UpdateIn2Nodes(tableStore.spec.visTree.children!);
-        tableStore.transformTablebyCode();  // auto run
-    } catch (e) {
-        message.error(`Failed to parse the specification:\n ${e}`);
-    }
     // console.log('watch code changed: end');
 });
 
 // watch(() => tableStore.spec.visTree.size.height, (newVal) => {
 //     console.log('watch tbl size changed: start');
-//     const setFlag = tableStore.setSpec();
+//     const setFlag = tableStore.prepareDataAfterCodeChange();
 //     if (!setFlag) return;
 //     drawTree(tableStore.spec.visTree);
 //     console.log('watch tbl size changed: end');

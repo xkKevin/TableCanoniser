@@ -306,6 +306,9 @@ export const useTableStore = defineStore('table', {
       return prompt;
     },
 
+    /**
+     * Update visTree's matchs
+     */
     traverseTree4UpdateMatchs(nodes: AreaInfo[]) {
       let visNode: VisTreeNode | null = null;
       nodes.forEach((node) => {
@@ -336,6 +339,24 @@ export const useTableStore = defineStore('table', {
       const in2nodes = this.input_tbl.in2nodes;
       nodes.forEach((node) => {
         const areaKey = `${node.x}-${node.y}-${node.width}-${node.height}`;
+
+        // 给每个node赋予type，并计算selectionsAreaFromLegend和selectAreaFromLegend
+        if (node.extract === undefined || node.extract === null) {
+          node.type = "null";
+        } else {
+          if (node.extract.byPositionToTargetCols !== undefined) {
+            node.type = "position";
+          } else if (node.extract.byContext !== undefined) {
+            node.type = "context";
+          } else if (node.extract.byValue !== undefined) {
+            node.type = "value";
+          } else {
+            node.type = "null";
+          }
+        }
+        this.spec.selectionsAreaFromLegend.push([node.y, node.x, node.y + node.height - 1, node.x + node.width - 1]);
+        this.spec.selectAreaFromLegend.push(node.type)
+
         if (in2nodes.hasOwnProperty(areaKey)) {
           in2nodes[areaKey].add(node.id!);
         } else {
@@ -362,6 +383,8 @@ export const useTableStore = defineStore('table', {
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
       this.traverseTree4UpdateMatchs(rootArea.children);
       this.input_tbl.in2nodes = {};
+      this.spec.selectAreaFromLegend = []
+      this.spec.selectionsAreaFromLegend = []
       this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
       return tidyData;
     },
@@ -454,6 +477,27 @@ export const useTableStore = defineStore('table', {
         pEndRow >= cEndRow &&
         pEndCol >= cEndCol
       );
+    },
+
+    findMaxCNumber(arr: any[] | null = null) {
+      if (arr === null) arr = this.output_tbl.cols;
+
+      let maxNumber = 0;
+
+      arr.forEach(ele => {
+        // 使用正则表达式匹配以 "C" 开头并以数字结尾的字符串
+        if (typeof ele !== 'string') return;
+        const match = ele.match(/^C(\d+)$/);
+        if (match) {
+          const number = parseInt(match[1], 10);
+          if (number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      });
+
+      // 如果未找到匹配的字符串，返回 null 或 -1 等
+      return maxNumber;
     },
 
     buildTree(selections: Selection[], types: string[]) {
@@ -672,8 +716,9 @@ export const useTableStore = defineStore('table', {
       };
     },
 
-    setSpec() {
+    prepareDataAfterCodeChange() {
       try {
+        // Step 1: update specs, including rawSpecs and visTree
         // let code = this.editor.mappingSpec.instance!.getValue();
         let code = this.editor.mappingSpec.code;
         if (code.trim() === "") return false;
@@ -695,6 +740,24 @@ export const useTableStore = defineStore('table', {
         //     spec.children = [];
         //   }
         // })
+
+
+        // Step 2: update visTree's AreaBox properties
+        if (this.editor.mappingSpec.highlightCode) {
+          this.highlightCode(...this.editor.mappingSpec.highlightCode);
+          this.editor.mappingSpec.highlightCode = null;
+        }
+
+        const { rootArea } = transformTable(this.input_tbl.tbl, this.spec.rawSpecs, false);
+        // console.log(rootArea, this.spec.visTree, this.spec.rawSpecs, this.input_tbl.tbl[0]);
+        this.copyTreeAttributes(rootArea, this.spec.visTree);
+        // console.log(rootArea, this.spec.visTree);
+
+        // Step 3: update in2nodes
+        this.input_tbl.in2nodes = {};
+        this.spec.selectAreaFromLegend = []
+        this.spec.selectionsAreaFromLegend = []
+        this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
         return true
       }
       catch (e) {
@@ -703,12 +766,35 @@ export const useTableStore = defineStore('table', {
       }
     },
 
+    numberToOrdinal(num: number) {
+      let suffix = "th";
+
+      if (num % 100 >= 11 && num % 100 <= 13) {
+        suffix = "th";
+      } else {
+        switch (num % 10) {
+          case 1:
+            suffix = "st";
+            break;
+          case 2:
+            suffix = "nd";
+            break;
+          case 3:
+            suffix = "rd";
+            break;
+        }
+      }
+
+      return num + suffix;
+    },
+
     transformTablebyCode() {
       if (this.editor.mappingSpec.errorMark != null) {
         const marker = this.editor.mappingSpec.errorMark;
         message.error(`Invalid syntax at Line ${marker.startLineNumber}, Column ${marker.startColumn}:\n ${marker.message}`);
         return;
       }
+      let messageContent = ''
       try {
         const specs = this.spec.rawSpecs;
         // this.stringifySpec(); // 更新(格式化) editor.mappingSpec.code
@@ -717,10 +803,25 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo(false);
         this.tree.visInst?.render();
 
+        this.spec.visTree.children?.forEach((spec, index) => {
+          if (index) messageContent += '\n'
+          if (spec.matchs) {
+            if (spec.matchs.length > 1) {
+              messageContent += `For the ${this.numberToOrdinal(index + 1)} template, ${spec.matchs.length} instances are matched.`
+            } else if (spec.matchs.length === 1) {
+              messageContent += `For the ${this.numberToOrdinal(index + 1)} template, only one instance is matched.`
+            } else {
+              messageContent += `For the ${this.numberToOrdinal(index + 1)} template, no instance is matched.`
+            }
+          }
+        })
+
         if (Object.keys(tidyData).length === 0) {
-          message.warning('The output table is empty based on the specification.');
-          return;
+          messageContent += 'The output table is empty based on the specification.';
+          // return;
         }
+        message.info(messageContent)
+
         // 将tidyData转换为output_tbl.tbl，注意数据格式
         this.derivePosiMapping(tidyData);
         // console.log(this.output_tbl.tbl, this.output_tbl.cols);
@@ -728,8 +829,6 @@ export const useTableStore = defineStore('table', {
         this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
         // this.output_tbl.instance.render();
       } catch (e) {
-        let messageContent;
-        console.log(e);
         if (e instanceof CustomError) {
           messageContent = `Failed to transform the table based on the specification:\n ${e}`
         } else {
@@ -1113,8 +1212,8 @@ export const useTableStore = defineStore('table', {
         case "matchArea":
           document.body.style.cursor = 'default';
           document.documentElement.style.setProperty('--custom-cursor', 'default');
-          this.spec.selectAreaFromLegend = []
-          this.spec.selectionsAreaFromLegend = []
+          // this.spec.selectAreaFromLegend = []
+          // this.spec.selectionsAreaFromLegend = []
           break;
       }
     },

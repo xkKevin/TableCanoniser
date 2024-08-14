@@ -176,22 +176,22 @@ onUnmounted(() => {
 
     .nullShallow {
         // background-color: var(--color-null);
-        background-color: var(--color-nullShallow);
+        background-color: var(--color-nullRGBA); // var(--color-nullShallow);
     }
 
     .positionShallow {
         // background-color: var(--color-position);
-        background-color: var(--color-positionShallow);
+        background-color: var(--color-positionRGBA); // var(--color-positionShallow);
     }
 
     .valueShallow {
         // background-color: var(--color-value);
-        background-color: var(--color-valueShallow);
+        background-color: var(--color-valueRGBA); // var(--color-valueShallow);
     }
 
     .contextShallow {
         // background-color: var(--color-context);
-        background-color: var(--color-contextShallow);
+        background-color: var(--color-contextRGBA); // var(--color-contextShallow);
     }
 
 }
