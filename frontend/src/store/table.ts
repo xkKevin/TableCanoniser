@@ -84,6 +84,7 @@ interface AreaBox {
 export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   id?: number,
   type?: "position" | "value" | "context" | "null",
+  path?: number[],
   matchs?: AreaBox[],
   children?: VisTreeNode[]
 }
@@ -117,13 +118,14 @@ export const useTableStore = defineStore('table', {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
-        visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", children: [] }),
+        visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", path: [], children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<NodeData>({} as NodeData),
-        /** 1表示add area, 2表示edit area, 3表示add constraint, 4表示edit constraint */
+        constrNodeRectClickId: "",
         selectAreaFromNode: "" as "" | "0" | "1" | "2-0" | "2-1" | "2-2" | "3" | "4",
         selectAreaFromLegend: shallowRef<TypeColor[]>([]),
         selectionsAreaFromLegend: shallowRef<Selection[]>([]),
+        selectionsPath: shallowRef<number[][]>([]),  // 每一个selection在rawSpecs中对应的path
         dragConfigOpen: false,
         areaConfig: shallowRef<TableTidierTemplate>({
           match: {
@@ -335,9 +337,13 @@ export const useTableStore = defineStore('table', {
       })
     },
 
-    traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[]) {
+    traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = []) {
       const in2nodes = this.input_tbl.in2nodes;
-      nodes.forEach((node) => {
+      nodes.forEach((node, index) => {
+        // 构建当前节点的 path
+        const currentPath = [...parentPath, index];
+        node.path = currentPath;
+
         const areaKey = `${node.x}-${node.y}-${node.width}-${node.height}`;
 
         // 给每个node赋予type，并计算selectionsAreaFromLegend和selectAreaFromLegend
@@ -356,6 +362,7 @@ export const useTableStore = defineStore('table', {
         }
         this.spec.selectionsAreaFromLegend.push([node.y, node.x, node.y + node.height - 1, node.x + node.width - 1]);
         this.spec.selectAreaFromLegend.push(node.type)
+        this.spec.selectionsPath.push(node.path);
 
         if (in2nodes.hasOwnProperty(areaKey)) {
           in2nodes[areaKey].add(node.id!);
@@ -371,7 +378,7 @@ export const useTableStore = defineStore('table', {
             in2nodes[areaKey] = new Set([node.id!]);
           }
         })
-        if (node.children) this.traverseTree4UpdateIn2Nodes(node.children)
+        if (node.children) this.traverseTree4UpdateIn2Nodes(node.children, currentPath);
       })
     },
 
@@ -385,6 +392,7 @@ export const useTableStore = defineStore('table', {
       this.input_tbl.in2nodes = {};
       this.spec.selectAreaFromLegend = []
       this.spec.selectionsAreaFromLegend = []
+      this.spec.selectionsPath = []
       this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
       return tidyData;
     },
@@ -500,7 +508,7 @@ export const useTableStore = defineStore('table', {
       return maxNumber;
     },
 
-    buildTree(selections: Selection[], types: string[]) {
+    buildTree(selections: Selection[], types: string[], paths: number[][]) {
       const rootNodes: TreeNode[] = [];
 
       const insertNode = (parent: TreeNode, child: TreeNode): boolean => {
@@ -520,7 +528,7 @@ export const useTableStore = defineStore('table', {
 
       for (let i = 0; i < selections.length; i++) {
         const selection = selections[i];
-        const newNode: TreeNode = { type: types[i], selection };
+        const newNode: TreeNode = { type: types[i], selection, path: paths[i] };
 
         let added = false;
         for (const rootNode of rootNodes) {
@@ -539,58 +547,68 @@ export const useTableStore = defineStore('table', {
       return { rootNodes, specs };
     },
 
-    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection, colCount: number = 0) {
+    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection) {
       const px = pSelection[1], py = pSelection[0];
       const pw = pSelection[3] - px + 1, ph = pSelection[2] - py + 1;
       nodes.forEach((node) => {
+
+        const newSpec: TableTidierTemplate = {};
         const { selection, type } = node;
-        const [startRow, startCol, endRow, endCol] = selection;
-        const width = endCol - startCol + 1;
-        const height = endRow - startRow + 1;
-        const traverse = {
-          xDirection: pw >= 2 * width ? 'after' as const : undefined,
-          yDirection: ph >= 2 * height ? 'after' as const : undefined
-        }
-        if (nodes.length > 1) {
-          traverse.xDirection = undefined;
-          traverse.yDirection = undefined;
-        }
-        const newSpec: TableTidierTemplate = {
-          match: {
+
+        if (node.path.length > 0) {
+          const targetNode = this.getNodebyPath(this.spec.rawSpecs, node.path);
+          this.copyAttributes(targetNode!, newSpec, ['match', 'extract', 'fill']);
+        } else {
+
+          const [startRow, startCol, endRow, endCol] = selection;
+          const width = endCol - startCol + 1;
+          const height = endRow - startRow + 1;
+          const traverse = {
+            xDirection: pw >= 2 * width ? 'after' as const : undefined,
+            yDirection: ph >= 2 * height ? 'after' as const : undefined
+          }
+          if (nodes.length > 1) {
+            traverse.xDirection = undefined;
+            traverse.yDirection = undefined;
+          }
+          newSpec.match = {
             startCell: { xOffset: startCol - px, yOffset: startRow - py },
             size: { width, height },
             traverse
           }
-        }
-        switch (type) {
-          case "position":
-            newSpec.extract = {
-              byPositionToTargetCols: Array.from({ length: width * height }, (_, _i) => `C${++colCount}`)
-            }
-            break;
-          case "context":
-            newSpec.extract = {
-              byContext: {
-                position: 'above',
-                toTargetCols: 'cellValue'
+
+          switch (type) {
+            case "position":
+              newSpec.extract = {
+                // byPositionToTargetCols: Array.from({ length: width * height }, (_, _i) => `C${++colCount}`)
+                byPositionToTargetCols: Array.from({ length: width * height }, (_, i) => `C${this.findMaxCNumber() + i + 1}`)
               }
-            }
-            break;
-          case "value":
-            newSpec.extract = {
-              byValue: (currentAreaTbl: Table2D) => {
-                // Please replace the default code with the necessary implementation to complete the function.
-                return currentAreaTbl.flat();
+              break;
+            case "context":
+              newSpec.extract = {
+                byContext: {
+                  position: 'above',
+                  toTargetCols: 'cellValue'
+                }
               }
-            };
-            break;
-          // case "null": 
-          // default:
-          //   break;
+              break;
+            case "value":
+              newSpec.extract = {
+                byValue: (currentAreaTbl: Table2D) => {
+                  // Please replace the default code with the necessary implementation to complete the function.
+                  return currentAreaTbl.flat();
+                }
+              };
+              break;
+            // case "null": 
+            // default:
+            //   break;
+          }
         }
+
         if (node.children) {
           newSpec.children = [];
-          this.traverseTree4buildSpecs(node.children, newSpec.children, selection, colCount)
+          this.traverseTree4buildSpecs(node.children, newSpec.children, selection)
         }
         specs.push(newSpec);
       })
@@ -757,6 +775,7 @@ export const useTableStore = defineStore('table', {
         this.input_tbl.in2nodes = {};
         this.spec.selectAreaFromLegend = []
         this.spec.selectionsAreaFromLegend = []
+        this.spec.selectionsPath = []
         this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
         return true
       }
@@ -1214,6 +1233,22 @@ export const useTableStore = defineStore('table', {
           document.documentElement.style.setProperty('--custom-cursor', 'default');
           // this.spec.selectAreaFromLegend = []
           // this.spec.selectionsAreaFromLegend = []
+          break;
+        case "tree":
+          /*
+          const typeNodes = document.querySelectorAll('.type-node');
+          typeNodes.forEach((node) => {
+            (node as HTMLElement).classList.remove('selection');
+          });
+          const constraintRects = document.querySelectorAll('.node-constraint-rect');
+          constraintRects.forEach((rect) => {
+            // (rect as HTMLElement).style.visibility = 'hidden';
+            (rect as HTMLElement).setAttribute('visibility', 'hidden');
+          });
+          */
+          this.spec.constrNodeRectClickId = '';
+          d3.selectAll('.type-node').classed('selection', false);
+          d3.selectAll('.node-constraint-rect').attr('visibility', 'hidden');
           break;
       }
     },

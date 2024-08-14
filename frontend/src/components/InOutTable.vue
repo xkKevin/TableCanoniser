@@ -224,26 +224,15 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           tblInst2.updateSettings({ cell: [] });
         }
       } else {
-        document.body.style.cursor = 'default';
-        document.documentElement.style.setProperty('--custom-cursor', 'default');
+        tableStore.clearStatus("matchArea");
         tblInst2.updateSettings({ cell: [] });
       }
       tableStore.highlightMinimapCells([]);
-      const typeNodes = document.querySelectorAll('.type-node');
-      typeNodes.forEach((node) => {
-        (node as HTMLElement).classList.remove('selection');
-      });
+      tableStore.clearStatus("tree");
+
       if (tbl === "input_tbl") {
         if (typeof targetEle?.className === "string" && !(targetEle?.className.startsWith("mtk") || targetEle?.className === "view-line"))
           tableStore.editor.mappingSpec.decorations?.clear();
-
-        // if (tableStore.spec.selectAreaFromLegend.length === 0) {
-        //   tblInst1.updateSettings({ cell: [] });
-        // }
-        // tblInst2.updateSettings({ cell: [] });
-      } else {
-        // tblInst1.updateSettings({ cell: [] });
-        // tblInst2.updateSettings({ cell: [] });
       }
 
       return true;
@@ -364,6 +353,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           inHotInst.updateSettings({ cell: [] });
           const selectFromLegend = tableStore.spec.selectAreaFromLegend;
           tableStore.spec.selectionsAreaFromLegend.push(selected[0]);
+          tableStore.spec.selectionsPath.push([]);
           if (selectFromLegend.length < tableStore.spec.selectionsAreaFromLegend.length) {
             selectFromLegend.push(selectFromLegend[selectFromLegend.length - 1])
           }
@@ -372,7 +362,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           // document.body.style.cursor = 'default';
           // document.documentElement.style.setProperty('--custom-cursor', 'default');
 
-          const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend);
+          const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend, tableStore.spec.selectionsPath);
 
           tableStore.stringifySpec(specs);
         }

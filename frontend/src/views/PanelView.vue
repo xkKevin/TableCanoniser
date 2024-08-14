@@ -148,16 +148,7 @@ function handleKeydown(event: KeyboardEvent) {
     tableStore.output_tbl.instance.updateSettings({ cell: [] });
     tableStore.highlightMinimapCells([]);
 
-    const typeNodes = document.querySelectorAll('.type-node');
-    typeNodes.forEach((node) => {
-      (node as HTMLElement).classList.remove('selection');
-    });
-
-    const constraintRects = document.querySelectorAll('.node-constraint-rect');
-    constraintRects.forEach((rect) => {
-      // (rect as HTMLElement).style.visibility = 'hidden';
-      (rect as HTMLElement).setAttribute('visibility', 'hidden');
-    });
+    tableStore.clearStatus("tree");
     tableStore.clearStatus("matchArea");
   }
 }

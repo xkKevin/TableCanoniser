@@ -18,8 +18,7 @@ export type NodeData = {
   [key: string]: any,
   children: NodeData[],
   parent: NodeData | null,
-  data: VisTreeNode,
-  path?: number[],
+  data: VisTreeNode
 }
 
 /** 创建一个新的Escape键盘事件，指定事件类型和相关参数 */
@@ -383,23 +382,6 @@ export class TreeChart {
     };
   }
   /*
-    const { size } = completeSpecification({ size: d.data.size });
-            d.data.size = size;
-            const parent: TableTidierTemplate = d.parent!.data;
-            let parentX = 0, parentY = 0;
-            if (parent.hasOwnProperty('startCell')) {
-              parentX = parent.startCell!.xOffset as number;
-              parentY = parent.startCell!.yOffset as number;
-            } else {
-              // console.log("parent", parent, d);
-            }
-            if (size.height === 'toParentY') {
-              d.data.size.height = (parent.size!.height as number) - parentY;
-            }
-            if (d.data.size.width === 'toParentX') {
-              d.data.size.width = (parent.size!.width as number) - parentX;
-            }*/
-
   private addPathToNodes(nodes: NodeData[], parentPath: number[] = []) {
     if (!nodes) return;
     nodes.forEach((node, index) => {
@@ -423,11 +405,11 @@ export class TreeChart {
       if (size.width === 'toParentX') {
         node.data.width = parent.width! - parentX;
       }
-      */
+      //
       // 如果当前节点有子节点，递归处理子节点
       this.addPathToNodes(node.children, currentPath);
     });
-  }
+  }*/
 
   public render() {
     // 获取当前svg所在容器，使svg长度高度匹配容器
@@ -503,9 +485,9 @@ export class TreeChart {
         }*/
       });
 
-      this.root.path = [];
+      // this.root.path = [];
       // this.root.id = "root";
-      this.addPathToNodes(this.root.children);
+      // this.addPathToNodes(this.root.children);
     }
 
     this.root.x0 = 0;
@@ -694,8 +676,6 @@ export class TreeChart {
     // nodeGroups.attr('transform', ({ data: info }: any) => `translate(${-info.nodeWidth / 2}, ${-info.nodeHeight / 2})`);
     nodeGroups.attr('transform', () => `translate(${-typeNodeStyle.nodeWidth / 2}, ${-typeNodeStyle.nodeHeight / 2})`);
 
-    let constrNodeRectClickId = '';
-
     nodeGroups.each(function (this: any, node: NodeData) {
       const current = d3.select(this);
       /** 绘制节点（circle + rect） */
@@ -714,7 +694,7 @@ export class TreeChart {
         current.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
         current.select('.node-tooltip')
           // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-          .text("Path: " + JSON.stringify(node.path));
+          .text("Path: " + JSON.stringify(node.data.path));
         return;
       }
 
@@ -745,7 +725,7 @@ export class TreeChart {
       singleNodeG.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
       singleNodeG.select('.node-tooltip')
         // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-        .text("Path: " + JSON.stringify(node.path) + tooltipText);
+        .text("Path: " + JSON.stringify(node.data.path) + tooltipText);
 
       /** 绘制节点的constraints */
       node.data.match?.constraints?.forEach((constraint, i) => {
@@ -780,7 +760,7 @@ export class TreeChart {
             constrNodeRect.attr('visibility', 'visible');
           })
           .on('mouseout', (_e: any, d: NodeData) => {
-            if (constrNodeRectClickId !== constrId)
+            if (tableStore.spec.constrNodeRectClickId !== constrId)
               constrNodeRect.attr('visibility', 'hidden');
           })
           .on('click', (_e: any, d: NodeData) => {
@@ -789,9 +769,9 @@ export class TreeChart {
             // 先清空其他样式
             document.dispatchEvent(escapeEvent);
 
-            constrNodeRectClickId = constrId;
+            tableStore.spec.constrNodeRectClickId = constrId;
             constrNodeRect.attr('visibility', 'visible');
-            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path!);
+            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.data.path!);
             /*
             const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)
             const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
@@ -875,7 +855,8 @@ export class TreeChart {
       .on('click', function (event: any, node: any) {
         event.stopPropagation();
         const d = node as NodeData;
-        d3.selectAll('.type-node').classed('selection', false);
+        // d3.selectAll('.type-node').classed('selection', false);
+        tableStore.clearStatus("tree");
         if (d.id) {
           tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
           d3.select(this).classed('selection', true);
@@ -911,7 +892,7 @@ export class TreeChart {
           tableStore.output_tbl.instance.deselectCell();
 
           /************** 与 monaco editor 交互 ***************/
-          const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.path!);
+          const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, visData.path!);
           /*
           const subTemplateStr = tableStore.stringifySpec(subTemplate, "all", false)
           const specsStr = tableStore.stringifySpec(tableStore.spec.rawSpecs, "all", false)

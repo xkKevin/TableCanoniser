@@ -95,7 +95,7 @@ const contextMenuVisibleChange = (value: boolean) => {
 
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
-    const node = tableStore.spec.selectNode;
+    const visNode = tableStore.spec.selectNode.data;
     let extract: any = null, extractColor: string = '';
     let triggerCellCursorFlag = false;
     let messageInfo = "\n Press ESC to cancel the selection mode.";
@@ -115,7 +115,7 @@ const closeContextMenu = (e: any) => {
             // let colCount = 0;
             extract = {
                 // byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, _i) => `C${++colCount}`)
-                byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, i) => `C${tableStore.findMaxCNumber() + i + 1}`)
+                byPositionToTargetCols: Array.from({ length: visNode.width * visNode.height }, (_, i) => `C${tableStore.findMaxCNumber() + i + 1}`)
             }
             extractColor = 'positionShallow';
             break;
@@ -149,14 +149,14 @@ const closeContextMenu = (e: any) => {
             triggerCellCursorFlag = true;
             break;
         case "4":
-            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, node.path!);
+            tableStore.deleteChildByPath(tableStore.spec.rawSpecs, visNode.path!);
             tableStore.stringifySpec();
             break;
     }
 
     if (extract !== null) {
         tableStore.insertNodeOrPropertyIntoSpecs(extract, "extract")
-        tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(extract, tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.path!)), extractColor];
+        tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(extract, tableStore.getNodebyPath(tableStore.spec.rawSpecs, visNode.path!)), extractColor];
     }
     if (triggerCellCursorFlag) {
         message.info(messageInfo);
