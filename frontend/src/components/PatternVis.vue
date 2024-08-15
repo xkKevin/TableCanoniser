@@ -53,7 +53,7 @@ import { TreeChart } from '@/tree/drawTree';
 import { message } from 'ant-design-vue';
 import { TblCell, useTableStore } from "@/store/table";
 import * as d3 from 'd3';
-import { TypeColor } from '@/tree/style';
+import { TypeColor, typeMapColor } from '@/tree/style';
 import { Table2D } from '@/grammar/grammar';
 const tableStore = useTableStore();
 
@@ -259,6 +259,7 @@ const drawTblTemplate = () => {
         let texts: any = null;
 
         const grids = tableStore.computeTblPatternGrid();
+        // console.log("grids", grids);
 
         const cells = matrix.selectAll('rect')
             .data(grids)
@@ -294,15 +295,23 @@ const drawTblTemplate = () => {
                 tableStore.input_tbl.instance.deselectCell();
                 tableStore.output_tbl.instance.deselectCell();
             })
-            .append('title').text(d => d.text ? 'Target Col: ' + d.text : null);
+            .append('title').text(d => {
+                if (d.text && d.text.length) {
+                    if (d.bgColor === typeMapColor.position || d.bgColor === typeMapColor.positionShallow) {
+                        return "The cell's Target Column is:\n" + d.text.toString();
+                    } else {
+                        return "The cell's Target Column may be:\n" + d.text.toString();
+                    }
+                } else {
+                    return "No Target Column";
+                }
+            });
 
         // Calculate the offset to center the matrix in the SVG container
         offsetX = Math.max((containerWidth - matrix.node()!.getBBox().width) / 2, 0);
         offsetY = Math.max((containerHeight - matrix.node()!.getBBox().height) / 2, 0);
         matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
         transformStatue = d3.zoomIdentity;
-
-
 
         const updateCellTextVisibility = (scale: number) => {
             const scaledCellWidth = cellWidth * scale;
@@ -319,9 +328,9 @@ const drawTblTemplate = () => {
                         .attr('y', d => d.row * cellHeight + cellHeight / 2)
                         .attr('dy', '.30em')
                         .attr('font-size', 15 / scale)
-                        .attr('fill', (d) => d.textColor ? d.textColor : '#f9f7ff')
+                        .attr('fill', (d) => d.textColor ? d.textColor : typeMapColor.cellFill)
                         .attr('text-anchor', 'middle')
-                        .text(d => d.text ? d.text : '')
+                        .text(d => d.text ? d.text[0] : '')
                         .each(function (d) {
                             const textElement = d3.select(this);
                             let text = textElement.text();
@@ -346,7 +355,7 @@ const drawTblTemplate = () => {
         updateCellTextVisibility(1); // Initial update for default scale 1
     }
     catch (e) {
-
+        console.error(e);
     }
 }
 
@@ -369,9 +378,10 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
+    tableStore.transformTablebyCode();  // auto run
     drawTree(tableStore.spec.visTree);
     drawTblTemplate();
-    tableStore.transformTablebyCode();  // auto run
+
 
     // console.log('watch code changed: end');
 });

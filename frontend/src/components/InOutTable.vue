@@ -371,8 +371,6 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         }
       }
 
-
-
       tableStore.highlightNodes(selected);
     } else {
       tableStore.highlightMinimapCells(cells);

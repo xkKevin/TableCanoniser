@@ -433,11 +433,12 @@ export class TreeChart {
     } else {
       this.root = d3.hierarchy(this.data, (d: any) => d.children);
       // 初始化 id 计数器
-      let idCounter = 0;
+      // let idCounter = 0;
       // 为每个节点分配唯一的 id
       this.root.each((node: NodeData) => {
-        node.id = idCounter++;
-        node.data.id = node.id;
+        // node.id = idCounter++;
+        // node.data.id = node.id;
+        node.id = node.data.id;
       });
     }
 
@@ -642,10 +643,10 @@ export class TreeChart {
           .attr('cursor', 'pointer')
         // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
         // @ts-ignore
-        current.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
-        current.select('.node-tooltip')
-          // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-          .text("Path: " + JSON.stringify(node.data.path));
+        // current.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
+        // current.select('.node-tooltip')
+        //   // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
+        //   .text("Path: " + JSON.stringify(node.data.path));
         return;
       }
 
@@ -676,7 +677,8 @@ export class TreeChart {
       singleNodeG.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
       singleNodeG.select('.node-tooltip')
         // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-        .text("Path: " + JSON.stringify(node.data.path) + tooltipText);
+        .text("Pattern Path: " + JSON.stringify(node.data.path) + tooltipText);
+      // .text("Pattern Path: " + JSON.stringify(node.data.path) + "\nPattern Id: " + node.data.id + tooltipText);
 
       /** 绘制节点的constraints */
       node.data.match?.constraints?.forEach((constraint, i) => {

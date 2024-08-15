@@ -345,9 +345,10 @@ export const useTableStore = defineStore('table', {
       })
     },
 
-    traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = []) {
+    traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = [], idCounter: [number] = [1]) {
       const in2nodes = this.input_tbl.in2nodes;
       nodes.forEach((node, index) => {
+        node.id = idCounter[0]++;
         // 构建当前节点的 path
         const currentPath = [...parentPath, index];
         node.path = currentPath;
@@ -386,7 +387,7 @@ export const useTableStore = defineStore('table', {
             in2nodes[areaKey] = new Set([node.id!]);
           }
         })
-        if (node.children) this.traverseTree4UpdateIn2Nodes(node.children, currentPath);
+        if (node.children) this.traverseTree4UpdateIn2Nodes(node.children, currentPath, idCounter);
       })
     },
 
@@ -828,7 +829,7 @@ export const useTableStore = defineStore('table', {
         this.spec.visTreeMatchPath = {};
         const tidyData = this.transformTblUpdateRootArea(specs);
         this.initTblInfo(false);
-        this.tree.visInst?.render();
+        // this.tree.visInst?.render();
 
         this.spec.visTree.children?.forEach((spec, index) => {
           if (index) messageContent += '\n'
@@ -919,7 +920,10 @@ export const useTableStore = defineStore('table', {
     },
 
     computeTblPatternGrid() {
-      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0]));
+      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0], function (key, value) {
+        if (key === 'currentAreas') return undefined;
+        return value;
+      }));
       const grids = this.generateGrid(firstNode.height, firstNode.width);
       const nodes = [firstNode];
       // const box: AreaBox = { width: firstNode.width, height: firstNode.height, x: firstNode.x, y: firstNode.y };
@@ -929,6 +933,48 @@ export const useTableStore = defineStore('table', {
       while (nodes.length) {
         const node = nodes.shift()
         if (!node) continue;
+
+        // const xDirection = node.match?.traverse?.xDirection;
+        // const yDirection = node.match?.traverse?.yDirection;
+        // if ((xDirection === undefined || xDirection === null) && (yDirection === undefined || yDirection === null)) {};
+
+        if (!(node.x >= box[0] && node.y >= box[1] && node.x + node.width <= box[2] && node.y + node.height <= box[3])) continue;
+
+        // 当前属于模版里面的节点
+        // node.matchs!.forEach(match => {});
+        for (const match of node.matchs!) {
+          const { x, y, width, height } = match;
+          const xOffset = x - box[0];
+          const yOffset = y - box[1];
+
+          if (!(xOffset >= 0 && yOffset >= 0 && x + width <= box[2] && y + height <= box[3])) break;
+
+          let bgColor: TypeColor = node.type!;
+          let textColor: TypeColor = "cellFill";
+          if (bgColor !== 'position') {
+            textColor = "ambiguousText"
+          }
+          if (!(x === node.x && y === node.y && width === node.width && height === node.height)) {
+            bgColor += "Shallow";
+          }
+          for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+              const cell = grids[(yOffset + i) * firstNode.width + (xOffset + j)]
+              cell.bgColor = typeMapColor[bgColor as TypeColor];
+              cell.text = new Set();
+              cell.textColor = typeMapColor[textColor];
+              if (this.input_tbl.in2out.hasOwnProperty(`[${y + i},${x + j}]`)) {
+                const outPosi = this.input_tbl.in2out[`[${y + i},${x + j}]`];
+                outPosi.forEach(posi => {
+                  const [outY, outX] = JSON.parse(posi);
+                  cell.text.add(this.output_tbl.cols[outX]);
+                })
+              }
+              cell.text = Array.from(cell.text);
+            }
+          }
+        }
+        /*
         const xOffset = node.x - box[0];
         const yOffset = node.y - box[1];
         if (xOffset >= 0 && yOffset >= 0 && node.x + node.width <= box[2] && node.y + node.height <= box[3]) {
@@ -951,7 +997,7 @@ export const useTableStore = defineStore('table', {
             }
           }
           grids[(node.y - box[1]) * firstNode.width + (node.x - box[0])].bgColor = typeMapColor[node.type!];
-        }
+        }*/
         if (node.children) nodes.push(...node.children);
       }
 

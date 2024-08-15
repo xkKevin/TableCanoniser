@@ -1,22 +1,24 @@
 export const typeMapColor = {
   // Pattern selection
-  position: '#6ab04c',  // 'rgba(106, 176, 76, 0.5)' -> 6ab04c, 'rgba(126, 170, 85)',  // '#7EAA55',
-  positionShallow: '#badc58', // 'rgba(186, 220, 88, 0.5)' -> badc58,  'rgba(126, 170, 85, 0.8)',
-  context: '#f0932b',    // 'rgba(238, 177, 137)',  // '#EEB189',
-  contextShallow: '#ffbe76', // 'rgba(238, 177, 137, 0.8)',
-  value: '#22a6b3', // 'rgba(146, 110, 184)',    // '#926EB8',
-  valueShallow: '#7ed6df', // 'rgba(146, 110, 184, 0.8)',
-  null: '#8395a7',
-  nullShallow: '#c8d6e5',
+  position: 'rgba(106, 176, 76)',    // '#6ab04c',
+  positionShallow: 'rgba(106, 176, 76, 0.65)',// '#badc58'
+  context: 'rgba(240, 147, 43)', // '#f0932b', 
+  contextShallow: 'rgba(240, 147, 43, 0.65)', // '#ffbe76'
+  value: 'rgba(34, 166, 179)', // '#22a6b3',
+  valueShallow: 'rgba(34, 166, 179, 0.65)', // '#7ed6df'
+  null: 'rgba(131, 149, 167)', // '#8395a7',
+  nullShallow: 'rgba(131, 149, 167, 0.65)', // '#c8d6e5',
   // Table selection
   selection: 'rgba(9, 132, 227)',  // '#0984e3',
-  selectionShallow: 'rgba(9, 132, 227, 0.6)',
+  selectionShallow: 'rgba(9, 132, 227, 0.65)',
 
   positionRGBA: 'rgba(106, 176, 76, 0.5)',
   contextRGBA: 'rgba(240, 147, 43, 0.5)',
   valueRGBA: 'rgba(34, 166, 179, 0.5)',
   nullRGBA: 'rgba(131, 149, 167, 0.5)',
   selectionRGBA: 'rgba(9, 132, 227, 0.5)',
+
+  ambiguousText: '#f9f7ff', // 'rgba(233, 16, 16, 0.5)',
 
   // Minimap
   cellFill: '#f9f7ff',
@@ -64,7 +66,7 @@ export const colorConfig = {
 */
 
 export const typeNodeStyle = {
-  nodeWidth: 100,
+  nodeWidth: 96, // 100,
   nodeHeight: 30,
   nodeRectFillColor: "#7EAA55",
   nodeCircleFillColor: "#83b5ed",
