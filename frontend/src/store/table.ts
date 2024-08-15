@@ -1298,6 +1298,7 @@ export const useTableStore = defineStore('table', {
         case "matchArea":
           document.body.style.cursor = 'default';
           document.documentElement.style.setProperty('--custom-cursor', 'default');
+          d3.selectAll('.legend').classed('legend-selection', false);
           // this.spec.selectAreaFromLegend = []
           // this.spec.selectionsAreaFromLegend = []
           break;

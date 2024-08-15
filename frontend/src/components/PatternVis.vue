@@ -196,6 +196,8 @@ const typeMap = {
     "value": "Value Based",
 }
 const selectMatchExtractArea = (type: TypeColor) => {
+    d3.selectAll('.legend').classed('legend-selection', false);
+    d3.select(`.legend.legend-${type}`).classed('legend-selection', true);
     const selectionsFromLegend = tableStore.spec.selectionsAreaFromLegend;
     const selectFromLegend = tableStore.spec.selectAreaFromLegend;
     const cells = tableStore.generateHighlightCells(selectionsFromLegend, selectFromLegend);
@@ -432,12 +434,19 @@ onMounted(() => {
     }
 }
 
+.legend-selection {
+    border-color: #0a58d9 !important; // var(--color-selection);
+}
+
 .legend-null {
     background: var(--color-null);
+    border-color: var(--color-null);
+    // opacity: 0.5; /* 设置元素的透明度为 0.5 */
 }
 
 .legend-position {
     background: var(--color-position);
+    border-color: var(--color-position);
 }
 
 // .legend-position:hover {
@@ -446,17 +455,32 @@ onMounted(() => {
 
 .legend-context {
     background: var(--color-context);
+    border-color: var(--color-context);
 }
 
 .legend-value {
     background: var(--color-value);
+    border-color: var(--color-value);
 }
 
 .legend {
     color: white !important;
+    border-width: 2.5px;
+
+    // 设置 span 标签内的文本水平和垂直居中
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    span {
+        text-align: center;
+        width: 100%;
+        /* 确保文本内容水平居中 */
+    }
 }
 
 .legend:hover {
     color: white !important;
+    border-color: #0a58d9 !important;
 }
 </style>
