@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification } from "./grammar";
+import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification, ContextTransform } from "./grammar";
 
 import { CustomError } from "../types";
 
@@ -210,7 +210,7 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
     const tmpArea: AreaInfo = {
         parent: currentArea,
         areaLayer: currentArea.areaLayer + 1,
-        templateRef: index.templateRef.slice(),
+        templateRef: index.templateRef.slice(),  // copy
         instanceIndex: index.instanceIndex,
         xIndex: index.xIndex,
         yIndex: index.yIndex,
@@ -250,7 +250,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
         if (template.extract.byPositionToTargetCols !== undefined) {
             transformedCols = template.extract.byPositionToTargetCols
         } else if (template.extract.byContext !== undefined) {
-            const context = template.extract.byContext;
+            const context = template.extract.byContext as AllParams<ContextTransform>;
             const ctxCols: (CellValueType | null)[] = []
             const ctxCellsInfo: CellInfo[][] = [];
 
@@ -322,12 +322,13 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                 console.log('No context cells found');
             }
 
-            if (context.toTargetCols === 'cellValue') {
+            if (context.toTargetCol === null) {
                 ctxCellsInfo.forEach((cellCtxsInfo) => {
-                    ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
+                    // ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
+                    ctxCols.push(cellCtxsInfo[0].value);
                 })
             } else {
-                const customMapColbyCxt = context.toTargetCols
+                const customMapColbyCxt = context.toTargetCol
                 ctxCellsInfo.forEach((ctxCells) => {
                     ctxCols.push(customMapColbyCxt(ctxCells));
                 })
@@ -353,6 +354,14 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
             }
         })
     }
+    /*
+    console.log(JSON.stringify(tidyData, (key, value) => {
+        if (key === 'x' || key === 'y') {
+            return undefined;
+        }
+        return value
+    }, 2));
+    console.log("-----------------");*/
 }
 
 
@@ -418,25 +427,45 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
     traverseArea(template, startX, startY, endX, endY, width, height, index, currentArea, rootArea, tidyData, traverseFlag);
 
-    if (template.children.length > 0 && currentArea.children.length > 0) {
+    const matchTemplateArea = currentArea.children.filter((area) => area.templateRef.toString() === index.templateRef.toString());
+
+    if (template.children.length > 0 && matchTemplateArea.length > 0) {
+        matchTemplateArea.forEach((areaChild) => {
+            template.children.forEach((templateChild, ti) => {
+                processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
+            });
+            if (template.fill === TableTidierKeyWords.Auto) {
+                if (index.templateRef.length > 1) {
+                    fillColumns(tidyData, null);
+                } else {
+                    fillColumns(tidyData, "");
+                }
+            } else {
+                fillColumns(tidyData, template.fill);
+            }
+        })
+
+        /*
         if (template.extract === null) {
             // 父区域没有 transform
-            for (let areaChild of currentArea.children) {
+            matchTemplateArea.forEach((areaChild, ai) => {
                 template.children.forEach((templateChild, ti) => {
                     processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
+                    console.log("templateChild", ti);
                 });
-                fillColumns(tidyData, template.fill);
+                console.log(template.children.length, "areaChild", ai, "fillColumns:", areaChild.x, areaChild.y, areaChild.width, areaChild.height);
+                // fillColumns(tidyData, template.fill);
                 // if (template.fill === null && template.children.length > 1) {
                 // if (template.fill === undefined && template.children.length > 1) {
                 //     fillColumns(tidyData, "");
                 // } else {
                 //     fillColumns(tidyData, template.fill);
                 // }
-            }
+            })
         } else {
             // 父区域有 transform
             template.children.forEach((templateChild, ti) => {
-                currentArea.children.forEach((areaChild) => {
+                matchTemplateArea.forEach((areaChild) => {
                     processTemplate(templateChild, areaChild, rootArea, tidyData, ti, traverseFlag);
                 });
                 fillColumns(tidyData, template.fill);
@@ -448,6 +477,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
                 // }
             })
         }
+        */
     }
 
 
@@ -481,7 +511,7 @@ export function transformTable(table: Table2D, specs: TableTidierTemplate[], tra
     specs.forEach((template, ti) => {
         const specWithDefaults = completeSpecification(template);
         processTemplate(specWithDefaults, rootArea, rootArea, tidyData, ti, traverseFlag);
-        fillColumns(tidyData, specWithDefaults.fill);
+        // fillColumns(tidyData, specWithDefaults.fill);
         // if (specWithDefaults.fill === undefined && specWithDefaults.children.length > 1) {
         //     fillColumns(tidyData, "");
         // } else {

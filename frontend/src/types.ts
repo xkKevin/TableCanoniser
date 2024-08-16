@@ -187,12 +187,12 @@ interface CellConstraint extends CellSelection {
  *   - `contextPosiFn`: A custom function to determine the position of the context cell.
  * 
  * - `targetCol`: Determines how to derive the target column based on the context cell's value.
- *   - 'cellValue': Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+ *   - null: Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
  *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
 interface ContextTransform {
     position: 'above' | 'below' | 'left' | 'right' | contextPosiFn;
-    targetCol: 'cellValue' | mapColbyContextFn;
+    targetCol: null | mapColbyContextFn;
 }
 
 

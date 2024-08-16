@@ -302,8 +302,8 @@ interface CellConstraint extends CellSelection {
  *   - 'right': The context cell is located directly to the right of the current cell.
  *   - `contextPosiFn`: A custom function to determine the position of the context cell.
  * 
- * - `toTargetCols`: Determines how to derive the target column based on the context cell's value.
- *   - 'cellValue' (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+ * - `toTargetCol`: Determines how to derive the target column based on the context cell's value.
+ *   - null (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
  *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
  */
 interface ContextTransform {
@@ -318,10 +318,10 @@ interface ContextTransform {
     position: 'above' | 'below' | 'left' | 'right' | contextPosiFn;
     /**
      * Determines how to derive the target column based on the context cell's value.
-     * - 'cellValue' (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
+     * - null (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
      * - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
      */
-    toTargetCols: 'cellValue' | mapColbyContextFn;
+    toTargetCol: null | mapColbyContextFn;
 }
 
 
@@ -349,7 +349,7 @@ interface ContextTransform {
  * - `extract`: The extraction rules for transforming the selection area
  *   - `byContext`: The context-based transformation for the selection area
  *     - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
- *     - `toTargetCols`: Determines how to derive the target column based on the context cell's value, default is 'cellValue'
+ *     - `toTargetCol`: Determines how to derive the target column based on the context cell's value, default is null
  *   - `byPositionToTargetCols`: The target columns for the transformation, which is an array (position-based transformation)
  *   - `byValue`: The custom function for value-based transformation
  * - `fill`: Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
@@ -415,7 +415,7 @@ interface TableTidierTemplate {
         /**
          * The context-based transformation for the selection area
          * - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
-         * - `toTargetCols`: Determines how to derive the target column based on the context cell's value, default is 'cellValue'
+         * - `toTargetCol`: Determines how to derive the target column based on the context cell's value, default is null
          */
         byContext?: ContextTransform;
         /**

@@ -122,8 +122,7 @@ const closeContextMenu = (e: any) => {
             // Target Cols - Context Based Logic
             extract = {
                 byContext: {
-                    position: 'above',
-                    toTargetCols: 'cellValue'
+                    position: 'above'
                 }
             }
             extractColor = 'contextShallow';
@@ -133,7 +132,7 @@ const closeContextMenu = (e: any) => {
             extract = {
                 byValue: (currentAreaTbl: Table2D) => {
                     // Please replace the default code with the necessary implementation to complete the function.
-                    return currentAreaTbl.flat();
+                    return currentAreaTbl.flat().map((cell, i) => `Col${i + 1}`);
                 }
             };
             extractColor = 'valueShallow';

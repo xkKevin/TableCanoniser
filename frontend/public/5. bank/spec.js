@@ -45,7 +45,6 @@ const option2: TableTidierTemplate[] = [
             },
           ];
         },
-        toTargetCols: "cellValue",
       },
     },
   },

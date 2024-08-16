@@ -63,7 +63,7 @@ const option: TableTidierTemplate[] = [
         extract: {
           byContext: {
             position: "above",
-            toTargetCols: "cellValue",
+            toTargetCol: null,
           },
         },
       },

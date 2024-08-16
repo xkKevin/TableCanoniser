@@ -596,8 +596,7 @@ export const useTableStore = defineStore('table', {
             case "context":
               newSpec.extract = {
                 byContext: {
-                  position: 'above',
-                  toTargetCols: 'cellValue'
+                  position: 'above'
                 }
               }
               break;
@@ -605,7 +604,7 @@ export const useTableStore = defineStore('table', {
               newSpec.extract = {
                 byValue: (currentAreaTbl: Table2D) => {
                   // Please replace the default code with the necessary implementation to complete the function.
-                  return currentAreaTbl.flat();
+                  return currentAreaTbl.flat().map((cell, i) => `C${this.findMaxCNumber() + i + 1}`);
                 }
               };
               break;

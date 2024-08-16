@@ -149,7 +149,6 @@ const case1_spec: TableTidierTemplate = {
             extract: {
                 byContext: {
                     position: "above",
-                    toTargetCols: "cellValue",
                 }
             },
             fill: "",
@@ -435,7 +434,7 @@ const case3_spec: TableTidierTemplate = {
             extract: {
                 byContext: {
                     position: "left",
-                    toTargetCols: (ctxCells) => {
+                    toTargetCol: (ctxCells) => {
                         if (ctxCells[0].value === "Announced Date") return "Release Date";
                         return ctxCells[0].value;
                     },
@@ -487,7 +486,7 @@ const case3_spec: TableTidierTemplate = {
                     extract: {
                         byContext: {
                             position: "left",
-                            toTargetCols: (ctxCells) => {
+                            toTargetCol: (ctxCells) => {
                                 const contextValue = ctxCells[0].value;
                                 if (typeof contextValue != "string") return null;
                                 if (["Height", "H"].includes(contextValue)) return "Height";
@@ -562,7 +561,6 @@ const case4_spec: TableTidierTemplate = {
                     yOffset: cell.yOffset - (currentArea.yIndex + 1) * currentArea.height,
                 }];
             },
-            toTargetCols: "cellValue",
         },
     },
 };

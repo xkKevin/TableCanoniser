@@ -73,7 +73,7 @@ const option: TableTidierTemplate[] = [
                 },
               ];
             },
-            toTargetCols: "cellValue",
+            toTargetCol: null,
           },
         },
       },
