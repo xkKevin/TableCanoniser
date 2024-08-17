@@ -4,9 +4,9 @@
       <span id="system_name">TableTidier</span>
       <span style="left: 20px; position: absolute;">
         <span style="font-size: 16px; font-weight: normal; margin-right: 5px">Cases:</span>
-        <!-- @mouseenter="selectEnter" @mouseleave="selectLeave"  :open="isDropdownOpen" -->
+        <!-- @mouseenter="selectEnter" @mouseleave="selectLeave"  :open="isDropdownOpen" :getPopupContainer="(triggerNode: any) => triggerNode.parentNode" -->
         <a-select :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
-          style="width: 124px;"></a-select>
+          @mouseenter="selectEnter" @mouseleave="selectLeave" :open="isDropdownOpen" style="width: 124px;"></a-select>
       </span>
       <span style="right: 20px; position: absolute;">
         <a-button-group>
@@ -100,13 +100,15 @@ import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
 
 // let caseOption: Ref<{ value: string; label: string; }[]> = ref([]);
-let caseOption = ref<{ value: string; label: string }[]>([]);
+// let caseOption = ref<{ value: string; label: string }[]>([]);
 
-caseOption.value = tableStore.caseList.map((v) => {
-  return { value: v, label: v };
-});
+const caseOption = computed(() => {
+  return tableStore.caseList.map((v) => {
+    return { value: v, label: v };
+  });
+})
 
-let currentCase = ref(tableStore.caseList[0]);
+const currentCase = computed(() => tableStore.currentCase);
 
 const codePanel = ref("1");
 const loading = ref<boolean>(false);
@@ -156,33 +158,42 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 function handleCaseChange(value: string) {
-  currentCase.value = value;
-  // isDropdownOpen.value = false;
-  // fileList.value = [];
-  tableStore.loadCaseData(value);
+  tableStore.currentCase = value;
+  isDropdownOpen.value = false;
 }
 
-// const isDropdownOpen = ref(false);
+const isDropdownOpen = ref(false);
+let timeHandler: any = null;
+let dropdownListEle: any = null;
 
-// function selectEnter(e: any, v: any) {
-//   isDropdownOpen.value = true;
-// }
+function selectEnter(e: any, v: any) {
+  isDropdownOpen.value = true;
+  if (dropdownListEle === null) {
+    setTimeout(() => {
+      dropdownListEle = document.querySelector(".rc-virtual-list-holder-inner");
+      dropdownListEle?.addEventListener('mouseenter', () => {
+        if (timeHandler !== null) {
+          clearTimeout(timeHandler);
+          timeHandler = null;
+        }
+        isDropdownOpen.value = true;
+      })
+      dropdownListEle?.addEventListener('mouseleave', () => {
+        isDropdownOpen.value = false;
+      })
+    }, 100)
+  }
+}
 
-// function selectLeave(e: any, v: any) {
-//   // isDropdownOpen.value = false;
-//   console.log(e, v);
-// }
+function selectLeave(e: any, v: any) {
+  timeHandler = setTimeout(() => {
+    isDropdownOpen.value = false;
+  }, 200);
+}
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
-  handleCaseChange(currentCase.value);
-  // const select = document.querySelector(".rc-virtual-list-holder-inner")
-  // select?.addEventListener('mouseenter', (event) => {
-  //   isDropdownOpen.value = true;
-  // })
-  // select?.addEventListener('mouseleave', (event) => {
-  //   isDropdownOpen.value = false;
-  // })
+  tableStore.loadCaseData(tableStore.currentCase);
 });
 
 </script>

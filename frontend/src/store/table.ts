@@ -114,7 +114,7 @@ export const useTableStore = defineStore('table', {
     return {
       specMode: false,
       caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"],
-      currentCase: '', // caseList[0],
+      currentCase: "1. university", // caseList[0],
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],

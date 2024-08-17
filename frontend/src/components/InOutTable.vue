@@ -50,6 +50,7 @@ import {
   ComponentPublicInstance,
   ref,
   onMounted,
+  watch,
 } from "vue";
 import { HotTable } from "@handsontable/vue3";
 import "handsontable/dist/handsontable.full.css";
@@ -148,9 +149,14 @@ const handleUpload = (request: any) => {
   }
 };
 
+let saveLastCase = ""
+
 const handleRemove = () => {
   tableStore.initTblInfo()
   tableStore.transformTblUpdateRootArea();
+  tableStore.currentCase = saveLastCase ? saveLastCase : tableStore.caseList[0];
+  saveLastCase = ""
+  tableStore.caseList.pop();
 };
 
 const handlePreview = () => {
@@ -160,7 +166,19 @@ const handlePreview = () => {
   tableStore.input_tbl.instance.updateData(fileTblData);
   tableStore.input_tbl.instance.render();
   tableStore.transformTblUpdateRootArea();
+  if (!tableStore.currentCase.startsWith("Custom")) {
+    saveLastCase = tableStore.currentCase
+  }
+  if (!tableStore.caseList.includes("Custom File")) {
+    tableStore.caseList.push("Custom File");
+  }
+  tableStore.currentCase = "Custom File";
 };
+
+watch(() => tableStore.currentCase, (newVal) => {
+  if (newVal.startsWith("Custom")) handlePreview();
+  else tableStore.loadCaseData(newVal);
+});
 
 
 // 函数用于将二维数组转换为 CSV 格式
@@ -417,7 +435,7 @@ onMounted(() => {
   .ant-upload-list-item-name {
     color: #1677ff;
     padding: 0 0 0 2px !important;
-    max-width: 100px;
+    max-width: 150px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
