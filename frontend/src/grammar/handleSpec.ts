@@ -250,7 +250,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
         if (template.extract.byPositionToTargetCols !== undefined) {
             transformedCols = template.extract.byPositionToTargetCols
         } else if (template.extract.byContext !== undefined) {
-            const context = template.extract.byContext as AllParams<ContextTransform>;
+            const context = template.extract.byContext; // as AllParams<ContextTransform>;
             const ctxCols: (CellValueType | null)[] = []
             const ctxCellsInfo: CellInfo[][] = [];
 
@@ -292,7 +292,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                     })
                 })
             } else {
-                const ctxPosiFn = context.position
+                const ctxPosiFn = context.position!;
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
                         const customSelections = ctxPosiFn({
@@ -322,17 +322,23 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                 console.log('No context cells found');
             }
 
-            if (context.toTargetCol === null) {
-                ctxCellsInfo.forEach((cellCtxsInfo) => {
-                    // ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
-                    ctxCols.push(cellCtxsInfo[0].value);
-                })
-            } else {
-                const customMapColbyCxt = context.toTargetCol
-                ctxCellsInfo.forEach((ctxCells) => {
-                    ctxCols.push(customMapColbyCxt(ctxCells));
-                })
-            }
+            const customMapColbyCxt = context.toTargetCol!
+            ctxCellsInfo.forEach(ctxCells => {
+                ctxCols.push(customMapColbyCxt(ctxCells));
+            })
+
+            /*
+        if (context.toTargetCol === null) {
+            ctxCellsInfo.forEach((cellCtxsInfo) => {
+                // ctxCols.push(cellCtxsInfo[0].value === undefined ? null : cellCtxsInfo[0].value.toString());
+                ctxCols.push(cellCtxsInfo[0].value);
+            })
+        } else {
+            const customMapColbyCxt = context.toTargetCol
+            ctxCellsInfo.forEach((ctxCells) => {
+                ctxCols.push(customMapColbyCxt(ctxCells));
+            })
+        }*/
             transformedCols = ctxCols
         } else if (template.extract.byValue !== undefined) {
             transformedCols = template.extract.byValue(currentArea.areaTbl);

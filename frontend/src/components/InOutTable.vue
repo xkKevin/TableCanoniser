@@ -303,7 +303,6 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
             case "1":
               // Add Constraints Logic
               const cellValue = inHotInst.getDataAtCell(startRow, startCol);
-              console.log(null, cellValue);
               match = {
                 constraints: [{
                   xOffset,

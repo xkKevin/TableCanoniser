@@ -9,7 +9,8 @@ type CellValueType = string | number | undefined;
  * - `Number`: Used in `valueCstr` of `constraints` to specify that a cell must contain a numeric value.
  * - `None`: Used in `valueCstr` of `constraints` to specify that a cell must be empty, null, or undefined.
  * - `NotNone`: Used in `valueCstr` of `constraints` to specify that a cell must not be empty, null, or undefined.
- * - `Forward`: Used in the `fill` property to indicate that the column should be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+ * - `Forward`: Used in the `fill` property to indicate that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+ * - `Auto`: Used in the `fill` property to indicate that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
  * - `pairSort`: Used in user-defined functions to sort array `A` according to the specified order (`asc` or `desc`) and reorders array `B`, so that its elements correspond to the newly sorted order of `A`.
  */
 const TableTidierKeyWords = {
@@ -160,7 +161,7 @@ type checkValueFn = (value: CellValueType) => boolean;
 type mapColsFn = (currentAreaTbl: Table2D) => (CellValueType | null)[];
 
 /**
- * A function that maps a context value to a target column.
+ * A function that maps the context cells to a specific target column.
  * @param ctxCells - The info (position and value) of the context cells.
  * @returns The name of the target column or null.
  */
@@ -332,9 +333,8 @@ interface CellConstraint extends CellSelection {
  *   - 'right': The context cell is located directly to the right of the current cell.
  *   - `contextPosiFn`: A custom function to determine the position of a cell's context.
  *
- * - `toTargetCol`: Determines how to derive the target column based on the context cell's value.
- *   - null (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
- *   - `mapColbyContextFn`: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
+ * - `toTargetCol`: Determines how to derive the target column based on the context cell(s).
+ *   - `mapColbyContextFn` (ctxCells: CellInfo[]) => CellValueType | null: A custom function to map the context cells to a specific target column. If the function returns null, the cell will not be transformed to the output table. This function will return the first context cell's value as the target column by default (i.e., `(ctxCells) => ctxCells[0].value`).
  */
 interface ContextTransform {
     /**
@@ -358,9 +358,8 @@ interface ContextTransform {
        */
     position?: "above" | "below" | "left" | "right" | contextPosiFn;
     /**
-       * Determines how to derive the target column based on the context cell's value.
-       * - null (default): Uses the context cell's value as the target column. If the context cell's value is null or empty, the target column will be null, and this cell will not be transformed to the output table.
-       * - `mapColbyContextFn` (ctxCells: CellInfo[]) => CellValueType | null: A custom function to map the context cell's value to a specific target column. If the function returns null, the cell will not be transformed to the output table.
+       * Determines how to derive the target column based on the context cell(s).
+       * - `mapColbyContextFn` (ctxCells: CellInfo[]) => CellValueType | null: A custom function to map the context cells to a specific target column. If the function returns null, the cell will not be transformed to the output table. This function will return the first context cell's value as the target column by default (i.e., `(ctxCells) => ctxCells[0].value`).
        *   - `ctxCells`: The info (position and value) of the context cells.
        *   @example
        *   (ctxCells) => {
@@ -374,7 +373,7 @@ interface ContextTransform {
            return null;
        }
        */
-    toTargetCol?: null | mapColbyContextFn;
+    toTargetCol?: mapColbyContextFn;
 }
 
 /**
@@ -385,28 +384,29 @@ interface ContextTransform {
  *     - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
  *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
  *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
- *   - `size`: The size of the selection area
- *     - `width`: The width of the selection area; 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
- *     - `height`: The height of the selection area; 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
- *   - `constraints`: Constraints to apply to the cells within the selection area
+ *   - `size`: The size of the selected area
+ *     - `width`: The width of the selected area; 'toParentX' means the distance from the startCell to the parent's x-axis end; `null` means no fixed width, default is 1
+ *     - `height`: The height of the selected area; 'toParentY' means the distance from the startCell to the parent's y-axis end; `null` means no fixed height, default is 1
+ *   - `constraints`: Constraints to apply to the cells within the selected area
  *     - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
  *     - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
  *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
  *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
  *     - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
  *     - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
- *   - `traverse`: The traversal direction for the selection area
+ *   - `traverse`: The traversal direction for the selected area
  *     - `xDirection`: The x-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
  *     - `yDirection`: The y-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
- * - `extract`: The extraction rules for transforming the selection area
- *   - `byContext`: The context-based transformation for the selection area
+ * - `extract`: The extraction rules for transforming the selected area
+ *   - `byContext`: The context-based transformation for the selected area
  *     - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
- *     - `toTargetCol`: Determines how to derive the target column based on the context cell's value, default is null
+ *     - `toTargetCol`: Determines how to derive the target column based on the context cell(s). This function will return the first context cell's value as the target column by default.
  *   - `byPositionToTargetCols`: The target columns for the transformation, which is an array (position-based transformation)
  *   - `byValue`: The custom function for value-based transformation
  * - `fill`: Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
- *   - `null` (default) means no filling will occur, and columns can have different lengths.
- *   - `TableTidierKeyWords.Forward` means that the column will be filled with the previous value until all columns have equal lengths.
+ *   - `TableTidierKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
+ *   - `TableTidierKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+ *   - `null` means no filling will occur, and columns can have different lengths.
  *   - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
  * - `children`: The child templates for nested selections
  */
@@ -424,20 +424,20 @@ interface TableTidierTemplate {
          */
         startCell?: CellSelection;
         /**
-         * The size of the selection area
+         * The size of the selected area
          */
         size?: {
             /**
-             * The width of the selection area; 'toParentX' means the distance from the startCell to the parent's x-axis end; null means no width constraint, default is 1
+             * The width of the selected area; 'toParentX' means the distance from the startCell to the parent's x-axis end; `null` means that the selected area does not have a fixed width (its width depends on the constraints), default is 1
              */
             width?: number | "toParentX" | null;
             /**
-             * The height of the selection area; 'toParentY' means the distance from the startCell to the parent's y-axis end; null means no height constraint, default is 1
+             * The height of the selected area; 'toParentY' means the distance from the startCell to the parent's y-axis end; `null` means that the selected area does not have a fixed height (its height depends on the constraints), default is 1
              */
             height?: number | "toParentY" | null;
         };
         /**
-         * Constraints to apply to the cells within the selection area
+         * Constraints to apply to the cells within the selected area
          * - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
          * - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
          * - `xOffset`: The x-axis offset relative to the reference area, default is 0
@@ -447,7 +447,7 @@ interface TableTidierTemplate {
          */
         constraints?: CellConstraint[];
         /**
-         * The traversal direction for the selection area
+         * The traversal direction for the selected area
          */
         traverse?: {
             /**
@@ -461,13 +461,13 @@ interface TableTidierTemplate {
         };
     };
     /**
-     * The extraction rules for transforming the selection area
+     * The extraction rules for transforming the selected area
      */
     extract?: {
         /**
-         * The context-based transformation for the selection area
+         * The context-based transformation for the selected area
          * - `position`: Defines the location of the context cell relative to the current cell, default is 'above'
-         * - `toTargetCol`: Determines how to derive the target column based on the context cell's value, default is null
+         * - `toTargetCol`: Determines how to derive the target column based on the context cell(s). This function will return the first context cell's value as the target column by default.
          */
         byContext?: ContextTransform;
         /**
@@ -480,14 +480,15 @@ interface TableTidierTemplate {
          * @param currentAreaTbl - The current area table.
          * @example
          * (currentAreaTbl) => currentAreaTbl.flat().map((cell, i) => 'Col' + (i + 1));
-         * // => ['Col1', 'Col2', ...]
+         * // => ['Col1', 'Col2', 'Col3', ...]
          */
         byValue?: mapColsFn;
     } | null;
     /**
      * Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
-     * - `null` (default) means no filling will occur, and columns can have different lengths.
-     * - `TableTidierKeyWords.Forward` means that the column will be filled with the previous value until all columns have equal lengths.
+     * - `TableTidierKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
+     * - `TableTidierKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+     * - `null` means no filling will occur, and columns can have different lengths.
      * - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
      */
     fill?: CellValueType | null;
@@ -496,9 +497,6 @@ interface TableTidierTemplate {
      */
     children?: TableTidierTemplate[];
 }
-
-// TableTidierTemplate 是我定义的一个转换表格的语法，我现在想为这个语法写注释，目的是为了让用户在前端使用我的语法时，鼠标悬浮在语法的属性上，能看到这个属性的完整数据类型，以及解释说明，如果这个属性可以是自定义函数的数据类型，则一定要展示这个自定义函数的参数（包括其解释和数据类型）以及返回值，并根据这个函数定义再提供一个example，让用户更好地理解。
-// 因此，请帮我重新组织一下我的语法comment，以方便用户悬浮在语法上，看到完整的数据类型，以及解释说明。
 
 /**
  * Sorts array `A` according to the specified order (`asc` or `desc`) and reorders array `B`

@@ -98,6 +98,7 @@ const closeContextMenu = (e: any) => {
     let extract: any = null, extractColor: string = '';
     let triggerCellCursorFlag = false;
     let messageInfo = "\n Press ESC to cancel the selection mode.";
+    const maxCNum = tableStore.findMaxCNumber() + 1;
     switch (e.key) {
         case "0":
             // Reset Area Logic
@@ -111,10 +112,8 @@ const closeContextMenu = (e: any) => {
             break;
         case "2-0":
             // Target Cols - Position Based Logic
-            // let colCount = 0;
             extract = {
-                // byPositionToTargetCols: Array.from({ length: node.data.width * node.data.height }, (_, _i) => `C${++colCount}`)
-                byPositionToTargetCols: Array.from({ length: visNode.width * visNode.height }, (_, i) => `C${tableStore.findMaxCNumber() + i + 1}`)
+                byPositionToTargetCols: Array.from({ length: visNode.width * visNode.height }, (_, i) => `C${maxCNum + i}`)
             }
             extractColor = 'positionShallow';
             break;
@@ -129,12 +128,15 @@ const closeContextMenu = (e: any) => {
             break;
         case "2-2":
             // Target Cols - Value Based Logic
+            const createExtract = () => {
+                return eval(`currentAreaTbl => {
+                  // Please replace the default code with the necessary implementation to complete the function.
+                  return currentAreaTbl.flat().map((cell, i) => 'C' + (${maxCNum} + i))
+                  }`)
+            }
             extract = {
-                byValue: (currentAreaTbl: Table2D) => {
-                    // Please replace the default code with the necessary implementation to complete the function.
-                    return currentAreaTbl.flat().map((cell, i) => `Col${i + 1}`);
-                }
-            };
+                byValue: createExtract()
+            }
             extractColor = 'valueShallow';
             break;
         case "2-3":

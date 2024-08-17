@@ -116,6 +116,7 @@ const redoFlag = computed(() => tableStore.spec.redoHistory.length === 0);
 
 // 撤销操作
 function undo() {
+  tableStore.editor.mappingSpec.errorMark = null
   const lastSpec = tableStore.spec.undoHistory.pop();
   if (lastSpec !== undefined) {
     tableStore.spec.redoHistory.push(tableStore.editor.mappingSpec.code);
@@ -125,6 +126,7 @@ function undo() {
 
 // 重做操作
 function redo() {
+  tableStore.editor.mappingSpec.errorMark = null
   const lastUndo = tableStore.spec.redoHistory.pop();
   if (lastUndo !== undefined) {
     tableStore.spec.undoHistory.push(tableStore.editor.mappingSpec.code);

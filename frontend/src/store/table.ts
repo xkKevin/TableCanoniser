@@ -279,6 +279,7 @@ export const useTableStore = defineStore('table', {
 
         this.initTblInfo();
         this.clearStatus("matchArea");
+        this.editor.mappingSpec.errorMark = null;
 
         if (dataText !== null) {
           this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
@@ -586,11 +587,13 @@ export const useTableStore = defineStore('table', {
             traverse
           }
 
+          const maxCNum = this.findMaxCNumber() + 1;
+
           switch (type) {
             case "position":
               newSpec.extract = {
                 // byPositionToTargetCols: Array.from({ length: width * height }, (_, _i) => `C${++colCount}`)
-                byPositionToTargetCols: Array.from({ length: width * height }, (_, i) => `C${this.findMaxCNumber() + i + 1}`)
+                byPositionToTargetCols: Array.from({ length: width * height }, (_, i) => `C${maxCNum + i}`)
               }
               break;
             case "context":
@@ -601,12 +604,15 @@ export const useTableStore = defineStore('table', {
               }
               break;
             case "value":
-              newSpec.extract = {
-                byValue: (currentAreaTbl: Table2D) => {
+              const createExtract = () => {
+                return eval(`currentAreaTbl => {
                   // Please replace the default code with the necessary implementation to complete the function.
-                  return currentAreaTbl.flat().map((cell, i) => `C${this.findMaxCNumber() + i + 1}`);
-                }
-              };
+                  return currentAreaTbl.flat().map((cell, i) => 'C' + (${maxCNum} + i))
+                  }`)
+              }
+              newSpec.extract = {
+                byValue: createExtract()
+              }
               break;
             // case "null": 
             // default:
@@ -815,8 +821,23 @@ export const useTableStore = defineStore('table', {
       return num + suffix;
     },
 
+    checkGrammarError() {
+      const markers = monaco.editor.getModelMarkers({});
+      if (markers.length > 0) {
+        markers.forEach((marker) => {
+          if (marker.code != "6133") {
+            // "‘<name>’ is declared but its value is never read" 错误不会被提示
+            this.editor.mappingSpec.errorMark = marker;
+            return
+          }
+        })
+      } else {
+        this.editor.mappingSpec.errorMark = null
+      }
+    },
+
     transformTablebyCode() {
-      if (this.editor.mappingSpec.errorMark != null) {
+      if (this.editor.mappingSpec.errorMark !== null) {
         const marker = this.editor.mappingSpec.errorMark;
         message.error(`Invalid syntax at Line ${marker.startLineNumber}, Column ${marker.startColumn}:\n ${marker.message}`);
         return;
@@ -941,7 +962,8 @@ export const useTableStore = defineStore('table', {
 
         // 当前属于模版里面的节点
         // node.matchs!.forEach(match => {});
-        for (const match of node.matchs!) {
+        if (node.matchs === undefined) return grids;
+        for (const match of node.matchs) {
           const { x, y, width, height } = match;
           const xOffset = x - box[0];
           const yOffset = y - box[1];

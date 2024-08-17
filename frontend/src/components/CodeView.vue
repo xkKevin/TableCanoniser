@@ -59,13 +59,9 @@ const initEditor = () => {
 
     editor.onDidBlurEditorText(() => {
         // 失焦事件优先于别的按钮的点击事件
-        const markers = monaco.editor.getModelMarkers({})
         if (codeType === "mappingSpec") {
-            if (markers.length > 0) {
-                tableStore.editor.mappingSpec.errorMark = markers[0];
-                return;
-            }
-            tableStore.editor.mappingSpec.errorMark = null;
+            tableStore.checkGrammarError();
+            if (tableStore.editor.mappingSpec.errorMark !== null) return
         }
         const value = editor!.getValue();
         if (areStringEqual(tableStore.editor[codeType].code, value)) return; // 忽略换行还有空格之后比较字符串是否相等
