@@ -20,7 +20,6 @@ const option: TableTidierTemplate[] = [
         yDirection: "after",
       },
     },
-    fill: "",
     children: [
       {
         match: {
@@ -63,7 +62,6 @@ const option: TableTidierTemplate[] = [
         extract: {
           byContext: {
             position: "above",
-            toTargetCol: null,
           },
         },
       },

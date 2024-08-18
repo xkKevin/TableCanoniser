@@ -73,7 +73,6 @@ const option: TableTidierTemplate[] = [
                 },
               ];
             },
-            toTargetCol: null,
           },
         },
       },
