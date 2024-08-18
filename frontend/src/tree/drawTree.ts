@@ -12,7 +12,7 @@ import {
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, TblCell, Selection } from "@/store/table";
-import { CellConstraint, completeCellConstraint } from '@/grammar/grammar';
+import { CellConstraint, completeCellConstraint, TableTidierKeyWords } from '@/grammar/grammar';
 import { getCellBySelect } from '@/grammar/handleSpec';
 
 
@@ -681,13 +681,16 @@ export class TreeChart {
       // .text("Pattern Path: " + JSON.stringify(node.data.path) + "\nPattern Id: " + node.data.id + tooltipText);
 
       /** 绘制节点的constraints */
-      node.data.match?.constraints?.forEach((constraint, i) => {
+      node.data.match?.constraints?.forEach((_constraint, i) => {
         // console.log('hhh', constraint, i, dataBindToThis.id, dataBindToThis);
         const iconsz = typeNodeStyle.iconsize;
         const constrId = `${node.id}-${i}`;
         // @ts-ignore
         current.patternify({ tag: 'rect', selector: `node-constraint-rect-${constrId}` });
         const constrNodeRect = nodeGroups.select(`.node-constraint-rect-${constrId}`);
+
+        const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, node.data.path!);
+        const constraint: CellConstraint = subTemplate!.match.constraints![i];
 
         constrNodeRect.classed('node-constraint-rect', true)
           .attr('transform', `translate(${(iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 3})`)
@@ -711,13 +714,22 @@ export class TreeChart {
           .attr('height', iconsz)
           .on('mouseover', (_e: any, d: NodeData) => {
             constrNodeRect.attr('visibility', 'visible');
+            const cellInfo = d.data.constrsInfo![i][0];
+            tableStore.highlightTblTemplate({
+              x: cellInfo.x,
+              y: cellInfo.y,
+              width: 1,
+              height: 1
+            });
           })
           .on('mouseout', (_e: any, d: NodeData) => {
             if (tableStore.spec.constrNodeRectClickId !== constrId)
               constrNodeRect.attr('visibility', 'hidden');
+            d3.select('.tbl-container .tbl-template-highlight').select('rect').remove();
           })
           .on('contextmenu', declareContextMenu.bind(null, tableStore, node, i))  // bind 第一个参数为 this，这种情况下最后一个参数为 event
           .on('click', (_e: any, d: NodeData) => {
+            // console.time('constraint click');
             // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
             tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
             // 先清空其他样式
@@ -725,12 +737,11 @@ export class TreeChart {
 
             tableStore.spec.constrNodeRectClickId = constrId;
             constrNodeRect.attr('visibility', 'visible');
-            const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, d.data.path!);
-            const constraint: CellConstraint = subTemplate!.match.constraints![i];
+
             const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(constraint, subTemplate);
             tableStore.highlightCode(startLine, endLine, 'selectionShallow');   // `${d.data.type}Shallow`
 
-
+            /*
             const cellInfoSelections: Selection[] = [];
             const allConstr = completeCellConstraint(constraint);
             d.data.currentAreas!.forEach((area) => {
@@ -739,15 +750,37 @@ export class TreeChart {
                 if (cellInfo) {
                   cellInfoSelections.push([cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x]);
                 }
-                const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
-                tableStore.highlightTblCells("input_tbl", cells);
-                tableStore.highlightMinimapCells(cells);
               } catch (e) {
                 // console.error(e);
               }
             })
-          });
-
+            const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
+            */
+            const cellInfoSelections = d.data.constrsInfo![i].map((cellInfo) => [cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x] as Selection);
+            const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
+            tableStore.highlightTblCells("input_tbl", cells);
+            tableStore.highlightMinimapCells(cells);
+            // console.timeEnd('constraint click');
+          })
+          .append('svg:title').text(() => {
+            const valueCstr = constraint.valueCstr;
+            if (typeof valueCstr === 'function') {
+              return "The cell is constrained by a custom function:\nClick to see details in the Code Panel.";
+            } else {
+              switch (valueCstr) {
+                case TableTidierKeyWords.String:
+                  return "The cell's data type should be a string.";
+                case TableTidierKeyWords.Number:
+                  return "The cell's data type should be a number.";
+                case TableTidierKeyWords.None:
+                  return "The cell should be an empty string, null, or undefined.";
+                case TableTidierKeyWords.NotNone:
+                  return "The cell should not be an empty string, null, or undefined.";
+                default:
+                  return "The cell should be " + valueCstr;
+              }
+            }
+          })
       });
     });
 
@@ -794,19 +827,13 @@ export class TreeChart {
       .on('contextmenu', (e, d) => {
         declareContextMenu(tableStore, d as NodeData, -1, e);
       })
-      /*
-      .on('mouseover', function () {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
+      .on('mouseover', function (event: any, node: any) {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
         // console.log('mouseover', event, node);  // event: any, node: any
-        // d3.select(this).attr("stroke-width", 3).attr("stroke", typeMapColor.tblSelect);  // typeMapColor[(node as NodeData).type!]
-        d3.select(this).classed('selection', true);
+        if (node.id) tableStore.highlightTblTemplate(node.data);
       })
       .on('mouseout', function (event: any, node: any) {
-        // console.log('mouseout', event, node);
-        // d3.select(this).attr("stroke-width", 0).attr("stroke", "none");
-        if (tableStore.tree.clickNodeId === node.id) return;
-        d3.select(this).classed('selection', false);
+        d3.select('.tbl-container .tbl-template-highlight').select('rect').remove();
       })
-        */
       .on('click', function (event: any, node: any) {
         event.stopPropagation();
         const d = node as NodeData;

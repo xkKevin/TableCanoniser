@@ -51,10 +51,9 @@ import { computed, onMounted, ref, watch } from 'vue';
 // import { flextree, FlextreeNode } from 'd3-flextree';
 import { TreeChart } from '@/tree/drawTree';
 import { message } from 'ant-design-vue';
-import { TblCell, useTableStore } from "@/store/table";
+import { AreaBox, TblCell, useTableStore } from "@/store/table";
 import * as d3 from 'd3';
 import { TypeColor, typeMapColor } from '@/tree/style';
-import { Table2D } from '@/grammar/grammar';
 const tableStore = useTableStore();
 
 /*
@@ -356,6 +355,15 @@ const drawTblTemplate = () => {
         };
 
         updateCellTextVisibility(1); // Initial update for default scale 1
+
+        tableStore.tree.tblVisHighlight = matrix.append('g').classed('tbl-template-highlight', true);
+        tableStore.tree.tblVisInfo = {
+            x: visChildren[0].x,
+            y: visChildren[0].y,
+            width: cellWidth,
+            height: cellHeight
+        }
+
     }
     catch (e) {
         console.error(e);
@@ -384,8 +392,6 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.transformTablebyCode();  // auto run
     drawTree(tableStore.spec.visTree);
     drawTblTemplate();
-
-
     // console.log('watch code changed: end');
 });
 

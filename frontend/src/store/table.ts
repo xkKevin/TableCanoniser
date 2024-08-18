@@ -3,8 +3,8 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, CellConstraint } from "@/grammar/grammar"
-import { transformTable, serialize } from "@/grammar/handleSpec"
+import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, CellConstraint, completeCellConstraint } from "@/grammar/grammar"
+import { transformTable, serialize, getCellBySelect } from "@/grammar/handleSpec"
 import { TreeChart, NodeData } from '@/tree/drawTree';
 import { CustomError } from "@/types";
 
@@ -72,7 +72,7 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-interface AreaBox {
+export interface AreaBox {
   width: number,
   height: number,
   x: number,
@@ -86,7 +86,8 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   type?: "position" | "value" | "context" | "null",
   path?: number[],
   matchs?: AreaBox[],
-  currentAreas?: AreaInfo[],
+  // currentAreas?: AreaInfo[],
+  constrsInfo?: { x: number, y: number }[][],
   children?: VisTreeNode[]
 }
 
@@ -198,6 +199,8 @@ export const useTableStore = defineStore('table', {
       tree: {
         contextMenuVisible: false,
         visInst: shallowRef<TreeChart | null>(null),
+        tblVisHighlight: null as d3.Selection<SVGGElement, unknown, null, undefined> | null,
+        tblVisInfo: shallowRef<AreaBox | null>(null),  // tblTemplate中起始单元格在input tbl中的坐标位置(x, y)，以及单元格的宽高(width, height)
         menuAllList: [{
           key: "0",
           label: "Reset Area",
@@ -312,7 +315,9 @@ export const useTableStore = defineStore('table', {
       // const end = Date.now();
       // console.log(`Loaded case ${caseN} in seconds: ${(end - begin) / 1000}`);
       this.currentCase = caseN;
-      return prompt;
+      prompt.forEach((msg) => {
+        message.error(msg);
+      })
     },
 
     /**
@@ -332,7 +337,17 @@ export const useTableStore = defineStore('table', {
             width: node.width,
             height: node.height
           }];
-          visNode.currentAreas = [node];
+          // visNode.currentAreas = [node];
+          visNode.constrsInfo = [];
+          visNode.match?.constraints?.forEach((constraint) => {
+            const cellInfoSelections = [];
+            const allConstr = completeCellConstraint(constraint);
+            const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
+            if (cellInfo) {
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y });
+            }
+            visNode!.constrsInfo!.push(cellInfoSelections);
+          })
         } else {
           this.spec.visTreeMatchPath[path].matchs!.push({
             x: node.x,
@@ -340,7 +355,16 @@ export const useTableStore = defineStore('table', {
             width: node.width,
             height: node.height
           });
-          this.spec.visTreeMatchPath[path].currentAreas!.push(node);
+          // this.spec.visTreeMatchPath[path].currentAreas!.push(node);
+          visNode = this.spec.visTreeMatchPath[path];
+          visNode.match?.constraints?.forEach((constraint, ci) => {
+            const cellInfoSelections = visNode!.constrsInfo![ci];
+            const allConstr = completeCellConstraint(constraint);
+            const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
+            if (cellInfo) {
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y });
+            }
+          })
         }
         this.traverseTree4UpdateMatchs(node.children)
       })
@@ -658,6 +682,19 @@ export const useTableStore = defineStore('table', {
       return highlightNodesId;
     },
 
+    highlightTblTemplate(area: AreaBox) {
+      const highlight = this.tree.tblVisHighlight!;  // .tbl-container .tbl-template-highlight
+      const tblVisInfo = this.tree.tblVisInfo!;
+      highlight.raise().append('rect')
+        .attr('x', (area.x - tblVisInfo.x) * tblVisInfo.width)
+        .attr('y', (area.y - tblVisInfo.y) * tblVisInfo.height)
+        .attr('width', area.width * tblVisInfo.width)
+        .attr('height', area.height * tblVisInfo.height)
+        .attr('fill', 'none')
+        .attr('stroke', typeMapColor.selection)
+        .attr('stroke-width', 3);
+    },
+
     /*
     highlightNodes(selected: Selection[]) {
       const highlightNodesId: Set<number> = new Set();
@@ -795,6 +832,7 @@ export const useTableStore = defineStore('table', {
       }
       catch (e) {
         message.error(`Failed to parse the specification:\n ${e}`);
+        console.error(e);
         return false
       }
     },
@@ -884,6 +922,7 @@ export const useTableStore = defineStore('table', {
           messageContent = `Failed to parse the specification:\n ${e}`
         }
         message.error(messageContent);
+        console.error(e);
       }
     },
 
@@ -940,10 +979,11 @@ export const useTableStore = defineStore('table', {
     },
 
     computeTblPatternGrid() {
-      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0], function (key, value) {
-        if (key === 'currentAreas') return undefined;
-        return value;
-      }));
+      // const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0], function (key, value) {
+      //   if (key === 'currentAreas') return undefined;
+      //   return value;
+      // }));
+      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0]));
       const grids = this.generateGrid(firstNode.height, firstNode.width);
       const nodes = [firstNode];
       // const box: AreaBox = { width: firstNode.width, height: firstNode.height, x: firstNode.x, y: firstNode.y };
@@ -995,30 +1035,6 @@ export const useTableStore = defineStore('table', {
             }
           }
         }
-        /*
-        const xOffset = node.x - box[0];
-        const yOffset = node.y - box[1];
-        if (xOffset >= 0 && yOffset >= 0 && node.x + node.width <= box[2] && node.y + node.height <= box[3]) {
-          let index = 0;
-          for (let i = 0; i < node.height; i++) {
-            for (let j = 0; j < node.width; j++) {
-              const cell = grids[(yOffset + i) * firstNode.width + (xOffset + j)]
-              if (node.type === "position") {
-                const text = node.extract!.byPositionToTargetCols![index];
-                if (!(text === undefined || text === null || text === '')) {
-                  cell.bgColor = typeMapColor.position;
-                  cell.text = text;
-                } else {
-                  cell.bgColor = typeMapColor.null;
-                }
-              } else {
-                cell.bgColor = typeMapColor[node.type!];
-              }
-              index++;
-            }
-          }
-          grids[(node.y - box[1]) * firstNode.width + (node.x - box[0])].bgColor = typeMapColor[node.type!];
-        }*/
         if (node.children) nodes.push(...node.children);
       }
 

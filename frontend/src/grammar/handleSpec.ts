@@ -41,7 +41,7 @@ const calculateOffset = (offset: number | offsetFn, currentArea: AreaInfo, rootA
     return typeof offset === 'number' ? offset : offset(currentArea, rootArea);
 };
 
-export const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo): CellInfo | null => {
+export const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo, constrFlag: boolean = false): CellInfo | null => {
     let area: AreaInfo = currentArea;
     if (select.referenceAreaLayer === 'current') {
         area = currentArea;
@@ -74,9 +74,13 @@ export const getCellBySelect = (select: AllParams<CellSelection>, currentArea: A
 
     // 判断是否越界
     if (cellPosi.x < 0 || cellPosi.y < 0 || cellPosi.x >= rootArea.width || cellPosi.y >= rootArea.height) {
-        throw new CustomError(`Invalid cell selection:\n Table size is (width: ${rootArea.width}, height: ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`, 'OutOfBoundsError');
+        const errorMessage = `Invalid cell selection:\n Table size is (width: ${rootArea.width}, height: ${rootArea.height}), Position (${cellPosi.x}, ${cellPosi.y}) is out of bounds.`
+        if (constrFlag) {
+            // console.error(errorMessage); 
+            return null;
+        }
+        else { throw new CustomError(errorMessage, 'OutOfBoundsError'); }
     }
-
     return {
         ...cellPosi,
         value: rootArea.areaTbl[cellPosi.y][cellPosi.x],
