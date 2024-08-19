@@ -89,7 +89,7 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   matchs?: AreaBox[],
   currentMatchs?: AreaBox[],
   // currentAreas?: AreaInfo[],
-  constrsInfo?: { x: number, y: number }[][],
+  constrsInfo?: { x: number, y: number, isDefinedFromSpec: boolean }[][],
   children?: VisTreeNode[]
 }
 
@@ -124,7 +124,7 @@ export const useTableStore = defineStore('table', {
         rawSpecs: shallowRef<TableTidierTemplate[]>([]),
         visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", path: [], children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
-        selectNode: shallowRef<NodeData>({} as NodeData),
+        selectNode: shallowRef<NodeData | null>(null),
         selectConstrIndex: -1,
         constrNodeRectClickId: "",
         selectAreaFromNode: "" as "" | "0" | "1" | "2-0" | "2-1" | "2-2" | "3" | "4",
@@ -200,6 +200,7 @@ export const useTableStore = defineStore('table', {
       },
       tree: {
         contextMenuVisible: false,
+        instanceIndex: 0,
         visInst: shallowRef<TreeChart | null>(null),
         tblVisHighlight: null as d3.Selection<SVGGElement, unknown, null, undefined> | null,
         tblVisInfo: shallowRef<AreaBox | null>(null),  // tblTemplate中起始单元格在input tbl中的坐标位置(x, y)，以及单元格的宽高(width, height)
@@ -285,6 +286,8 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo();
         this.clearStatus("matchArea");
         this.editor.mappingSpec.errorMark = null;
+        this.tree.instanceIndex = 0;
+        this.spec.selectNode = null;
 
         if (dataText !== null) {
           this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
@@ -347,7 +350,7 @@ export const useTableStore = defineStore('table', {
             const allConstr = completeCellConstraint(constraint);
             const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
             if (cellInfo) {
-              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y });
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec: node.isDefinedFromSpec });
             }
             visNode!.constrsInfo!.push(cellInfoSelections);
           })
@@ -366,7 +369,7 @@ export const useTableStore = defineStore('table', {
             const allConstr = completeCellConstraint(constraint);
             const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
             if (cellInfo) {
-              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y });
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec: node.isDefinedFromSpec });
             }
           })
         }
@@ -377,13 +380,13 @@ export const useTableStore = defineStore('table', {
     /**
      * Update visTree's AreaBox properties
      */
-    updateVisTreeAreaBox(node: VisTreeNode | null = null, instanceIndex: number = 0, areaBox: AreaBox | null = null) {
+    updateVisTreeAreaBox(node: VisTreeNode | null = null, areaBox: AreaBox | null = null) {
       if (node === null) {
         if (this.spec.visTree.children!.length === 0) return;
         node = this.spec.visTree.children![0];
       }
       if (areaBox === null) {
-        const instance = node.matchs![instanceIndex];
+        const instance = node.matchs![this.tree.instanceIndex];
         areaBox = {
           width: instance.width,
           height: instance.height,
@@ -409,9 +412,15 @@ export const useTableStore = defineStore('table', {
       }
       if (node.children) {
         node.children.forEach((child) => {
-          this.updateVisTreeAreaBox(child, instanceIndex, areaBox);
+          this.updateVisTreeAreaBox(child, areaBox);
         })
       }
+    },
+
+    goToInstance(step: number) {
+      this.tree.instanceIndex += step;
+      this.updateVisTreeAreaBox();
+      this.hightlightViewsAfterClickNode(this.spec.selectNode!.data);
     },
 
 
@@ -519,6 +528,37 @@ export const useTableStore = defineStore('table', {
             .classed(cell.className, true)
         }
       });
+    },
+
+    hightlightViewsAfterClickNode(visData: VisTreeNode) {
+      const matchArea: Array<[number, number, number, number]> = [];
+      visData.matchs?.forEach((match) => {
+        const { x, y, width, height } = match;
+        matchArea.push([y, x, y + height - 1, x + width - 1]);
+      })
+      let allHightedInCells: TblCell[] = [];
+      let allHightedOutCells: TblCell[] = [];
+      if (matchArea.length > 0) {
+        const { selectedCoords, hightedCells } = this.getHightlightedCells(matchArea, `${visData.type}Shallow`);
+        allHightedInCells = allHightedInCells.concat(hightedCells);
+        const cells = this.in_out_mapping(selectedCoords, "input_tbl", `${visData.type}Shallow`);
+        allHightedOutCells = allHightedOutCells.concat(cells);
+        this.highlightMinimapCells(hightedCells);
+      }
+
+      const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
+      const { selectedCoords, hightedCells } = this.getHightlightedCells(selected, visData.type!);
+      allHightedInCells = allHightedInCells.concat(hightedCells);
+      this.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
+      const cells = this.in_out_mapping(selectedCoords, "input_tbl", visData.type);
+      allHightedOutCells = allHightedOutCells.concat(cells);
+      const coordsOut = cells.map((c) => [c.row, c.col] as [number, number]);
+      this.highlightTblCells("output_tbl", allHightedOutCells, coordsOut);
+      this.highlightMinimapCells(hightedCells, matchArea.length === 0);
+      // 在 D3.js 中，使用 .classed() 方法为元素添加类时，如果一个元素同时拥有多个类，CSS 样式的优先级依赖于 CSS 样式表中的定义顺序，而不是你通过 D3.js 添加类的顺序。
+
+      this.input_tbl.instance.deselectCell();
+      this.output_tbl.instance.deselectCell();
     },
 
     in_out_mapping(selectedCoords: { [key: string]: [number, number][] }, type: "input_tbl" | "output_tbl", className: string = "selection") {
@@ -977,6 +1017,7 @@ export const useTableStore = defineStore('table', {
         message.error(messageContent);
         console.error(e);
       }
+      this.tree.instanceIndex = 0;
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
@@ -1071,7 +1112,7 @@ export const useTableStore = defineStore('table', {
             textColor = "ambiguousText"
           }
           // if (!(x === node.x && y === node.y && width === node.width && height === node.height)) {
-          if (match.isDefinedFromSpec === false) {
+          if (node.path!.length > 1 && match.isDefinedFromSpec === false) {
             bgColor += "Shallow";
           }
           for (let i = 0; i < height; i++) {
@@ -1216,7 +1257,7 @@ export const useTableStore = defineStore('table', {
     },
 
     selectArea() {
-      const visNode = this.spec.selectNode.data;
+      const visNode = this.spec.selectNode!.data;
       const formData = this.spec.areaFormData
       const newSpec: TableTidierTemplate = {
         match: {
@@ -1256,7 +1297,7 @@ export const useTableStore = defineStore('table', {
 
     insertNodeOrPropertyIntoSpecs(nodeOrProperty: any, property: "children" | "match" | "constraints" | "extract", visNode: VisTreeNode | null = null) {
       if (visNode === null) {
-        visNode = this.spec.selectNode.data;
+        visNode = this.spec.selectNode!.data;
       }
       if (visNode.path!.length === 0) {
         // 当前节点为根节点

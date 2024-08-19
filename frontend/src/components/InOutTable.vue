@@ -236,6 +236,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   tblInst1.updateSettings({
     outsideClickDeselects: (targetEle) => {
       const targetClassName = targetEle?.className;
+      // console.log(targetClassName, targetEle);
+      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || targetClassName === "wtHolder") {
+        return true;
+      };
       if (typeof targetClassName !== "string") {
         tblInst2.updateSettings({ cell: [] });
         return true;
@@ -283,7 +287,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         if (tableStore.spec.selectAreaFromNode) {
           // 说明需要重新为某个节点选择区域
           const selectType = tableStore.spec.selectAreaFromNode;
-          const visNode = selectType === "0" ? tableStore.spec.selectNode.parent!.data : tableStore.spec.selectNode.data;
+          const visNode = selectType === "0" ? tableStore.spec.selectNode!.parent!.data : tableStore.spec.selectNode!.data;
           const nx = visNode.x, ny = visNode.y, nw = visNode.width, nh = visNode.height;
           const [startRow, startCol, endRow, endCol] = selected[0];
           const xOffset = startCol - nx, yOffset = startRow - ny;
@@ -311,8 +315,8 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               }
               if (selectType === "0") {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
-                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode.data.path!) as TableTidierTemplate;
-                tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode.data.type}Shallow`];
+                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode!.data.path!) as TableTidierTemplate;
+                tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode!.data.type}Shallow`];
               } else {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
                 tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine({ match: match }), 'nullShallow'];

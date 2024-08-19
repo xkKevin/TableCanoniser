@@ -3,6 +3,22 @@
         <div class="view-title">
             <span>Pattern Panel</span>
             <span style="float: right; margin-right: 20px; ">
+                <span style="margin-right: 15px; ">
+                    <a-button-group class="goToInstance">
+                        <a-button size="small" @click="tableStore.goToInstance(-1)"
+                            :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
+                            title="Last instance">
+                            <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
+                            <span>Last</span>
+                        </a-button>
+                        <a-button size="small" @click="tableStore.goToInstance(1)"
+                            :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1"
+                            title="Next instance">
+                            <span>Next</span>
+                            <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
+                        </a-button>
+                    </a-button-group>
+                </span>
                 <span style="font-size: 15px">
                     <!-- <span>Match:</span>
                     <a-button class="legend legend-null" size="small">No Extration</a-button>
@@ -93,7 +109,7 @@ const contextMenuVisibleChange = (value: boolean) => {
 
 const closeContextMenu = (e: any) => {
     // console.log("closeContextMenu", e, e.key);
-    const visNode = tableStore.spec.selectNode.data;
+    const visNode = tableStore.spec.selectNode!.data;
     let extract: any = null, extractColor: string = '';
     let triggerCellCursorFlag = false;
     let messageInfo = "\n Press ESC to cancel the selection mode.";
@@ -393,6 +409,10 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     drawTree(tableStore.spec.visTree);
     drawTblTemplate();
     // console.log('watch code changed: end');
+});
+
+watch(() => tableStore.tree.instanceIndex, (newVal) => {
+    drawTblTemplate();
 });
 
 // watch(() => tableStore.spec.visTree.size.height, (newVal) => {

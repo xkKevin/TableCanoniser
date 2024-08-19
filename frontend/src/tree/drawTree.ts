@@ -650,6 +650,11 @@ export class TreeChart {
         return;
       }
 
+      if (node.data.id === 1) {
+        tableStore.spec.selectNode = node  // 默认选中第一个节点
+        tableStore.goToInstance(0);
+      }
+
       const nodeRectData = {
         // "rectColor": typeNodeStyle.nodeRectFillColor,
         "rectHeight": typeNodeStyle.nodeHeight,
@@ -701,6 +706,8 @@ export class TreeChart {
           .attr("stroke-width", 1.5)
           .attr("fill", "none")
 
+        let constrIndex = 0;
+
         // @ts-ignore
         current.patternify({ tag: 'image', selector: `node-constraint-icon-${constrId}` });
         nodeGroups.select(`.node-constraint-icon-${constrId}`)
@@ -714,7 +721,16 @@ export class TreeChart {
           .attr('height', iconsz)
           .on('mouseover', (_e: any, d: NodeData) => {
             constrNodeRect.attr('visibility', 'visible');
-            const cellInfo = d.data.constrsInfo![i][0];
+            let cellInfo;
+            if (d.data.path?.length === 1) {
+              cellInfo = d.data.constrsInfo![i][tableStore.tree.instanceIndex]
+              constrIndex = tableStore.tree.instanceIndex
+            } else {
+              cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter((info) => info.ele.isDefinedFromSpec)[tableStore.tree.instanceIndex];
+              constrIndex = cellInfo.index;
+              cellInfo = cellInfo.ele;
+            }
+            if (cellInfo === undefined) return;
             tableStore.highlightTblTemplate({
               x: cellInfo.x,
               y: cellInfo.y,
@@ -757,8 +773,16 @@ export class TreeChart {
             const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
             */
             const cellInfoSelections = d.data.constrsInfo![i].map((cellInfo) => [cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x] as Selection);
-            const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
-            tableStore.highlightTblCells("input_tbl", cells);
+            const classNames = Array(cellInfoSelections.length).fill("selectionShallow");
+            const cells = tableStore.generateHighlightCells(cellInfoSelections, classNames);
+            let { row, col } = cells.slice(-1)[0];
+            if (constrIndex < classNames.length) {
+              // classNames[tableStore.tree.instanceIndex] = 'selection';
+              cells[constrIndex].className = 'selection';
+              row = cells[constrIndex].row;
+              col = cells[constrIndex].col;
+            }
+            tableStore.highlightTblCells("input_tbl", cells, [[row, col]]);
             tableStore.highlightMinimapCells(cells);
             // console.timeEnd('constraint click');
           })
@@ -849,37 +873,14 @@ export class TreeChart {
         tableStore.clearStatus("tree");
         if (d.id) {
           tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
+          // if (tableStore.spec.selectNode === null || tableStore.spec.selectNode.data.id !== node.data.id) {}
+          tableStore.spec.selectNode = node;
+          // tableStore.tree.instanceIndex = 0;
           d3.select(this).classed('selection', true);
           // console.log(event, d);
           // [startRow, startCol, endRow, endCol]
           const visData = d.data as VisTreeNode;
-          const matchArea: Array<[number, number, number, number]> = [];
-          visData.matchs?.forEach((match) => {
-            const { x, y, width, height } = match;
-            matchArea.push([y, x, y + height - 1, x + width - 1]);
-          })
-          let allHightedInCells: TblCell[] = [];
-          let allHightedOutCells: TblCell[] = [];
-          if (matchArea.length > 0) {
-            const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(matchArea, `${visData.type}Shallow`);
-            allHightedInCells = allHightedInCells.concat(hightedCells);
-            const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", `${visData.type}Shallow`);
-            allHightedOutCells = allHightedOutCells.concat(cells);
-            tableStore.highlightMinimapCells(hightedCells);
-          }
-
-          const selected: Array<[number, number, number, number]> = [[visData.y, visData.x, visData.y + visData.height - 1, visData.x + visData.width - 1]];
-          const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected, visData.type!);
-          allHightedInCells = allHightedInCells.concat(hightedCells);
-          tableStore.highlightTblCells("input_tbl", allHightedInCells, Object.values(selectedCoords)[0]);
-          const cells = tableStore.in_out_mapping(selectedCoords, "input_tbl", visData.type);
-          allHightedOutCells = allHightedOutCells.concat(cells);
-          tableStore.highlightTblCells("output_tbl", allHightedOutCells);
-          tableStore.highlightMinimapCells(hightedCells, matchArea.length === 0);
-          // 在 D3.js 中，使用 .classed() 方法为元素添加类时，如果一个元素同时拥有多个类，CSS 样式的优先级依赖于 CSS 样式表中的定义顺序，而不是你通过 D3.js 添加类的顺序。
-
-          tableStore.input_tbl.instance.deselectCell();
-          tableStore.output_tbl.instance.deselectCell();
+          tableStore.goToInstance(0);
 
           /************** 与 monaco editor 交互 ***************/
           const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, visData.path!);
