@@ -2,10 +2,26 @@
     <div class="view">
         <div class="view-title">
             <span>Minimap</span>
-            <a-button size="small" style="float: right; margin-right: 5px" @click="resetZoom">
+            <span style="float: right; margin-right: 2px; ">
+                <a-button-group class="goToInstance">
+                    <a-button size="small" @click="tableStore.goToInstance(-1)"
+                        :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
+                        title="Last instance">
+                        <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
+                        <span>Last</span>
+                    </a-button>
+                    <a-button size="small" @click="tableStore.goToInstance(1)"
+                        :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1"
+                        title="Next instance">
+                        <span>Next</span>
+                        <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
+                    </a-button>
+                </a-button-group>
+            </span>
+            <!-- <a-button size="small" style="float: right; margin-right: 5px" @click="resetZoom">
                 <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                 <span>Reset View</span>
-            </a-button>
+            </a-button> -->
         </div>
         <div class="view-content">
             <div ref="container" class="grid-container"></div>
@@ -69,7 +85,7 @@ const drawGrid = (rows: number, cols: number) => {
 
     const grids = tableStore.generateGrid(rows, cols);
 
-    const cells = matrix.selectAll('rect')
+    const cells = matrix.append('g').selectAll('rect')
         .data(grids)
         .enter().append('rect').classed('grid-cell', true)
         .attr('x', d => d.col * cellWidth)
@@ -106,6 +122,12 @@ const drawGrid = (rows: number, cols: number) => {
     offsetY = Math.max((containerHeight - matrix.node()!.getBBox().height) / 2, 0);
     matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
     transformStatue = d3.zoomIdentity;
+
+    tableStore.tree.minimapInstHighlight = matrix.append('g').classed('tbl-minimap-highlight', true);
+    tableStore.tree.minimapVisInfo = {
+        width: cellWidth,
+        height: cellHeight
+    }
 
     /*
     const updateCellTextVisibility = (scale: number) => {
@@ -245,6 +267,9 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
     }
 
     /*
+    .grid-inst:hover {
+        stroke: var(--color-selection);
+    }
     rect.cell-grid {
         fill: #f9f7ff;
         stroke: grey;

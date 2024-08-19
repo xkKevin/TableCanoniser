@@ -204,6 +204,11 @@ export const useTableStore = defineStore('table', {
         visInst: shallowRef<TreeChart | null>(null),
         tblVisHighlight: null as d3.Selection<SVGGElement, unknown, null, undefined> | null,
         tblVisInfo: shallowRef<AreaBox | null>(null),  // tblTemplate中起始单元格在input tbl中的坐标位置(x, y)，以及单元格的宽高(width, height)
+        minimapInstHighlight: null as d3.Selection<SVGGElement, unknown, null, undefined> | null,
+        minimapVisInfo: {
+          width: 0,
+          height: 0
+        },
         menuAllList: [{
           key: "0",
           label: "Reset Area",
@@ -421,8 +426,44 @@ export const useTableStore = defineStore('table', {
       this.tree.instanceIndex += step;
       this.updateVisTreeAreaBox();
       this.hightlightViewsAfterClickNode(this.spec.selectNode!.data);
-    },
 
+      const hightlight = this.tree.minimapInstHighlight!;
+      hightlight.selectAll('rect').attr('stroke', 'none');
+      hightlight.select(`rect:nth-child(${this.tree.instanceIndex + 1})`).attr('stroke', typeMapColor.selection);
+    },
+    highlightMinimapInsts() {
+      const hightlight = this.tree.minimapInstHighlight!;
+      const visInfo = this.tree.minimapVisInfo!;
+      const tableStore = this;
+
+      hightlight.selectAll('rect').remove();
+      hightlight.raise().selectAll('rect').data(this.spec.visTree.children![0].matchs!.map((d, i) => ({ x: d.x, y: d.y, width: d.width, height: d.height, index: i })))
+        .enter().append('rect') // .classed('grid-inst', true)
+        .attr('x', d => d.x * visInfo.width)
+        .attr('y', d => d.y * visInfo.height)
+        .attr('width', d => d.width * visInfo.width)
+        .attr('height', d => d.height * visInfo.height)
+        .attr('fill', 'rgba(0, 0, 0, 0)')  // 设置透明，如果为 none，则不会有交互事件
+        .attr('stroke', (d, i) => {
+          if (i === this.tree.instanceIndex) {
+            return typeMapColor.selection;
+          } else {
+            return 'none';
+          }
+        })
+        .attr('stroke-width', 1.5)
+        .on('mouseover', function (event: any, d) {
+          d3.select(this).attr('stroke', typeMapColor.selection);
+        })
+        .on('mouseout', function (event, d) {
+          if (d.index !== tableStore.tree.instanceIndex)
+            d3.select(this).attr('stroke', 'none');
+        })
+        .on('click', function (event: any, d) {
+          tableStore.goToInstance(d.index - tableStore.tree.instanceIndex);
+        })
+        .append('svg:title').text((d, i) => `The ${tableStore.numberToOrdinal(i + 1)} instance.\nArea Box:\n · x: ${d.x}\n · y: ${d.y}\n · width: ${d.width}\n · height: ${d.height}`);
+    },
 
     traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = [], idCounter: [number] = [1]) {
       const in2nodes = this.input_tbl.in2nodes;
@@ -529,6 +570,8 @@ export const useTableStore = defineStore('table', {
         }
       });
     },
+
+
 
     hightlightViewsAfterClickNode(visData: VisTreeNode) {
       const matchArea: Array<[number, number, number, number]> = [];
@@ -1018,6 +1061,8 @@ export const useTableStore = defineStore('table', {
         console.error(e);
       }
       this.tree.instanceIndex = 0;
+      // this.tree.minimapInstHighlight!.select('rect:nth-child(1)').attr('stroke', typeMapColor.selection);
+      this.highlightMinimapInsts();
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {

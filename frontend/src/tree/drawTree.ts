@@ -877,6 +877,9 @@ export class TreeChart {
           tableStore.spec.selectNode = node;
           // tableStore.tree.instanceIndex = 0;
           d3.select(this).classed('selection', true);
+
+          tableStore.highlightMinimapInsts();
+
           // console.log(event, d);
           // [startRow, startCol, endRow, endCol]
           const visData = d.data as VisTreeNode;

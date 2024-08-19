@@ -154,6 +154,8 @@ function handleKeydown(event: KeyboardEvent) {
 
     tableStore.clearStatus("tree");
     tableStore.clearStatus("matchArea");
+
+    tableStore.tree.minimapInstHighlight!.selectAll('rect').remove();
   }
 }
 

@@ -237,7 +237,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     outsideClickDeselects: (targetEle) => {
       const targetClassName = targetEle?.className;
       // console.log(targetClassName, targetEle);
-      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || targetClassName === "wtHolder") {
+      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || targetClassName === "wtHolder" || (targetEle.parentNode as HTMLElement).classList.contains("goToInstance")) {
         return true;
       };
       if (typeof targetClassName !== "string") {
