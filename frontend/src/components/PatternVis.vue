@@ -211,7 +211,7 @@ const selectMatchExtractArea = (type: TypeColor) => {
     // const cursorStyle = `url(${require('@/assets/cell.png')}), auto`;
     document.body.style.cursor = 'cell';
     document.documentElement.style.setProperty('--custom-cursor', 'cell');
-    message.info("Now is " + typeMap[type as keyof typeof typeMap] + " mode. Please select the starting area in the input table.\n Press ESC to cancel the selection mode.");
+    message.info("Now is in " + typeMap[type as keyof typeof typeMap] + " mode. Please select the starting area in the input table.\n Press ESC to cancel the selection mode.");
     // tableStore.input_tbl.instance.rootElement.style.cursor = "cell";
     // (document.querySelector('.truncated') as HTMLElement).style.cursor = "cell"
 }
@@ -271,7 +271,7 @@ const drawTblTemplate = () => {
             // .attr('id', d => `tbl-template-${d.row}-${d.col}`)
             .attr('width', cellWidth)
             .attr('height', cellHeight)
-            .attr('fill', (d) => d.bgColor ? d.bgColor : '#f9f7ff')
+            .attr('fill', (d) => d.bgColor ? typeMapColor[d.bgColor as TypeColor] : typeMapColor.cellFill)
             .attr('stroke', '#cccccc')
             .on('mouseover', function (this: SVGRectElement) {
                 d3.select(this).raise() // Bring the cell to the front 
@@ -330,7 +330,7 @@ const drawTblTemplate = () => {
                         .attr('y', d => d.row * cellHeight + cellHeight / 2)
                         .attr('dy', '.30em')
                         .attr('font-size', 15 / scale)
-                        .attr('fill', (d) => d.textColor ? d.textColor : typeMapColor.cellFill)
+                        .attr('fill', (d) => d.textColor ? typeMapColor[d.textColor as TypeColor] : typeMapColor.cellFill)
                         .attr('text-anchor', 'middle')
                         .text(d => d.text ? d.text[0] : '')
                         .each(function (d) {

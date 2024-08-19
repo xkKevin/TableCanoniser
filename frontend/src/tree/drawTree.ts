@@ -672,7 +672,7 @@ export class TreeChart {
       // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
 
       let tooltipText: any = node.data.matchs?.length;
-      tooltipText = tooltipText === undefined ? '' : `\nMatch: ${tooltipText} instances`;
+      tooltipText = tooltipText === undefined ? "\nDon't match any instances" : `\nMatch: ${tooltipText} instances`;
 
       singleNodeG.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
       singleNodeG.select('.node-tooltip')
@@ -802,12 +802,20 @@ export class TreeChart {
           // console.log(d.data.size);
           return "";
         } else {
-          let width: number | null = d.data.width!;
-          let height: number | null = d.data.height!;
-          if (d.data.match?.size !== undefined) {
-            if (d.data.match.size.width === null) width = null;
-            if (d.data.match.size.height === null) height = null;
+          let width: any = d.data.width;
+          let height: any = d.data.height;
+          let specWidth = d.data.match?.size?.width;
+          let specHeight = d.data.match?.size?.height;
+          if (specWidth === undefined) {
+            specWidth = 1
           }
+          if (specHeight === undefined) {
+            specHeight = 1
+          }
+          if (width === undefined) width = specWidth;
+          else if (specWidth === null) width = null;
+          if (height === undefined) height = specHeight;
+          else if (specHeight === null) height = null;
           return `(${width}, ${height})`;
         }
       })

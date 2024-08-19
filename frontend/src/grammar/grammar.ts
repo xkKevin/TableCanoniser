@@ -238,6 +238,10 @@ interface AreaInfo extends MatchedIndex {
      */
     height: number;
     /**
+     * Whether this area is defined from the specification
+     */
+    isDefinedFromSpec: boolean;
+    /**
      * All cells within this area
      */
     areaTbl: Table2D;
@@ -622,31 +626,6 @@ function completeContextTransform(
         toTargetCol: transform.toTargetCol || DEFAULT_TARGET_COL,
     };
 }
-
-/*
-function completeSpecification(template: TableTidierTemplate): AllParams<TableTidierTemplate> {
-    return {
-        startCell: completeCellSelection(template.startCell),
-        size: {
-            width: template.size?.width === undefined ? DEFAULT_WIDTH : template.size.width,
-            height: template.size?.height === undefined ? DEFAULT_HEIGHT : template.size.height
-        },
-        constraints: template.constraints?.map(completeCellConstraint) || [],
-        traverse: {
-            xDirection: template.traverse?.xDirection === undefined ? DEFAULT_X_DIRECTION : template.traverse.xDirection,
-            yDirection: template.traverse?.yDirection === undefined ? DEFAULT_Y_DIRECTION : template.traverse.yDirection
-        },
-        transform: template.transform
-            ? {
-                context: template.transform.context ? completeContextTransform(template.transform.context) : null,
-                targetCols: template.transform.targetCols || DEFAULT_TARGET_COLS
-            }
-            : null,
-        fill: template.fill === undefined ? DEFAULT_FILL : template.fill,
-        children: template.children?.map(completeSpecification) || []
-    } as AllParams<TableTidierTemplate>;
-}
-*/
 
 function completeSpecification(
     template: TableTidierTemplate

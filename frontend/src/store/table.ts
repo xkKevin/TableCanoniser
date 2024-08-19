@@ -77,6 +77,7 @@ export interface AreaBox {
   height: number,
   x: number,
   y: number,
+  isDefinedFromSpec?: boolean
 }
 
 // type CoordinateMap = Map<number, Map<number, any>>;  // 根据坐标获取某值
@@ -86,6 +87,7 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
   type?: "position" | "value" | "context" | "null",
   path?: number[],
   matchs?: AreaBox[],
+  currentMatchs?: AreaBox[],
   // currentAreas?: AreaInfo[],
   constrsInfo?: { x: number, y: number }[][],
   children?: VisTreeNode[]
@@ -335,7 +337,8 @@ export const useTableStore = defineStore('table', {
             x: node.x,
             y: node.y,
             width: node.width,
-            height: node.height
+            height: node.height,
+            isDefinedFromSpec: node.isDefinedFromSpec
           }];
           // visNode.currentAreas = [node];
           visNode.constrsInfo = [];
@@ -353,7 +356,8 @@ export const useTableStore = defineStore('table', {
             x: node.x,
             y: node.y,
             width: node.width,
-            height: node.height
+            height: node.height,
+            isDefinedFromSpec: node.isDefinedFromSpec
           });
           // this.spec.visTreeMatchPath[path].currentAreas!.push(node);
           visNode = this.spec.visTreeMatchPath[path];
@@ -369,6 +373,47 @@ export const useTableStore = defineStore('table', {
         this.traverseTree4UpdateMatchs(node.children)
       })
     },
+
+    /**
+     * Update visTree's AreaBox properties
+     */
+    updateVisTreeAreaBox(node: VisTreeNode | null = null, instanceIndex: number = 0, areaBox: AreaBox | null = null) {
+      if (node === null) {
+        if (this.spec.visTree.children!.length === 0) return;
+        node = this.spec.visTree.children![0];
+      }
+      if (areaBox === null) {
+        const instance = node.matchs![instanceIndex];
+        areaBox = {
+          width: instance.width,
+          height: instance.height,
+          x: instance.x,
+          y: instance.y
+        }
+        Object.assign(node, areaBox);
+      } else {
+        if (node.matchs === undefined) return;
+        for (const match of node.matchs) {
+          const { x, y, width, height } = match;
+          if (x >= areaBox.x && y >= areaBox.y && x + width <= areaBox.x + areaBox.width && y + height <= areaBox.y + areaBox.height) {
+            if (node.currentMatchs === undefined) node.currentMatchs = [match];
+            else node.currentMatchs.push(match);
+            if (match.isDefinedFromSpec) {
+              Object.assign(node, match);
+            }
+          }
+        }
+        if (node.x === undefined && node.currentMatchs) {
+          Object.assign(node, node.currentMatchs[0]);
+        }
+      }
+      if (node.children) {
+        node.children.forEach((child) => {
+          this.updateVisTreeAreaBox(child, instanceIndex, areaBox);
+        })
+      }
+    },
+
 
     traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = [], idCounter: [number] = [1]) {
       const in2nodes = this.input_tbl.in2nodes;
@@ -423,6 +468,7 @@ export const useTableStore = defineStore('table', {
       this.editor.rootArea.code = serialize(rootArea);
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
       this.traverseTree4UpdateMatchs(rootArea.children);
+      this.updateVisTreeAreaBox();
       this.input_tbl.in2nodes = {};
       this.spec.selectAreaFromLegend = []
       this.spec.selectionsAreaFromLegend = []
@@ -577,11 +623,12 @@ export const useTableStore = defineStore('table', {
         }
       }
       const specs: TableTidierTemplate[] = [];
-      this.traverseTree4buildSpecs(rootNodes, specs, [0, 0, this.input_tbl.tbl.length - 1, this.input_tbl.tbl[0].length - 1]);
-      return { rootNodes, specs };
+      const addedSpec: [any] = [null];
+      this.traverseTree4buildSpecs(rootNodes, specs, [0, 0, this.input_tbl.tbl.length - 1, this.input_tbl.tbl[0].length - 1], addedSpec);
+      return { rootNodes, specs, newSpec: addedSpec[0] };
     },
 
-    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection) {
+    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection, addedSpec: [any]) {
       const px = pSelection[1], py = pSelection[0];
       const pw = pSelection[3] - px + 1, ph = pSelection[2] - py + 1;
       nodes.forEach((node) => {
@@ -642,11 +689,12 @@ export const useTableStore = defineStore('table', {
             // default:
             //   break;
           }
+          addedSpec[0] = newSpec;
         }
 
         if (node.children) {
           newSpec.children = [];
-          this.traverseTree4buildSpecs(node.children, newSpec.children, selection)
+          this.traverseTree4buildSpecs(node.children, newSpec.children, selection, addedSpec);
         }
         specs.push(newSpec);
       })
@@ -683,6 +731,9 @@ export const useTableStore = defineStore('table', {
     },
 
     highlightTblTemplate(area: AreaBox) {
+      if (area.x === undefined || area.y === undefined || area.width === undefined || area.height === undefined) {
+        return
+      }
       const highlight = this.tree.tblVisHighlight!;  // .tbl-container .tbl-template-highlight
       const tblVisInfo = this.tree.tblVisInfo!;
       highlight.raise().append('rect')
@@ -811,18 +862,20 @@ export const useTableStore = defineStore('table', {
         // })
 
 
-        // Step 2: update visTree's AreaBox properties
+        // Step 2: highlightCode
         if (this.editor.mappingSpec.highlightCode) {
           this.highlightCode(...this.editor.mappingSpec.highlightCode);
           this.editor.mappingSpec.highlightCode = null;
         }
 
-        const { rootArea } = transformTable(this.input_tbl.tbl, this.spec.rawSpecs, false);
+        // Step 3: update visTree's AreaBox properties
+        // const { rootArea } = transformTable(this.input_tbl.tbl, this.spec.rawSpecs, false);
+        // console.log(rootArea);
         // console.log(rootArea, this.spec.visTree, this.spec.rawSpecs, this.input_tbl.tbl[0]);
-        this.copyTreeAttributes(rootArea, this.spec.visTree);
+        // this.copyTreeAttributes(rootArea, this.spec.visTree);
         // console.log(rootArea, this.spec.visTree);
 
-        // Step 3: update in2nodes
+        // Step 4: update in2nodes
         this.input_tbl.in2nodes = {};
         this.spec.selectAreaFromLegend = []
         this.spec.selectionsAreaFromLegend = []
@@ -983,7 +1036,9 @@ export const useTableStore = defineStore('table', {
       //   if (key === 'currentAreas') return undefined;
       //   return value;
       // }));
-      const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0]));
+      // const firstNode: VisTreeNode = JSON.parse(JSON.stringify(this.spec.visTree.children![0]));
+      const firstNode = this.spec.visTree.children![0];
+
       const grids = this.generateGrid(firstNode.height, firstNode.width);
       const nodes = [firstNode];
       // const box: AreaBox = { width: firstNode.width, height: firstNode.height, x: firstNode.x, y: firstNode.y };
@@ -991,39 +1046,40 @@ export const useTableStore = defineStore('table', {
       const box: Selection = [firstNode.x, firstNode.y, firstNode.x + firstNode.width, firstNode.y + firstNode.height];
 
       while (nodes.length) {
-        const node = nodes.shift()
-        if (!node) continue;
+        const node = nodes.shift() as VisTreeNode;
 
         // const xDirection = node.match?.traverse?.xDirection;
         // const yDirection = node.match?.traverse?.yDirection;
         // if ((xDirection === undefined || xDirection === null) && (yDirection === undefined || yDirection === null)) {};
 
-        if (!(node.x >= box[0] && node.y >= box[1] && node.x + node.width <= box[2] && node.y + node.height <= box[3])) continue;
+
+        // if (!(node.x >= box[0] && node.y >= box[1] && node.x + node.width <= box[2] && node.y + node.height <= box[3])) continue;
 
         // 当前属于模版里面的节点
         // node.matchs!.forEach(match => {});
-        if (node.matchs === undefined) return grids;
+        if (node.matchs === undefined) continue;
         for (const match of node.matchs) {
           const { x, y, width, height } = match;
           const xOffset = x - box[0];
           const yOffset = y - box[1];
 
-          if (!(xOffset >= 0 && yOffset >= 0 && x + width <= box[2] && y + height <= box[3])) break;
+          if (!(xOffset >= 0 && yOffset >= 0 && x + width <= box[2] && y + height <= box[3])) continue;
 
           let bgColor: TypeColor = node.type!;
           let textColor: TypeColor = "cellFill";
           if (bgColor !== 'position') {
             textColor = "ambiguousText"
           }
-          if (!(x === node.x && y === node.y && width === node.width && height === node.height)) {
+          // if (!(x === node.x && y === node.y && width === node.width && height === node.height)) {
+          if (match.isDefinedFromSpec === false) {
             bgColor += "Shallow";
           }
           for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
               const cell = grids[(yOffset + i) * firstNode.width + (xOffset + j)]
-              cell.bgColor = typeMapColor[bgColor as TypeColor];
+              cell.bgColor = bgColor; // typeMapColor[bgColor as TypeColor];
               cell.text = new Set();
-              cell.textColor = typeMapColor[textColor];
+              cell.textColor = textColor; // typeMapColor[textColor];
               if (this.input_tbl.in2out.hasOwnProperty(`[${y + i},${x + j}]`)) {
                 const outPosi = this.input_tbl.in2out[`[${y + i},${x + j}]`];
                 outPosi.forEach(posi => {
@@ -1035,7 +1091,7 @@ export const useTableStore = defineStore('table', {
             }
           }
         }
-        if (node.children) nodes.push(...node.children);
+        if (node.children && node.children.length) nodes.push(...node.children);
       }
 
       return grids; // { grids, box: (({ width, height, x, y }) => ({ width, height, x, y }))(firstNode) };

@@ -382,9 +382,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           // document.body.style.cursor = 'default';
           // document.documentElement.style.setProperty('--custom-cursor', 'default');
 
-          const { specs } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend, tableStore.spec.selectionsPath);
+          const { specs, newSpec } = tableStore.buildTree(tableStore.spec.selectionsAreaFromLegend, selectFromLegend, tableStore.spec.selectionsPath);
 
           tableStore.stringifySpec(specs);
+          tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(newSpec, null, specs), `${selectFromLegend[selectFromLegend.length - 1]}Shallow`];
         }
       }
 
