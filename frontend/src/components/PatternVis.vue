@@ -392,6 +392,9 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.transformTablebyCode();  // auto run
     drawTree(tableStore.spec.visTree);
     drawTblTemplate();
+
+    tableStore.computeColInfo("input_tbl");
+    tableStore.computeColInfo("output_tbl");
     // console.log('watch code changed: end');
 });
 

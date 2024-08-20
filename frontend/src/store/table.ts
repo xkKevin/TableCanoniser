@@ -110,6 +110,14 @@ export interface AreaForm {
   }
 }
 
+export type ColInfo = {
+  width: number,  // column width
+  index: number, // column index
+  string: number[],
+  number: number[],
+  null: number[]
+}
+
 // define and expose a store
 export const useTableStore = defineStore('table', {
   // data
@@ -190,6 +198,7 @@ export const useTableStore = defineStore('table', {
         tbl: shallowRef<Table2D>([]),
         in2out: shallowRef<{ [key: string]: string[] }>({}),
         in2nodes: shallowRef<{ [key: string]: Set<number> }>({}),  // 'x-y-width-height' -> {node.id} 的映射
+        colInfo: shallowRef<ColInfo[]>([]),
       },
       output_tbl: {
         instance: {} as Handsontable,
@@ -197,6 +206,7 @@ export const useTableStore = defineStore('table', {
         tbl: shallowRef<Table2D>([]),
         cols: shallowRef<string[]>([]),
         out2in: shallowRef<{ [key: string]: string[] }>({}),
+        colInfo: shallowRef<ColInfo[]>([]),
       },
       tree: {
         contextMenuVisible: false,
@@ -1460,6 +1470,41 @@ export const useTableStore = defineStore('table', {
         editor.revealRangeAtTop(range);
       }
     },
+    computeColInfo(tblType: 'input_tbl' | 'output_tbl' = 'input_tbl') {
+      const table = this[tblType].tbl;
+      if (table.length === 0) return [];
+      const hot = this[tblType].instance;
+      this[tblType].colInfo = [];
+      const colCount = table[0].length;
+
+      for (let col = 0; col < colCount; col++) {
+        const colInfo: ColInfo = {
+          index: col,
+          width: hot.getColWidth(col),
+          string: [],
+          number: [],
+          null: []
+        };
+
+        for (let row = 0; row < table.length; row++) {
+          const cell = table[row][col];
+          const type = this.getCellDataType(cell);
+          switch (type) {
+            case TableTidierKeyWords.String:
+              colInfo.string.push(row);
+              break;
+            case TableTidierKeyWords.Number:
+              colInfo.number.push(row);
+              break;
+            case TableTidierKeyWords.None:
+              colInfo.null.push(row);
+              break;
+          }
+        }
+        this[tblType].colInfo.push(colInfo);
+      }
+    },
+
     getCellDataType(value: CellValueType) {
       if (value === '' || value === null || value === undefined) {
         return TableTidierKeyWords.None;

@@ -275,7 +275,7 @@ onMounted(() => {
 
 .view {
   //   margin: 8px 2px 2px 8px;
-  padding: 10px;
+  padding: 10px 8px 5px 8px;
   border: 1px solid #ccc;
   //   border-radius: 8px;
   overflow: hidden;

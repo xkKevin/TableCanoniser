@@ -17,7 +17,8 @@
       </span>
     </div>
     <div class="view-content">
-      <div id="input-tbl">
+      <ColType tblType="input_tbl" />
+      <div id="input-tbl" style="height: calc(100% - 22px); overflow: scroll;">
         <hot-table ref="inputTbl" :data="input_tbl" :rowHeaders="true" :colHeaders="true" :manualColumnResize="true"
           :autoWrapRow="true" :autoWrapCol="true" :contextMenu="true" :renderer="renderTblCell"
           licenseKey="non-commercial-and-evaluation"></hot-table>
@@ -35,7 +36,8 @@
       </span>
     </div>
     <div class="view-content">
-      <div id="output-tbl">
+      <ColType tblType="output_tbl" />
+      <div id="output-tbl" style="height: calc(100% - 22px); overflow: scroll;">
         <hot-table ref="outputTbl" :data="output_tbl" :rowHeaders="true" :colHeaders="output_col"
           :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true" :autoWrapRow="true"
           :autoWrapCol="true" licenseKey="non-commercial-and-evaluation"></hot-table>
@@ -52,6 +54,7 @@ import {
   onMounted,
   watch,
 } from "vue";
+import ColType from "@/components/ColType.vue";
 import { HotTable } from "@handsontable/vue3";
 import "handsontable/dist/handsontable.full.css";
 import { registerAllModules } from "handsontable/registry";
@@ -449,7 +452,8 @@ onMounted(() => {
 
 .handsontable {
   .truncated {
-    max-width: 140px;
+    max-width: 140px; // 会再次基础上加上10px, 应该是有padding
+    min-width: 50px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
