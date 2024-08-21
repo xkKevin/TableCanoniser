@@ -714,7 +714,29 @@ export class TreeChart {
           .attr('transform', `translate(${1 + (iconsz + typeNodeStyle.iconPadding) * i}, ${-typeNodeStyle.nodeHeight / 2 - 2})`)
           .attr('xlink:xlink:href', () => {
             // eslint-disable-next-line
-            const iconPath = require('@/assets/constraint.png');
+            const valueCstr = constraint.valueCstr;
+            let iconPath: any;
+            if (typeof valueCstr === 'function') {
+              iconPath = require('@/assets/function.png');
+            } else {
+              switch (valueCstr) {
+                case TableTidierKeyWords.String:
+                  iconPath = require('@/assets/string.png');
+                  break;
+                case TableTidierKeyWords.Number:
+                  iconPath = require('@/assets/number.png');
+                  break;
+                case TableTidierKeyWords.None:
+                  iconPath = require('@/assets/minus.png');
+                  break;
+                case TableTidierKeyWords.NotNone:
+                  iconPath = require('@/assets/plus.png');
+                  break;
+                default:
+                  iconPath = require('@/assets/letter-w (3).png');
+              }
+            }
+            // const iconPath = require('@/assets/constraint.png');
             return iconPath;
           })
           .attr('width', iconsz)
@@ -932,7 +954,7 @@ export class TreeChart {
     });
 
     const offsetX = Math.max((this.svgWidth - realChartWidth) / 2, 0) - typeNodeStyle.nodeCircleRadius;
-    const offsetY = Math.max((this.svgHeight - this.realChart.node()!.getBBox().height) / 2, 0);
+    const offsetY = Math.max((this.svgHeight - this.realChart.node()!.getBBox().height) / 2, 0) + typeNodeStyle.nodeCircleRadius;
     this.centerG.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
   }
 }

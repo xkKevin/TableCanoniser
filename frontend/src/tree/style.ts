@@ -74,11 +74,11 @@ export const typeNodeStyle = {
   nodeBorderRadius: 5,
   verticalLineLength: 40,
   verticalLineWidth: 5,
-  nodeSpacing: 30,
+  nodeSpacing: 34,
   connectorLineColor: '#0000004D', // 树中link的颜色
   connectorLineWidth: 1.5,
   iconsize: 15, // 树中node上侧constraint icon的大小
-  iconPadding: 10,  // 树中node上侧constraint icon的间距
+  iconPadding: 6,  // 树中node上侧constraint icon的间距
 };
 
 export const nodeTextStyle = {

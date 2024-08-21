@@ -17,9 +17,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import stringIcon from '@/assets/text.png';
+import stringIcon from '@/assets/string.png';
 import numberIcon from '@/assets/number.png';
-import nullIcon from '@/assets/empty.png';
+import nullIcon from '@/assets/minus.png';
 
 import { useTableStore } from "@/store/table";
 // const { colInfos } = defineProps<{ colInfos: ColInfo[] }>();
