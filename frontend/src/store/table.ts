@@ -476,6 +476,9 @@ export const useTableStore = defineStore('table', {
         .append('svg:title').text((d, i) => `The ${tableStore.numberToOrdinal(i + 1)} instance.\nArea Box:\n · x: ${d.x}\n · y: ${d.y}\n · width: ${d.width}\n · height: ${d.height}`);
     },
 
+    /**
+     * Update in2nodes and selectionsAreaFromLegend and selectAreaFromLegend of each node
+     */
     traverseTree4UpdateIn2Nodes(nodes: VisTreeNode[], parentPath: number[] = [], idCounter: [number] = [1]) {
       const in2nodes = this.input_tbl.in2nodes;
       nodes.forEach((node, index) => {
@@ -529,6 +532,7 @@ export const useTableStore = defineStore('table', {
       this.editor.rootArea.code = serialize(rootArea);
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
       this.traverseTree4UpdateMatchs(rootArea.children);
+      this.tree.instanceIndex = 0;
       this.updateVisTreeAreaBox();
       this.input_tbl.in2nodes = {};
       this.spec.selectAreaFromLegend = []
@@ -970,11 +974,12 @@ export const useTableStore = defineStore('table', {
         // console.log(rootArea, this.spec.visTree);
 
         // Step 4: update in2nodes
+        /*
         this.input_tbl.in2nodes = {};
         this.spec.selectAreaFromLegend = []
         this.spec.selectionsAreaFromLegend = []
         this.spec.selectionsPath = []
-        this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
+        this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);*/
         return true
       }
       catch (e) {
@@ -1071,7 +1076,6 @@ export const useTableStore = defineStore('table', {
         message.error(messageContent);
         console.error(e);
       }
-      this.tree.instanceIndex = 0;
       // this.tree.minimapInstHighlight!.select('rect:nth-child(1)').attr('stroke', typeMapColor.selection);
       this.highlightMinimapInsts();
     },

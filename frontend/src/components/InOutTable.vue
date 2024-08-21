@@ -240,9 +240,15 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
     outsideClickDeselects: (targetEle) => {
       const targetClassName = targetEle?.className;
       // console.log(targetClassName, targetEle);
-      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || targetClassName === "wtHolder" || (targetEle.parentNode as HTMLElement).classList.contains("goToInstance")) {
+      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || (targetEle.parentNode as HTMLElement).classList.contains("goToInstance")) {
+        if (document.body.style.cursor === 'cell') {
+          tableStore.clearStatus("matchArea");
+        }
         return true;
       };
+      if (targetClassName === "wtHolder") {
+        return true;
+      }
       if (typeof targetClassName !== "string") {
         tblInst2.updateSettings({ cell: [] });
         return true;
@@ -267,7 +273,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       return true;
     },
   });
-  tblInst1.addHook("afterOnCellMouseDown", () => {
+  tblInst1.addHook("afterOnCellMouseDown", (e) => {
     tblInst2.updateSettings({ cell: [] });
   });
   tblInst1.addHook("afterOnCellMouseUp", (event, coords, TD) => {
@@ -289,6 +295,8 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       if (document.body.style.cursor === 'cell') {
         if (tableStore.spec.selectAreaFromNode) {
           // 说明需要重新为某个节点选择区域
+          tableStore.tree.instanceIndex = 0;
+          tableStore.updateVisTreeAreaBox();
           const selectType = tableStore.spec.selectAreaFromNode;
           const visNode = selectType === "0" ? tableStore.spec.selectNode!.parent!.data : tableStore.spec.selectNode!.data;
           const nx = visNode.x, ny = visNode.y, nw = visNode.width, nh = visNode.height;

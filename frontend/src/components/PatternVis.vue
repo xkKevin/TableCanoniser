@@ -7,18 +7,20 @@
                     <!-- <span>Match:</span>
                     <a-button class="legend legend-null" size="small">No Extration</a-button>
                     <span>Extract by:</span> -->
-                    <span>Match + Extract by:</span>
-                    <a-button-group style="margin: 0 20px 0 8px;">
+                    <span>Match:</span>
+                    <a-button-group style="margin: 0 12px 0 8px;">
                         <a-button class="legend legend-null" size="small" @click="selectMatchExtractArea('null')"
-                            title="Click to select a starting area in the input table for matching without extraction. Press 'Esc' to cancel the selection mode.">No
-                            Extration</a-button>
+                            title="Click to select a starting area in the input table. \nPress 'Esc' to cancel the selection mode.">Region</a-button>
+                    </a-button-group>
+                    <span>Extract by:</span>
+                    <a-button-group style="margin: 0 25px 0 8px;">
                         <a-button class="legend legend-position" size="small"
                             @click="selectMatchExtractArea('position')"
-                            title="Click to select a starting area in the input table for matching and extracting by position. Press 'Esc' to cancel the selection mode.">Position</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by position. \nPress 'Esc' to cancel the selection mode.">Position</a-button>
                         <a-button class="legend legend-context" size="small" @click="selectMatchExtractArea('context')"
-                            title="Click to select a starting area in the input table for matching and extracting by context. Press 'Esc' to cancel the selection mode.">Context</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by context. \nPress 'Esc' to cancel the selection mode.">Context</a-button>
                         <a-button class="legend legend-value" size="small" @click="selectMatchExtractArea('value')"
-                            title="Click to select a starting area in the input table for matching and extracting by value. Press 'Esc' to cancel the selection mode.">Value</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by value. \nPress 'Esc' to cancel the selection mode.">Value</a-button>
                     </a-button-group>
                 </span>
                 <a-button id="draw_tree" size="small" @click="drawTree2">
@@ -391,7 +393,7 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     if (!setFlag) return;
     tableStore.transformTablebyCode();  // auto run
     tableStore.computeColInfo("output_tbl");
-    drawTree(tableStore.spec.visTree);
+    drawTree(tableStore.spec.visTree); // 会默认选择第一个节点
     drawTblTemplate();
     // console.log(tableStore.input_tbl.instance.get);
     // console.log('watch code changed: end');

@@ -652,7 +652,9 @@ export class TreeChart {
 
       if (node.data.id === 1) {
         tableStore.spec.selectNode = node  // 默认选中第一个节点
-        tableStore.goToInstance(0);
+        if (document.body.style.cursor !== 'cell') {
+          tableStore.goToInstance(0);
+        }
       }
 
       const nodeRectData = {
