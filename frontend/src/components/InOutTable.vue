@@ -18,7 +18,7 @@
     </div>
     <div class="view-content">
       <ColType tblType="input_tbl" />
-      <div id="input-tbl" style="height: calc(100% - 22px); overflow: scroll;">
+      <div id="output-tbl" style="height: calc(100% - 28px); overflow: hidden;">
         <hot-table ref="inputTbl" :data="input_tbl" :rowHeaders="true" :colHeaders="true" :manualColumnResize="true"
           :autoWrapRow="true" :autoWrapCol="true" :contextMenu="true" :renderer="renderTblCell"
           licenseKey="non-commercial-and-evaluation"></hot-table>
@@ -37,7 +37,7 @@
     </div>
     <div class="view-content">
       <ColType tblType="output_tbl" />
-      <div id="output-tbl" style="height: calc(100% - 22px); overflow: scroll;">
+      <div id="output-tbl" style="height: calc(100% - 28px); overflow: hidden;">
         <hot-table ref="outputTbl" :data="output_tbl" :rowHeaders="true" :colHeaders="output_col"
           :manualColumnResize="true" :renderer="renderTblCell" :contextMenu="true" :autoWrapRow="true"
           :autoWrapCol="true" licenseKey="non-commercial-and-evaluation"></hot-table>

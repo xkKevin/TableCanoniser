@@ -115,7 +115,7 @@ export type ColInfo = {
   index: number, // column index
   string: number[],
   number: number[],
-  null: number[]
+  none: number[]
 }
 
 // define and expose a store
@@ -447,6 +447,7 @@ export const useTableStore = defineStore('table', {
       const tableStore = this;
 
       hightlight.selectAll('rect').remove();
+      if (this.spec.visTree.children!.length === 0 || this.spec.visTree.children![0].matchs === undefined) return;
       hightlight.raise().selectAll('rect').data(this.spec.visTree.children![0].matchs!.map((d, i) => ({ x: d.x, y: d.y, width: d.width, height: d.height, index: i })))
         .enter().append('rect') // .classed('grid-inst', true)
         .attr('x', d => d.x * visInfo.width)
@@ -552,7 +553,7 @@ export const useTableStore = defineStore('table', {
       return cells;
     },
 
-    highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[], coords: [number, number][] | null = null) {
+    highlightTblCells(tbl: "input_tbl" | "output_tbl", cells: TblCell[], coords: [number, number][] | null = null, rowFlag = true, colFlag = true) {
       this[tbl].instance.updateSettings({ cell: cells });
       if (coords === null) {
         coords = cells!.map((c) => [c.row, c.col] as [number, number]);
@@ -563,8 +564,8 @@ export const useTableStore = defineStore('table', {
         const visibleRows = this[tbl].instance.countVisibleRows();
         const visibleCols = this[tbl].instance.countVisibleCols();
         this[tbl].instance.scrollViewportTo({
-          row: rowSize === 1 ? Math.max(0, topLeft[0] - Math.floor(visibleRows / 2)) : Math.max(0, topLeft[0] - 2),
-          col: colSize === 1 ? Math.max(0, topLeft[1] - Math.floor(visibleCols / 2)) : Math.max(0, topLeft[1] - 1),
+          row: rowFlag ? (rowSize === 1 ? Math.max(0, topLeft[0] - Math.floor(visibleRows / 2)) : Math.max(0, topLeft[0] - 2)) : undefined,
+          col: colFlag ? (colSize === 1 ? Math.max(0, topLeft[1] - Math.floor(visibleCols / 2)) : Math.max(0, topLeft[1] - 1)) : undefined,
           verticalSnap: "top",
           horizontalSnap: "start",
         });
@@ -899,9 +900,9 @@ export const useTableStore = defineStore('table', {
     },
 
     grid_cell_click(cell: TblCell, className: string = "selection") {
-      let cells: TblCell[] = [{ ...cell, className }];
+      const cells: TblCell[] = [{ ...cell, className }];
       this.highlightTblCells("input_tbl", cells);
-      let outTblCells = this.in_out_mapping({ "0": [[cell.row, cell.col]] }, "input_tbl", className);
+      const outTblCells = this.in_out_mapping({ "0": [[cell.row, cell.col]] }, "input_tbl", className);
       this.highlightTblCells("output_tbl", outTblCells);
     },
 
@@ -1472,9 +1473,9 @@ export const useTableStore = defineStore('table', {
     },
     computeColInfo(tblType: 'input_tbl' | 'output_tbl' = 'input_tbl') {
       const table = this[tblType].tbl;
-      if (table.length === 0) return [];
-      const hot = this[tblType].instance;
       this[tblType].colInfo = [];
+      if (table.length === 0) return;
+      const hot = this[tblType].instance;
       const colCount = table[0].length;
 
       for (let col = 0; col < colCount; col++) {
@@ -1483,7 +1484,7 @@ export const useTableStore = defineStore('table', {
           width: hot.getColWidth(col),
           string: [],
           number: [],
-          null: []
+          none: []
         };
 
         for (let row = 0; row < table.length; row++) {
@@ -1497,7 +1498,7 @@ export const useTableStore = defineStore('table', {
               colInfo.number.push(row);
               break;
             case TableTidierKeyWords.None:
-              colInfo.null.push(row);
+              colInfo.none.push(row);
               break;
           }
         }

@@ -24,11 +24,11 @@
     <!-- <ChatBot /> -->
     <div class="main-views">
       <div class="column" style="flex: 12">
-        <div style="flex: 1; display: flex;">
+        <div style="flex: 1; display: flex; min-height: 0px;">
           <InOutTable />
         </div>
 
-        <div style="flex: 1; display: flex;">
+        <div style="flex: 1; display: flex; min-height: 0px;">
           <Minimap />
           <PatternVis />
         </div>
@@ -254,7 +254,6 @@ onMounted(() => {
   }
 
   .view {
-    flex: 1;
 
     // // height: calc(100vh - 80px);
     .ant-tabs {
@@ -271,6 +270,7 @@ onMounted(() => {
 .column {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .view {
@@ -282,6 +282,9 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
   /* View background color */
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .view-title {
@@ -295,8 +298,10 @@ onMounted(() => {
 
 .view-content {
   // overflow-y: auto;
-  overflow: hidden;
-  height: calc(100% - 40px);
+  // overflow: hidden;
+  // height: calc(100% - 40px);
+  min-height: 0px;
+  flex: auto;
 }
 
 .mapping-details {

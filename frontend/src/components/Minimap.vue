@@ -11,7 +11,7 @@
                         <span>Last</span>
                     </a-button>
                     <a-button size="small" @click="tableStore.goToInstance(1)"
-                        :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1"
+                        :disabled="tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1"
                         title="Next instance">
                         <span>Next</span>
                         <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
@@ -190,13 +190,20 @@ onMounted(() => {
 
 
 watch(() => tableStore.input_tbl.tbl, (newVal) => {
-    // console.log('watch: tbl changed: start');
+    // console.log('watch: input_tbl changed: start');
     if (newVal.length === 0) {
         d3.select(container.value).selectAll('svg').remove();
     } else {
         drawGrid(newVal.length, newVal[0].length);
     }
+    tableStore.computeColInfo("input_tbl");
 });
+
+// watch(() => tableStore.output_tbl.tbl, (newVal) => {
+//     console.log('watch: output_tbl changed: start');
+//     console.log(tableStore.output_tbl.tbl, newVal);
+//     // tableStore.computeColInfo("output_tbl");
+// })
 
 </script>
 

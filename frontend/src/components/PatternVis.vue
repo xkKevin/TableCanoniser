@@ -390,11 +390,10 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
     tableStore.transformTablebyCode();  // auto run
+    tableStore.computeColInfo("output_tbl");
     drawTree(tableStore.spec.visTree);
     drawTblTemplate();
-
-    tableStore.computeColInfo("input_tbl");
-    tableStore.computeColInfo("output_tbl");
+    // console.log(tableStore.input_tbl.instance.get);
     // console.log('watch code changed: end');
 });
 
