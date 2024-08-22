@@ -29,7 +29,6 @@
         </div>
 
         <div style="flex: 1; display: flex; min-height: 0px;">
-          <Minimap />
           <PatternVis />
         </div>
       </div>
@@ -85,7 +84,7 @@ import { computed, onMounted, ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
-import Minimap from "@/components/Minimap.vue";
+// import Minimap from "@/components/Minimap.vue";
 import PatternVis from "@/components/PatternVis.vue";
 import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
@@ -154,8 +153,8 @@ function handleKeydown(event: KeyboardEvent) {
 
     tableStore.clearStatus("tree");
     tableStore.clearStatus("matchArea");
+    tableStore.clearStatus("miniHighlight");
 
-    tableStore.tree.minimapInstHighlight!.selectAll('rect').remove();
   }
 }
 

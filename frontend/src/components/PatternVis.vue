@@ -1,8 +1,24 @@
 <template>
-    <div class="view" style="flex: 4.5">
+    <div class="view"> <!-- style="flex: 4.5" -->
         <div class="view-title">
             <span>Pattern Panel</span>
             <span style="float: right; margin-right: 20px; ">
+                <span style="font-size: 15px; margin-right: 10px;" v-show="currentInstFlag">
+                    Current instance: {{ tableStore.tree.instanceIndex + 1 }}
+                </span>
+                <a-button-group class="goToInstance">
+                    <a-button size="small" @click="tableStore.goToInstance(-1)"
+                        :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
+                        title="Last instance">
+                        <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
+                        <span>Last</span>
+                    </a-button>
+                    <a-button size="small" @click="tableStore.goToInstance(1)" :disabled="disableNextFlag"
+                        title="Next instance">
+                        <span>Next</span>
+                        <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
+                    </a-button>
+                </a-button-group>
                 <span style="font-size: 15px">
                     <!-- <span>Match:</span>
                     <a-button class="legend legend-null" size="small">No Extration</a-button>
@@ -23,15 +39,18 @@
                             title="Click to select a starting area in the input table for matching and extracting by value. \nPress 'Esc' to cancel the selection mode.">Value</a-button>
                     </a-button-group>
                 </span>
-                <a-button id="draw_tree" size="small" @click="drawTree2">
+                <a-button id="draw_tree" size="small" @click="resetZoom">
                     <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                     <span>Reset View</span>
                 </a-button>
             </span>
         </div>
         <div class="view-content" style="display: flex;">
-            <div style="flex: 1;">
-                <div class="tbl-container" ref="tblContainer"></div>
+            <div style="flex: 1.3;">
+                <svg ref="tblContainer" class="tbl-container">
+                    <path class="mini-temp-line top-line"></path>
+                    <path class="mini-temp-line bottom-line"></path>
+                </svg>
             </div>
             <div style="flex: 1; margin-left: 5px">
                 <a-dropdown :trigger="['contextmenu']" :open="contextMenuVisible"
@@ -40,7 +59,7 @@
                         <a-menu @click="closeContextMenu" :items="menuList">
                         </a-menu>
                     </template>
-                    <div class="tree-container" ref="treeContainer"></div>
+                    <div ref="treeContainer" class="tree-container"></div>
                 </a-dropdown>
             </div>
         </div>
@@ -80,6 +99,8 @@ const data: TreeNode = {
 };
 */
 
+const currentInstFlag = ref(false);
+const disableNextFlag = ref(false);
 const menuList = computed(() => tableStore.tree.menuList);
 // const contextMenuVisible = tableStore.tree.contextMenuVisible;
 const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible && tableStore.tree.menuList.length > 0);
@@ -175,14 +196,16 @@ const closeContextMenu = (e: any) => {
 
 const treeContainer = ref<HTMLDivElement | null>(null);
 
-function drawTree2() {
+function resetZoom(container: SVGSVGElement | null) {
     drawTree(tableStore.spec.visTree);
-    drawTblTemplate();
-    // if (zoom && tblContainer.value) {
-    //     // 不能对g.matrix元素进行transform操作，因为zoom事件监听器是添加在svg元素上的，所以需要对svg元素进行transform操作
-    //     d3.select(tblContainer.value).select('svg').transition().duration(750)
-    //         .call(zoom.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
-    // }
+    if (container) {
+        // 不能对g.matrix元素进行transform操作，因为zoom事件监听器是添加在svg元素上的，所以需要对svg元素进行transform操作
+        d3.select(container).select('g.left').transition().duration(750)
+            .call(miniZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
+
+        d3.select(container).select('g.right').transition().duration(750)
+            .call(tempZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
+    }
 }
 
 const drawTree = (data: any) => {
@@ -220,157 +243,10 @@ const selectMatchExtractArea = (type: TypeColor) => {
 
 
 
-const tblContainer = ref<HTMLDivElement | null>(null);
-let offsetX = 0;
-let offsetY = 0;
-let transformStatue: any;
-let zoom: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
-
-const drawTblTemplate = () => {
-    if (!tblContainer.value) return;
-    // Clear any existing SVG
-    d3.select(tblContainer.value).selectAll('svg').remove();
-
-    try {
-        const visChildren = tableStore.spec.visTree.children
-        if (visChildren === undefined || visChildren.length === 0 || visChildren[0].width === 0 || visChildren[0].height === 0) return;
-
-        const containerWidth = tblContainer.value.clientWidth;
-        const containerHeight = tblContainer.value.clientHeight;
+const tblContainer = ref<SVGSVGElement | null>(null);
 
 
-        let cellWidth = Math.max(5, Math.min(90, Math.floor(containerWidth / visChildren[0].width)));
-        let cellHeight = Math.max(5, Math.min(30, Math.floor(containerHeight / visChildren[0].height)));
-        // const cellWidth = 90;
-        // const cellHeight = 30;
 
-        zoom = d3.zoom<SVGSVGElement, unknown>()
-            // .scaleExtent([0.5, 3.5])  // set the zoom scale range
-            .on('zoom', function (event) {
-                // svg.attr('transform', event.transform);  // 直接设置svg的transform属性会导致缩放后的坐标系不正确（导致的问题是：用鼠标平移（pan）矩形的时候，矩形会抖动，导致矩形实际平移的距离小于鼠标平移的距离），因此需要在svg内部再添加一个g元素
-                d3.select('g.tbl-template').attr('transform', `translate(${offsetX + event.transform.x}, ${offsetY + event.transform.y}) scale(${event.transform.k})`); // Update the matrix transform based on the zoom event
-                updateCellTextVisibility(event.transform.k); // Update cell text visibility based on the current scale
-                // transformStatue = event.transform;
-            })
-
-        const svg = d3.select(tblContainer.value)
-            .append('svg')
-            .attr('width', containerWidth)
-            .attr('height', containerHeight)
-            .call(zoom)  // 注意，这里添加zoom的是svg元素，而不是g.matrix元素，所以当resetZoom时，需要对svg元素进行transform操作
-
-        const matrix = svg.append('g').classed("tbl-template", true);  // Append a 'g' element for better transform management to avoid jittering
-        let texts: any = null;
-
-        const grids = tableStore.computeTblPatternGrid();
-        // console.log("grids", grids);
-
-        const cells = matrix.selectAll('rect')
-            .data(grids)
-            .enter().append('rect').classed('tbl-template-cell', true)
-            .attr('x', d => d.col * cellWidth)
-            .attr('y', d => d.row * cellHeight)
-            // .attr('id', d => `tbl-template-${d.row}-${d.col}`)
-            .attr('width', cellWidth)
-            .attr('height', cellHeight)
-            .attr('fill', (d) => d.bgColor ? typeMapColor[d.bgColor as TypeColor] : typeMapColor.cellFill)
-            .attr('stroke', '#cccccc')
-            .on('mouseover', function (this: SVGRectElement) {
-                d3.select(this).raise() // Bring the cell to the front 
-                    // .attr('fill', '#ece9e6')
-                    // .attr('stroke', '#4b8aff')
-                    .attr('stroke-width', 2);
-                if (texts) {
-                    texts.raise();
-                }
-            })
-            .on('mouseout', function () {
-                d3.select(this)
-                    // .attr('fill', '#f9f7ff')
-                    // .attr('stroke', '#cccccc')
-                    .attr('stroke-width', 1);
-            })
-            .on('click', function (event, d: TblCell) {
-                // tableStore.grid_cell_click({ row: d.row + visChildren[0].y, col: d.col + visChildren[0].x });
-                const row = d.row + visChildren[0].y;
-                const col = d.col + visChildren[0].x;
-                d3.select(`#grid-${row}-${col}`).dispatch('click');
-                tableStore.highlightNodes([[row, col, row, col]]);
-                tableStore.input_tbl.instance.deselectCell();
-                tableStore.output_tbl.instance.deselectCell();
-            })
-            .append('title').text(d => {
-                if (d.text && d.text.length) {
-                    if (d.bgColor === typeMapColor.position || d.bgColor === typeMapColor.positionShallow) {
-                        return "The cell's Target Column is:\n" + d.text.toString();
-                    } else {
-                        return "The cell's Target Column may be:\n" + d.text.toString();
-                    }
-                } else {
-                    return "No Target Column";
-                }
-            });
-
-        // Calculate the offset to center the matrix in the SVG container
-        offsetX = Math.max((containerWidth - matrix.node()!.getBBox().width) / 2, 0);
-        offsetY = Math.max((containerHeight - matrix.node()!.getBBox().height) / 2, 0);
-        matrix.attr('transform', `translate(${offsetX}, ${offsetY})`); // Center the matrix
-        transformStatue = d3.zoomIdentity;
-
-        const updateCellTextVisibility = (scale: number) => {
-            const scaledCellWidth = cellWidth * scale;
-            const scaledCellHeight = cellHeight * scale;
-            // const cellArea = scaledCellWidth * scaledCellHeight;
-            if (scaledCellWidth >= 90 || scaledCellHeight >= 30) {
-                if (texts) {
-                    texts.style('display', 'block');
-                } else {
-                    texts = matrix.selectAll('text')
-                        .data(grids)
-                        .enter().append('text').classed('tbl-template-text', true)
-                        .attr('x', d => d.col * cellWidth + cellWidth / 2)
-                        .attr('y', d => d.row * cellHeight + cellHeight / 2)
-                        .attr('dy', '.30em')
-                        .attr('font-size', 15 / scale)
-                        .attr('fill', (d) => d.textColor ? typeMapColor[d.textColor as TypeColor] : typeMapColor.cellFill)
-                        .attr('text-anchor', 'middle')
-                        .text(d => d.text ? d.text[0] : '')
-                        .each(function (d) {
-                            const textElement = d3.select(this);
-                            let text = textElement.text();
-                            let textLength = this.getComputedTextLength();
-                            // 如果文本超出最大宽度，进行截断
-                            while (textLength > cellWidth && text.length > 0) {
-                                text = text.slice(0, -1);
-                                textElement.text(text + '…');
-                                textLength = this.getComputedTextLength();
-                            }
-                        })
-                        .style('display', 'block')
-                        .style('pointer-events', 'none'); // Ensure text does not capture mouse events, in order to allow clicking on the cells
-                }
-            } else {
-                if (texts) {
-                    texts.style('display', 'none');
-                }
-            }
-        };
-
-        updateCellTextVisibility(1); // Initial update for default scale 1
-
-        tableStore.tree.tblVisHighlight = matrix.append('g').classed('tbl-template-highlight', true);
-        tableStore.tree.tblVisInfo = {
-            x: visChildren[0].x,
-            y: visChildren[0].y,
-            width: cellWidth,
-            height: cellHeight
-        }
-
-    }
-    catch (e) {
-        console.error(e);
-    }
-}
 
 /*
 import { debounce } from 'lodash';
@@ -394,13 +270,27 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.transformTablebyCode();  // auto run
     tableStore.computeColInfo("output_tbl");
     drawTree(tableStore.spec.visTree); // 会默认选择第一个节点
-    drawTblTemplate();
+    drawTblTemplate(tblContainer.value, tableStore);
     // console.log(tableStore.input_tbl.instance.get);
     // console.log('watch code changed: end');
+    tableStore.optimizeMiniTempDistance();
+    tableStore.updateCurve();
+    currentInstFlag.value = tableStore.spec.visTree.children!.length > 0 && tableStore.spec.visTree.children![0].matchs !== undefined && tableStore.spec.visTree.children![0].matchs!.length > 0;
+    disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
 });
 
 watch(() => tableStore.tree.instanceIndex, (newVal) => {
-    drawTblTemplate();
+    drawTblTemplate(tblContainer.value, tableStore);
+    disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
+    tableStore.updateCurve();
+});
+
+import { drawMinimap, miniZoom } from '@/tree/minimap';
+import { drawTblTemplate, tempZoom } from '@/tree/template';
+watch(() => tableStore.input_tbl.tbl, (newVal) => {
+    // console.log('watch: input_tbl changed: start');
+    drawMinimap(newVal.length, newVal[0].length, tblContainer.value, tableStore);
+    tableStore.computeColInfo("input_tbl");
 });
 
 // watch(() => tableStore.spec.visTree.size.height, (newVal) => {
@@ -424,6 +314,10 @@ onMounted(() => {
 </script>
 
 <style lang="less">
+.goToInstance {
+    margin-right: 30px;
+}
+
 .tree-container {
     width: 100%;
     height: 100%;
@@ -442,6 +336,73 @@ onMounted(() => {
 .tbl-container {
     width: 100%;
     height: 100%;
+
+    .mini-temp-line {
+        fill: none;
+        stroke: #0000004D; // var(--color-selectionShallow);
+        stroke-width: 2px;
+    }
+
+    rect.positionShallow {
+        fill: var(--color-positionShallow);
+        stroke: var(--color-positionShallow);
+    }
+
+    rect.position {
+        fill: var(--color-position);
+        stroke: var(--color-position);
+    }
+
+    rect.contextShallow {
+        fill: var(--color-contextShallow);
+        stroke: var(--color-contextShallow);
+    }
+
+    rect.context {
+        fill: var(--color-context);
+        stroke: var(--color-context);
+    }
+
+    rect.valueShallow {
+        fill: var(--color-valueShallow);
+        stroke: var(--color-valueShallow);
+    }
+
+    rect.value {
+        fill: var(--color-value);
+        stroke: var(--color-value);
+    }
+
+    rect.nullShallow {
+        fill: var(--color-nullShallow);
+        stroke: var(--color-nullShallow);
+    }
+
+    rect.null {
+        fill: var(--color-null);
+        stroke: var(--color-null);
+    }
+
+    rect.selectionShallow {
+        fill: var(--color-selectionShallow);
+        stroke: var(--color-selectionShallow);
+    }
+
+    rect.selection {
+        fill: var(--color-selection);
+        stroke: var(--color-selection);
+    }
+
+    .grid-cell {
+        // 不写 rect.grid-cell 是让此选择器的优先级低于 rect.selection 等选择器
+        fill: var(--color-cellFill);
+        stroke: var(--color-cellStroke);
+        stroke-width: 1px;
+    }
+
+    .grid-cell:hover {
+        stroke-width: 2px;
+    }
 
     .tbl-template-cell:hover {
         stroke: var(--color-selection);

@@ -211,6 +211,10 @@ export const useTableStore = defineStore('table', {
       tree: {
         contextMenuVisible: false,
         instanceIndex: 0,
+        offset: {
+          left: { x: 0, y: 0 },
+          right: { x: 0, y: 0 }
+        },
         visInst: shallowRef<TreeChart | null>(null),
         tblVisHighlight: null as d3.Selection<SVGGElement, unknown, null, undefined> | null,
         tblVisInfo: shallowRef<AreaBox | null>(null),  // tblTemplate中起始单元格在input tbl中的坐标位置(x, y)，以及单元格的宽高(width, height)
@@ -437,9 +441,16 @@ export const useTableStore = defineStore('table', {
       this.updateVisTreeAreaBox();
       this.hightlightViewsAfterClickNode(this.spec.selectNode!.data);
 
+      if (this.tree.minimapInstHighlight && this.tree.minimapInstHighlight.selectAll('rect').size() === 0) {
+        this.highlightMinimapInsts();
+      };
+
       const hightlight = this.tree.minimapInstHighlight!;
       hightlight.selectAll('rect').attr('stroke', 'none');
       hightlight.select(`rect:nth-child(${this.tree.instanceIndex + 1})`).attr('stroke', typeMapColor.selection);
+
+      this.updateCurve();
+
     },
     highlightMinimapInsts() {
       const hightlight = this.tree.minimapInstHighlight!;
@@ -474,6 +485,72 @@ export const useTableStore = defineStore('table', {
           tableStore.goToInstance(d.index - tableStore.tree.instanceIndex);
         })
         .append('svg:title').text((d, i) => `The ${tableStore.numberToOrdinal(i + 1)} instance.\nArea Box:\n · x: ${d.x}\n · y: ${d.y}\n · width: ${d.width}\n · height: ${d.height}`);
+    },
+
+    optimizeMiniTempDistance(maxDistance: number = 120) {
+      const miniG = d3.select('g.left g.matrix')
+      const miniWidth = (miniG.node() as SVGGraphicsElement).getBBox().width
+      const distanceGap = this.tree.offset.right.x - this.tree.offset.left.x - miniWidth - maxDistance;
+
+      if (distanceGap > 0) {
+        this.tree.offset.left.x += distanceGap;
+        miniG.attr('transform', `translate(${this.tree.offset.left.x}, ${this.tree.offset.left.y})`);
+      }
+    },
+
+    updateCurve() {
+      try {
+        const currentInstRect = this.tree.minimapInstHighlight!.select(`rect:nth-child(${this.tree.instanceIndex + 1})`);
+        const instRightX = +currentInstRect.attr('x') + +currentInstRect.attr('width');
+
+        const instTopY = +currentInstRect.attr('y');
+        const instBottomY = +currentInstRect.attr('y') + +currentInstRect.attr('height');
+
+
+        const tempRect = d3.select('rect.tbl-template-cell')
+        const tempLeftX = +tempRect.attr('x');
+        const tempTopY = +tempRect.attr('y');
+        const tempBottomY = +tempRect.attr('y') + +tempRect.attr('height') * this.spec.visTree.children![0].height;
+
+        const miniG = d3.select('g.left g.matrix')
+        const tempG = d3.select('g.right g.tbl-template')
+
+        // 获取当前变换
+        const instTransform = (miniG.node() as SVGGraphicsElement).getCTM()!;
+        const tempTransform = (tempG.node() as SVGGraphicsElement).getCTM()!;
+
+        const applyTransform = (x: number, y: number, transform: DOMMatrix) => {
+          return {
+            x: transform.a * x + transform.e,
+            y: transform.d * y + transform.f
+          }
+        }
+
+        // 计算变换后的点
+        const rectTopRight = applyTransform(instRightX, instTopY, instTransform);
+        const rectBottomRight = applyTransform(instRightX, instBottomY, instTransform);
+        const rectRightTopLeft = applyTransform(tempLeftX, tempTopY, tempTransform);
+        const rectRightBottomLeft = applyTransform(tempLeftX, tempBottomY, tempTransform);
+
+        const lineGenerator = d3.line().curve(d3.curveCatmullRom);
+        // 绘制曲线
+        const pathData1 = lineGenerator([
+          [rectTopRight.x, rectTopRight.y],
+          [rectRightTopLeft.x, rectRightTopLeft.y]
+        ]);
+
+        const pathData2 = lineGenerator([
+          [rectBottomRight.x, rectBottomRight.y],
+          [rectRightBottomLeft.x, rectRightBottomLeft.y]
+        ]);
+
+        d3.select('path.top-line').attr("d", pathData1);
+        d3.select('path.bottom-line').attr("d", pathData2);
+      }
+      catch (e) {
+        d3.select('path.top-line').attr("d", "");
+        d3.select('path.bottom-line').attr("d", "");
+      }
     },
 
     /**
@@ -1547,6 +1624,11 @@ export const useTableStore = defineStore('table', {
           d3.selectAll('.type-node').classed('selection', false);
           d3.selectAll('.node-constraint-rect').attr('visibility', 'hidden');
           break;
+        case "miniHighlight":
+          this.tree.minimapInstHighlight!.selectAll('rect').remove();
+          d3.select('path.top-line').attr("d", "");
+          d3.select('path.bottom-line').attr("d", "");
+          break
       }
     },
   },
