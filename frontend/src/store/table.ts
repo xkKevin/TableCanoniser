@@ -223,60 +223,62 @@ export const useTableStore = defineStore('table', {
           width: 0,
           height: 0
         },
-        menuAllList: [{
-          key: "0",
-          label: "Reset Area",
-          title: "Reset Area",
-          // icon: () => h(MailOutlined),
-        }, {
-          key: "1",
-          label: "Add Constraint",
-          title: "Add Constraint",
-          // icon: () => h(MailOutlined),
-          // disabled: true
-        }, {
-          key: "2",
-          label: "Set Target Cols",
-          title: "Set Target Cols",
-          children: [{
-            key: "2-0",
-            label: "Position",
-            title: "Match and Extract by Position",
-            // class: "legend-position",
-            style: { color: typeMapColor['position'] },  // 使用 style 设置样式
+        menuAllList: [
+          //   {
+          //   key: "0",
+          //   label: "Reset Area",
+          //   title: "Reset Area",
+          //   // icon: () => h(MailOutlined),
+          // }, 
+          {
+            key: "3",
+            label: "Add Sub-Pattern",
+            title: "Add Sub-Pattern",
+            // disabled: true
+            // icon: () => h(MailOutlined),
           }, {
-            key: "2-1",
-            label: "Context",
-            title: "Match and Extract by Context",
-            style: { color: typeMapColor['context'] },
+            key: "1",
+            label: "Add Constraint",
+            title: "Add Constraint",
+            // icon: () => h(MailOutlined),
+            // disabled: true
           }, {
-            key: "2-2",
-            label: "Value",
-            title: "Match and Extract by Value",
-            style: { color: typeMapColor['value'] },
+            key: "2",
+            label: "Reset Target Cols",
+            title: "Reset Target Cols",
+            children: [{
+              key: "2-0",
+              label: "Position",
+              title: "Match and Extract by Position",
+              // class: "legend-position",
+              style: { color: typeMapColor['position'] },  // 使用 style 设置样式
+            }, {
+              key: "2-1",
+              label: "Context",
+              title: "Match and Extract by Context",
+              style: { color: typeMapColor['context'] },
+            }, {
+              key: "2-2",
+              label: "Value",
+              title: "Match and Extract by Value",
+              style: { color: typeMapColor['value'] },
+            }, {
+              key: "2-3",
+              label: "Region",
+              title: "Match Without Extraction",
+              style: { color: typeMapColor['null'] },
+            }],
           }, {
-            key: "2-3",
-            label: "Region",
-            title: "Match without Extraction",
-            style: { color: typeMapColor['null'] },
+            key: "4",
+            label: "Delete This Pattern",
+            title: "Delete This Pattern",
+            // disabled: true
+            // icon: () => h(MailOutlined),
+          }, {
+            key: "5",
+            label: "Delete Constraint",
+            title: "Delete Constraint",
           }],
-        }, {
-          key: "3",
-          label: "Add Sub-Template",
-          title: "Add Sub-Template",
-          // disabled: true
-          // icon: () => h(MailOutlined),
-        }, {
-          key: "4",
-          label: "Delete Template",
-          title: "Delete Template",
-          // disabled: true
-          // icon: () => h(MailOutlined),
-        }, {
-          key: "5",
-          label: "Delete Constraint",
-          title: "Delete Constraint",
-        }],
         menuList: [] as Array<{ [key: string]: any }>,
       }
     }
