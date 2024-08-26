@@ -6,6 +6,8 @@ export const typeMapColor = {
   contextShallow: 'rgba(240, 147, 43, 0.65)', // '#ffbe76'
   value: 'rgba(34, 166, 179)', // '#22a6b3',
   valueShallow: 'rgba(34, 166, 179, 0.65)', // '#7ed6df'
+  // value: 'rgba(140, 122, 230)', // '#8c7ae6',
+  // valueShallow: 'rgba(140, 122, 230, 0.65)', // '#a29bfe'
   null: 'rgba(131, 149, 167)', // '#8395a7',
   nullShallow: 'rgba(131, 149, 167, 0.65)', // '#c8d6e5',
   // Table selection

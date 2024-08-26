@@ -247,6 +247,7 @@ export class TreeChart {
   container: string;
   data: any;
   zoomLevel: number;
+  resetZoom: any;
   depth: number;
   calculated: KV; // SVG画布相关的信息，如宽高、边距、对称中心
   treeLayout: any; // 用于存放layout配置
@@ -288,7 +289,6 @@ export class TreeChart {
     this.data = _data;
     this.store = _store;
 
-    this.zoomed.bind(this);
     this.setZoomFactor.bind(this);
     this.batchEnterExitUpdate();
   }
@@ -306,11 +306,6 @@ export class TreeChart {
     } else {
       this.centerG.attr('transform', `translate(${this.calculated.centerX}, ${this.calculated.nodeMaxHeight / 2}) scale(${targetZoomLevel})`);
     }
-  }
-
-  private zoomed(e: any) {
-    this.previousTransform = e.transform;
-    this.realChart.attr('transform', e.transform);
   }
 
   /*
@@ -457,8 +452,16 @@ export class TreeChart {
     */
 
     // pan & zoom handler
-    const zoomfunc: any = (d3.zoom() as any).on('zoom', this.zoomed.bind(this))
-      .bind(this);
+    // this.zoomfunc = (d3.zoom() as any).on('zoom', this.zoomed.bind(this))
+    //   .bind(this);
+    const zoomfunc = (d3.zoom() as any).on('zoom', (e: any) => {
+      chart.attr('transform', e.transform);
+    })
+
+
+    // this.centerG.attr('transform', `translate(${offsetX}, ${offsetY})`);
+
+
 
     // svg画布
     // @ts-ignore
@@ -469,7 +472,12 @@ export class TreeChart {
       // .attr('cursor', 'move')
       // .attr('viewBox', `${this.margins[0]} ${this.margins[1]} ${this.svgWidth} ${this.svgHeight}`)
       // .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"))
-      .call(zoomfunc.bind(this)).on('dblclick.zoom', null)  // 禁用双击缩放
+      .call(zoomfunc).on('dblclick.zoom', null)  // 禁用双击缩放
+
+
+    this.resetZoom = () => {
+      svg.transition().duration(750).call(zoomfunc.transform, d3.zoomIdentity);
+    }
 
     // svg画布与容器边距 
     const chart = svg.patternify({ tag: 'g', selector: 'chart' })
@@ -735,7 +743,7 @@ export class TreeChart {
                   iconPath = require('@/assets/plus.png');
                   break;
                 default:
-                  iconPath = require('@/assets/letter-w (3).png');
+                  iconPath = require('@/assets/equal3.png');  // letter-w (3)
               }
             }
             // const iconPath = require('@/assets/constraint.png');

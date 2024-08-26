@@ -239,8 +239,8 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   tblInst1.updateSettings({
     outsideClickDeselects: (targetEle) => {
       const targetClassName = targetEle?.className;
-      // console.log(targetClassName, targetEle);
-      if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || (targetEle.parentNode as HTMLElement).classList.contains("goToInstance")) {
+      // if ((targetEle.parentNode?.parentNode as HTMLElement).classList.contains("goToInstance") || (targetEle.parentNode as HTMLElement).classList.contains("goToInstance"))
+      if (targetEle.closest(".goToInstance") !== null) {
         if (document.body.style.cursor === 'cell') {
           tableStore.clearStatus("matchArea");
         }

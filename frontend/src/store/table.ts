@@ -210,7 +210,7 @@ export const useTableStore = defineStore('table', {
       },
       tree: {
         contextMenuVisible: false,
-        instanceIndex: 0,
+        instanceIndex: -1,
         offset: {
           left: { x: 0, y: 0 },
           right: { x: 0, y: 0 }
@@ -256,7 +256,7 @@ export const useTableStore = defineStore('table', {
             style: { color: typeMapColor['value'] },
           }, {
             key: "2-3",
-            label: "No Extraction",
+            label: "Region",
             title: "Match without Extraction",
             style: { color: typeMapColor['null'] },
           }],
@@ -305,7 +305,7 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo();
         this.clearStatus("matchArea");
         this.editor.mappingSpec.errorMark = null;
-        this.tree.instanceIndex = 0;
+        this.tree.instanceIndex = -1; // 0;
         this.spec.selectNode = null;
 
         if (dataText !== null) {
@@ -436,8 +436,18 @@ export const useTableStore = defineStore('table', {
       }
     },
 
-    goToInstance(step: number) {
-      this.tree.instanceIndex += step;
+    goToInstance(instance: number) {
+      if (isNaN(instance)) {
+        message.error("The input number is invalid!");
+        return;
+      }
+      instance = Math.round(instance);
+      const maxInst = this.spec.visTree.children![0].matchs!.length;
+      if (instance < 0 || instance >= maxInst) {
+        message.error(`The input number is out of range: [1, ${maxInst}]`);
+        return;
+      }
+      this.tree.instanceIndex = instance;
       this.updateVisTreeAreaBox();
       this.hightlightViewsAfterClickNode(this.spec.selectNode!.data);
 
@@ -482,7 +492,8 @@ export const useTableStore = defineStore('table', {
             d3.select(this).attr('stroke', 'none');
         })
         .on('click', function (event: any, d) {
-          tableStore.goToInstance(d.index - tableStore.tree.instanceIndex);
+          // tableStore.goToInstance(d.index - tableStore.tree.instanceIndex);
+          tableStore.goToInstance(d.index);
         })
         .append('svg:title').text((d, i) => `The ${tableStore.numberToOrdinal(i + 1)} instance.\nArea Box:\n · x: ${d.x}\n · y: ${d.y}\n · width: ${d.width}\n · height: ${d.height}`);
     },
@@ -905,7 +916,7 @@ export const useTableStore = defineStore('table', {
       return highlightNodesId;
     },
 
-    highlightTblTemplate(area: AreaBox) {
+    highlightTblTemplate(area: AreaBox, icon = null) {
       if (area.x === undefined || area.y === undefined || area.width === undefined || area.height === undefined) {
         return
       }
@@ -1134,6 +1145,7 @@ export const useTableStore = defineStore('table', {
         if (Object.keys(tidyData).length === 0) {
           if (messageContent) messageContent += '\n';
           messageContent += 'The output table is empty based on the specification.';
+          this.tree.instanceIndex = -1;
           // return;
         }
         message.info(messageContent)

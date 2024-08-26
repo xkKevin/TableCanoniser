@@ -34,8 +34,12 @@ export const drawTblTemplate = (container: SVGSVGElement | null, tableStore: Tab
                 // transformStatue = event.transform;
                 tableStore.updateCurve();
             })
+            .filter(function (event) {
+                // 过滤掉双击事件
+                return !event.ctrlKey && !event.button && event.type !== 'dblclick';
+            });
         const g = svg.append('g').classed("right", true)
-            .call(tempZoom as any)
+            .call(tempZoom as any) // .on('dblclick.zoom', null)  // 禁用双击缩放
 
         const matrix = g.append('g').classed("tbl-template", true);  // Append a 'g' element for better transform management to avoid jittering
 
@@ -95,11 +99,13 @@ export const drawTblTemplate = (container: SVGSVGElement | null, tableStore: Tab
             })
             .append('title').text(d => {
                 if (d.text && d.text.length) {
+                    return "The cell's Target Column is:\n" + d.text.toString();
+                    /*
                     if (d.bgColor === typeMapColor.position || d.bgColor === typeMapColor.positionShallow) {
                         return "The cell's Target Column is:\n" + d.text.toString();
                     } else {
                         return "The cell's Target Column may be:\n" + d.text.toString();
-                    }
+                    }*/
                 } else {
                     return "No Target Column";
                 }

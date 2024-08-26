@@ -34,7 +34,7 @@ export const drawMinimap = (rows: number, cols: number, container: SVGSVGElement
 
 
     const g = svg.append('g').classed("left", true)
-        .call(miniZoom as any)
+        .call(miniZoom as any).on('dblclick.zoom', null)  // 禁用双击缩放
 
     const matrix = g.append('g').classed("matrix", true);  // Append a 'g' element for better transform management to avoid jittering
     // let texts: any = null;

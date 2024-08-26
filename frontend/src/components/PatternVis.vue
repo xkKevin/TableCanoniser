@@ -1,49 +1,59 @@
 <template>
     <div class="view"> <!-- style="flex: 4.5" -->
         <div class="view-title">
-            <span>Pattern Panel</span>
-            <span style="float: right; margin-right: 20px; ">
-                <span style="font-size: 15px; margin-right: 10px;" v-show="currentInstFlag">
-                    Current instance: {{ tableStore.tree.instanceIndex + 1 }}
+            <a-flex justify="space-between" align="center">
+                <span style="font-size: 18px; font-weight: bold;">Pattern Panel</span>
+                <span>
+                    Current instance: <a-input-number class="goToInstance" :value="tableStore.tree.instanceIndex"
+                        :defaultValue="-1" :disabled="tableStore.output_tbl.tbl.length === 0"
+                        @pressEnter="tableStore.goToInstance(+$event.target.value - 1)" size="small" :precision="0"
+                        :formatter="handleFormatter" @step="handleStep"
+                        @blur="tableStore.goToInstance(+$event.target.value - 1)"></a-input-number>
+                    <!--
+                    <span style="font-size: 15px; display: inline-block; width: 157px;" v-show="currentInstFlag">
+                        Current instance: {{ tableStore.tree.instanceIndex + 1 }}
+                    </span>
+                    <a-button-group class="goToInstance">
+                        <a-button size="small" @click="tableStore.goToInstance(-1)"
+                            :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
+                            title="Last instance">
+                            <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
+                            <span>Last</span>
+                        </a-button>
+                        <a-button size="small" @click="tableStore.goToInstance(1)" :disabled="disableNextFlag"
+                            title="Next instance">
+                            <span>Next</span>
+                            <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
+                        </a-button>
+                    </a-button-group>-->
                 </span>
-                <a-button-group class="goToInstance">
-                    <a-button size="small" @click="tableStore.goToInstance(-1)"
-                        :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
-                        title="Last instance">
-                        <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
-                        <span>Last</span>
-                    </a-button>
-                    <a-button size="small" @click="tableStore.goToInstance(1)" :disabled="disableNextFlag"
-                        title="Next instance">
-                        <span>Next</span>
-                        <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
-                    </a-button>
-                </a-button-group>
-                <span style="font-size: 15px">
+                <span style="font-size: 15px; height: 25px">
                     <!-- <span>Match:</span>
-                    <a-button class="legend legend-null" size="small">No Extration</a-button>
+                    <a-button class="legend legend-null" size="small">Region</a-button>
                     <span>Extract by:</span> -->
                     <span>Match:</span>
-                    <a-button-group style="margin: 0 12px 0 8px;">
+                    <a-button-group style="margin: 0 15px 0 6px">
                         <a-button class="legend legend-null" size="small" @click="selectMatchExtractArea('null')"
-                            title="Click to select a starting area in the input table. \nPress 'Esc' to cancel the selection mode.">Region</a-button>
+                            title="Click to select a starting area in the input table. Press 'Esc' to cancel the selection mode.">Region</a-button>
                     </a-button-group>
                     <span>Extract by:</span>
-                    <a-button-group style="margin: 0 25px 0 8px;">
+                    <a-button-group style="margin-left: 6px">
                         <a-button class="legend legend-position" size="small"
                             @click="selectMatchExtractArea('position')"
-                            title="Click to select a starting area in the input table for matching and extracting by position. \nPress 'Esc' to cancel the selection mode.">Position</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by position. Press 'Esc' to cancel the selection mode.">Position</a-button>
                         <a-button class="legend legend-context" size="small" @click="selectMatchExtractArea('context')"
-                            title="Click to select a starting area in the input table for matching and extracting by context. \nPress 'Esc' to cancel the selection mode.">Context</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by context. Press 'Esc' to cancel the selection mode.">Context</a-button>
                         <a-button class="legend legend-value" size="small" @click="selectMatchExtractArea('value')"
-                            title="Click to select a starting area in the input table for matching and extracting by value. \nPress 'Esc' to cancel the selection mode.">Value</a-button>
+                            title="Click to select a starting area in the input table for matching and extracting by value. Press 'Esc' to cancel the selection mode.">Value</a-button>
                     </a-button-group>
                 </span>
-                <a-button id="draw_tree" size="small" @click="resetZoom">
-                    <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
-                    <span>Reset View</span>
-                </a-button>
-            </span>
+                <span style="margin-right: 20px">
+                    <a-button id="draw_tree" size="small" @click="resetZoom">
+                        <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
+                        <span>Reset View</span>
+                    </a-button>
+                </span>
+            </a-flex>
         </div>
         <div class="view-content" style="display: flex;">
             <div style="flex: 1.3;">
@@ -99,8 +109,9 @@ const data: TreeNode = {
 };
 */
 
-const currentInstFlag = ref(false);
-const disableNextFlag = ref(false);
+// const currentInstFlag = ref(false);
+// const disableNextFlag = ref(false);
+// const disableGoToInstFlag = ref(false);
 const menuList = computed(() => tableStore.tree.menuList);
 // const contextMenuVisible = tableStore.tree.contextMenuVisible;
 const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible && tableStore.tree.menuList.length > 0);
@@ -196,16 +207,16 @@ const closeContextMenu = (e: any) => {
 
 const treeContainer = ref<HTMLDivElement | null>(null);
 
-function resetZoom(container: SVGSVGElement | null) {
-    drawTree(tableStore.spec.visTree);
-    if (container) {
-        // 不能对g.matrix元素进行transform操作，因为zoom事件监听器是添加在svg元素上的，所以需要对svg元素进行transform操作
-        d3.select(container).select('g.left').transition().duration(750)
-            .call(miniZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
+function resetZoom() {
+    // drawTree(tableStore.spec.visTree);
+    // c.transition().duration(750)// .call(tableStore.tree.visInst!.zoomfunc as any, d3.zoomIdentity);
+    tableStore.tree.visInst!.resetZoom();
+    // 不能对g.matrix元素进行transform操作，因为zoom事件监听器是添加在svg元素上的，所以需要对svg元素进行transform操作
+    d3.select('svg.tbl-container g.left').transition().duration(750)
+        .call(miniZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
+    d3.select('svg.tbl-container g.right').transition().duration(750)
+        .call(tempZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
 
-        d3.select(container).select('g.right').transition().duration(750)
-            .call(tempZoom!.transform as any, d3.zoomIdentity); // 重置缩放和平移状态
-    }
 }
 
 const drawTree = (data: any) => {
@@ -215,7 +226,7 @@ const drawTree = (data: any) => {
 };
 
 const typeMap = {
-    "null": "No Extration",
+    "null": "Region",
     "position": "Position Based",
     "context": "Context Based",
     "value": "Value Based",
@@ -262,6 +273,23 @@ const resizeObserver = new ResizeObserver(() => {
 });
 */
 
+const handleFormatter = (v: any) => {
+    // console.log(v, tableStore.output_tbl.tbl.length);
+    return tableStore.output_tbl.tbl.length === 0 ? '' : isNaN(v) ? 0 : parseInt(v) + 1
+}
+
+const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) => {
+    // :max=" tableStore.output_tbl.tbl.length> 0 ? tableStore.spec.visTree.children![0].matchs!.length - 1 : 0"
+    // :min="0"
+    if (info.type === 'up') {
+        if (v <= 1) return;
+        tableStore.goToInstance(v - 2);
+    } else {
+        if (v >= tableStore.spec.visTree.children![0].matchs!.length - 2) return;
+        tableStore.goToInstance(v + 2);
+    }
+}
+
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
@@ -275,13 +303,13 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     // console.log('watch code changed: end');
     tableStore.optimizeMiniTempDistance();
     tableStore.updateCurve();
-    currentInstFlag.value = tableStore.spec.visTree.children!.length > 0 && tableStore.spec.visTree.children![0].matchs !== undefined && tableStore.spec.visTree.children![0].matchs!.length > 0;
-    disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
+    // currentInstFlag.value = tableStore.spec.visTree.children!.length > 0 && tableStore.spec.visTree.children![0].matchs !== undefined && tableStore.spec.visTree.children![0].matchs!.length > 0;
+    // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
 });
 
 watch(() => tableStore.tree.instanceIndex, (newVal) => {
     drawTblTemplate(tblContainer.value, tableStore);
-    disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
+    // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
     tableStore.updateCurve();
 });
 
@@ -303,10 +331,8 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
 
 
 onMounted(() => {
-    if (treeContainer.value) {
-        // resizeObserver.observe(treeContainer.value);
-    }
-    // drawTree(tableStore.spec.visTree);
+    document.querySelector('span.ant-input-number-handler-up')!.setAttribute("title", "Previous instance")
+    document.querySelector('span.ant-input-number-handler-down')!.setAttribute("title", "Next instance")
 });
 
 
@@ -315,7 +341,9 @@ onMounted(() => {
 
 <style lang="less">
 .goToInstance {
-    margin-right: 30px;
+    // margin-right: calc(40vw - 430px);
+    width: 60px;
+    margin-left: 6px;
 }
 
 .tree-container {
