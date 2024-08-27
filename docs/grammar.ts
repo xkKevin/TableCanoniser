@@ -254,7 +254,7 @@ interface AreaInfo extends MatchedIndex {
  * - `xOffset`: The x-axis offset relative to the reference area, default is 0
  * - `yOffset`: The y-axis offset relative to the reference area, default is 0
  */
-interface CellSelection {
+interface RegionPosition {
     /**
      * The reference area layer for selection, default is 'current'
      * - `areaLayerFn` (currentArea: AreaInfo) => number: A function that determines the layer of an area based on its current area information.
@@ -262,11 +262,11 @@ interface CellSelection {
      *   @example
      *   (currentArea) => currentArea.areaLayer - 2
      */
-    referenceAreaLayer?: 'current' | 'parent' | 'root' | areaLayerFn;
+    offsetLayer?: 'current' | 'parent' | 'root' | areaLayerFn;
     /**
      * The reference area position for selection, default is 'topLeft'
      */
-    referenceAreaPosi?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';
+    offsetFrom?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';
     /**
      * The x-axis offset relative to the reference area, default is 0
      * - `offsetFn` (currentArea: AreaInfo, rootArea: AreaInfo) => number: A function that returns the x-axis offset
@@ -275,7 +275,7 @@ interface CellSelection {
      *   @example
      *   (currentArea, rootArea) => currentArea.x - rootArea.x
      */
-    xOffset?: number | offsetFn;
+    offsetX?: number | offsetFn;
     /**
      * The y-axis offset relative to the reference area, default is 0
      * - `offsetFn` (currentArea: AreaInfo, rootArea: AreaInfo) => number: A function that returns the y-axis offset
@@ -284,7 +284,7 @@ interface CellSelection {
      *   @example
      *   (currentArea, rootArea) => currentArea.y - rootArea.y
      */
-    yOffset?: number | offsetFn;
+    offsetY?: number | offsetFn;
 }
 
 /**
@@ -300,7 +300,7 @@ interface CellSelection {
  *   - `true` (default) means that if the specified cell is out of bounds, the constraint will be ignored, and the search will continue with other checks.
  *   - `false` means that if the specified cell is out of bounds, the pattern will be considered as not matching, even if other conditions are satisfied.
  */
-interface CellConstraint extends CellSelection {
+interface CellConstraint extends RegionSelection {
     /**
      * The value constraint
      * - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
@@ -422,7 +422,8 @@ interface TableTidierTemplate {
          * - `xOffset`: The x-axis offset relative to the reference area, default is 0
          * - `yOffset`: The y-axis offset relative to the reference area, default is 0
          */
-        startCell?: CellSelection;
+        /* startCell & size define region for matching */
+        startCell?: regionPosition;
         /**
          * The size of the selected area
          */
@@ -436,6 +437,7 @@ interface TableTidierTemplate {
              */
             height?: number | "toParentY" | null;
         };
+        /* Constraints & traverse restrict matching */
         /**
          * Constraints to apply to the cells within the selected area
          * - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
