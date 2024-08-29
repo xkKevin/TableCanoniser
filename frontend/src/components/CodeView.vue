@@ -57,7 +57,7 @@ const initEditor = () => {
     };
     editor = monaco.editor.create(editorWrapper.value!, editorOptions as monaco.editor.IEditorConstructionOptions);  // ! means that editorWrapper.value is not null
 
-    editor.onDidBlurEditorText(() => {
+    editor.onDidBlurEditorText((e) => {
         // 失焦事件优先于别的按钮的点击事件
         if (codeType === "mappingSpec") {
             tableStore.checkGrammarError();
@@ -71,6 +71,7 @@ const initEditor = () => {
             tableStore.spec.redoHistory = [];
         }
         tableStore.editor[codeType].code = value;
+        console.log('onblur', e);
     });
     if (codeType === "mappingSpec") {
         // 编辑器内容变化时取消高亮

@@ -143,7 +143,8 @@ function transformTablebyCode() {
   // triggerRef(ref(tableStore.editor.mappingSpec.code));
   // 即使新值和旧值相同，重新赋值依然会触发 watch：
   // PatternVis.methods!.handleCodeChange(tableStore.editor.mappingSpec.code);
-  patternVis.value.handleCodeChange(tableStore.editor.mappingSpec.code);
+  console.log('click');
+  patternVis.value.debouncedHandleCodeChange(); // handleCodeChange();
   // loading.value = false;
 }
 

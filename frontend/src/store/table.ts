@@ -177,7 +177,8 @@ export const useTableStore = defineStore('table', {
           decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
           highlightCode: null as [number, number, string] | null,  // [startLine, endLine, color]
           language: 'typescript',
-          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+          instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null),
+          triggerCodeChange: true,
         },
         rootArea: {
           code: '',
@@ -309,6 +310,7 @@ export const useTableStore = defineStore('table', {
         this.editor.mappingSpec.errorMark = null;
         this.tree.instanceIndex = -1; // 0;
         this.spec.selectNode = null;
+        this.editor.mappingSpec.highlightCode = null;
 
         if (dataText !== null) {
           this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
@@ -317,7 +319,6 @@ export const useTableStore = defineStore('table', {
           // 通常是由于Handsontable在初始化时还没有正确计算出表格容器的尺寸，或者在Vue组件生命周期的某个阶段，Handsontable的重新渲染没有正确触发。这个问题可能与表格渲染的时机有关。
           this.input_tbl.instance.render();
           // document.getElementById('system_name')?.click();
-          this.transformTblUpdateRootArea()
         } else {
           prompt.push(`Failed to load data from ${caseN}`);
         }
@@ -326,6 +327,7 @@ export const useTableStore = defineStore('table', {
           this.spec.undoHistory = [];
           this.spec.redoHistory = [];
           this.editor.mappingSpec.code = specText;
+          // this.transformTblUpdateRootArea();
         } else {
           prompt.push(`Failed to load spec from ${caseN}`);
         }
@@ -610,7 +612,9 @@ export const useTableStore = defineStore('table', {
             const startLine = this.editor.mappingSpec.highlightCode[0];
             const endLine = this.editor.mappingSpec.highlightCode[1];
             message.warning(`Multiple keys (${Object.keys(node.extract)}) detected in 'extract' (lines ${startLine}-${endLine}). We'll prioritize and parse in this order: byPositionToTargetCols, byContext, byValue. Any others will be ignored.\nPlease provide only one key for accurate processing.`)
-            this.highlightCode(...this.editor.mappingSpec.highlightCode);
+            this.editor.mappingSpec.triggerCodeChange = false; // 下面的代码修改不会触发 handleCodeChange 函数
+            this.stringifySpec();
+            // this.highlightCode(...this.editor.mappingSpec.highlightCode);
           }
         }
         this.spec.selectionsAreaFromLegend.push([node.y, node.x, node.y + node.height - 1, node.x + node.width - 1]);
@@ -1681,6 +1685,15 @@ export const useTableStore = defineStore('table', {
           break
       }
     },
+    debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
+      let timeout: any = null;
+      return function (...args: Parameters<T>) {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          func(...args);
+        }, wait);
+      };
+    }
   },
   // computed
   getters: {}

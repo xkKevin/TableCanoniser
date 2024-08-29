@@ -290,9 +290,8 @@ const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) =>
     }
 }
 
-function handleCodeChange(newVal: string) {
-    // console.log('watch code changed: start');
-    tableStore.editor.mappingSpec.instance?.setValue(newVal);
+function handleCodeChange() {
+    console.log("handleCodeChange: start");
     const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
     if (document.body.style.cursor === 'default') {
@@ -317,10 +316,22 @@ function handleCodeChange(newVal: string) {
     // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
 }
 
-// 在Vue 3的<script setup>模式下，不能像在Vue 2中那样直接通过 组件.methods 访问组件的方法。<script setup>模式的代码是模块化的，组件的methods不会自动暴露为一个对象供外部访问。使用 defineExpose 暴露方法
-defineExpose({ handleCodeChange });
+const debouncedHandleCodeChange = tableStore.debounce(handleCodeChange, 200); // 200ms 的延迟
 
-watch(() => tableStore.editor.mappingSpec.code, handleCodeChange);
+
+// 在Vue 3的<script setup>模式下，不能像在Vue 2中那样直接通过 组件.methods 访问组件的方法。<script setup>模式的代码是模块化的，组件的methods不会自动暴露为一个对象供外部访问。使用 defineExpose 暴露方法
+defineExpose({ debouncedHandleCodeChange });
+
+watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
+    console.log('watch code changed: start');
+    tableStore.editor.mappingSpec.instance?.setValue(newVal);
+    if (tableStore.editor.mappingSpec.triggerCodeChange) {
+        debouncedHandleCodeChange();
+    } else if (tableStore.editor.mappingSpec.highlightCode) {
+        tableStore.highlightCode(...tableStore.editor.mappingSpec.highlightCode);
+    }
+    tableStore.editor.mappingSpec.triggerCodeChange = true;
+});
 
 watch(() => tableStore.tree.instanceIndex, () => {
     drawTblTemplate(tblContainer.value, tableStore);
