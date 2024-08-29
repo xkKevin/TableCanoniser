@@ -11,9 +11,8 @@ import {
   Point, RectDef, KV,
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
-import { VisTreeNode, TableStore, TblCell, Selection } from "@/store/table";
-import { CellConstraint, completeCellConstraint, TableTidierKeyWords } from '@/grammar/grammar';
-import { getCellBySelect } from '@/grammar/handleSpec';
+import { VisTreeNode, TableStore, Selection } from "@/store/table";
+import { CellConstraint, TableTidierKeyWords } from '@/grammar/grammar';
 
 
 export type NodeData = {
@@ -752,23 +751,27 @@ export class TreeChart {
           .attr('width', iconsz)
           .attr('height', iconsz)
           .on('mouseover', (_e: any, d: NodeData) => {
-            constrNodeRect.attr('visibility', 'visible');
-            let cellInfo;
-            if (d.data.path?.length === 1) {
-              cellInfo = d.data.constrsInfo![i][tableStore.tree.instanceIndex]
-              constrIndex = tableStore.tree.instanceIndex
-            } else {
-              cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter((info) => info.ele.isDefinedFromSpec)[tableStore.tree.instanceIndex];
-              constrIndex = cellInfo.index;
-              cellInfo = cellInfo.ele;
+            try {
+              constrNodeRect.attr('visibility', 'visible');
+              let cellInfo;
+              if (d.data.path?.length === 1) {
+                cellInfo = d.data.constrsInfo![i][tableStore.tree.instanceIndex]
+                constrIndex = tableStore.tree.instanceIndex
+              } else {
+                cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter((info) => info.ele.isDefinedFromSpec)[tableStore.tree.instanceIndex];
+                constrIndex = cellInfo.index;
+                cellInfo = cellInfo.ele;
+              }
+              if (cellInfo === undefined) return;
+              tableStore.highlightTblTemplate({
+                x: cellInfo.x,
+                y: cellInfo.y,
+                width: 1,
+                height: 1
+              });
+            } catch (e) {
+              console.log('Constraint mouseover error: \n', e)
             }
-            if (cellInfo === undefined) return;
-            tableStore.highlightTblTemplate({
-              x: cellInfo.x,
-              y: cellInfo.y,
-              width: 1,
-              height: 1
-            });
           })
           .on('mouseout', (_e: any, d: NodeData) => {
             if (tableStore.spec.constrNodeRectClickId !== constrId)
@@ -777,46 +780,34 @@ export class TreeChart {
           })
           .on('contextmenu', declareContextMenu.bind(null, tableStore, node, i))  // bind 第一个参数为 this，这种情况下最后一个参数为 event
           .on('click', (_e: any, d: NodeData) => {
-            // console.time('constraint click');
-            // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
-            tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
-            // 先清空其他样式
-            document.dispatchEvent(escapeEvent);
+            try {
+              // console.time('constraint click');
+              // console.log(constraint, tableStore);  // constraint 等价于 d.data.constraints![i]
+              tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
+              // 先清空其他样式
+              document.dispatchEvent(escapeEvent);
 
-            tableStore.spec.constrNodeRectClickId = constrId;
-            constrNodeRect.attr('visibility', 'visible');
+              tableStore.spec.constrNodeRectClickId = constrId;
+              constrNodeRect.attr('visibility', 'visible');
 
-            const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(constraint, subTemplate);
-            tableStore.highlightCode(startLine, endLine, 'selectionShallow');   // `${d.data.type}Shallow`
-
-            /*
-            const cellInfoSelections: Selection[] = [];
-            const allConstr = completeCellConstraint(constraint);
-            d.data.currentAreas!.forEach((area) => {
-              try {
-                const cellInfo = getCellBySelect(allConstr, area, tableStore.editor.rootArea.object!);
-                if (cellInfo) {
-                  cellInfoSelections.push([cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x]);
-                }
-              } catch (e) {
-                // console.error(e);
+              const [startLine, endLine] = tableStore.getHighlightCodeStartEndLine(constraint, subTemplate);
+              tableStore.highlightCode(startLine, endLine, 'selectionShallow');
+              const cellInfoSelections = d.data.constrsInfo![i].map((cellInfo) => [cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x] as Selection);
+              const classNames = Array(cellInfoSelections.length).fill("selectionShallow");
+              const cells = tableStore.generateHighlightCells(cellInfoSelections, classNames);
+              let { row, col } = cells.slice(-1)[0];
+              if (constrIndex < classNames.length) {
+                // classNames[tableStore.tree.instanceIndex] = 'selection';
+                cells[constrIndex].className = 'selection';
+                row = cells[constrIndex].row;
+                col = cells[constrIndex].col;
               }
-            })
-            const cells = tableStore.generateHighlightCells(cellInfoSelections, ['selection', ...Array(cellInfoSelections.length - 1).fill("selectionShallow")]);
-            */
-            const cellInfoSelections = d.data.constrsInfo![i].map((cellInfo) => [cellInfo.y, cellInfo.x, cellInfo.y, cellInfo.x] as Selection);
-            const classNames = Array(cellInfoSelections.length).fill("selectionShallow");
-            const cells = tableStore.generateHighlightCells(cellInfoSelections, classNames);
-            let { row, col } = cells.slice(-1)[0];
-            if (constrIndex < classNames.length) {
-              // classNames[tableStore.tree.instanceIndex] = 'selection';
-              cells[constrIndex].className = 'selection';
-              row = cells[constrIndex].row;
-              col = cells[constrIndex].col;
+              tableStore.highlightTblCells("input_tbl", cells, [[row, col]]);
+              tableStore.highlightMinimapCells(cells);
+              // console.timeEnd('constraint click');
+            } catch (e) {
+              console.log('Constraint click error: \n', e)
             }
-            tableStore.highlightTblCells("input_tbl", cells, [[row, col]]);
-            tableStore.highlightMinimapCells(cells);
-            // console.timeEnd('constraint click');
           })
           .append('svg:title').text(() => {
             const valueCstr = constraint.valueCstr;
@@ -915,7 +906,7 @@ export class TreeChart {
           // console.log(event, d);
           // [startRow, startCol, endRow, endCol]
           const visData = d.data as VisTreeNode;
-          tableStore.goToInstance(0);
+          tableStore.goToInstance(0);  // 默认选择第一个节点
 
           /************** 与 monaco editor 交互 ***************/
           const subTemplate = tableStore.getNodebyPath(tableStore.spec.rawSpecs, visData.path!);

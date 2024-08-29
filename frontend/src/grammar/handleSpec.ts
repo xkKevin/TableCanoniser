@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, CellSelection, offsetFn, completeCellSelection, completeSpecification, ContextTransform } from "./grammar";
+import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, RegionPosition, offsetFn, completeRegionPosition, completeSpecification, ContextTransform } from "./grammar";
 
 import { CustomError } from "../types";
 
@@ -41,33 +41,33 @@ const calculateOffset = (offset: number | offsetFn, currentArea: AreaInfo, rootA
     return typeof offset === 'number' ? offset : offset(currentArea, rootArea);
 };
 
-export const getCellBySelect = (select: AllParams<CellSelection>, currentArea: AreaInfo, rootArea: AreaInfo, constrFlag: boolean = false): CellInfo | null => {
+export const getCellBySelect = (select: AllParams<RegionPosition>, currentArea: AreaInfo, rootArea: AreaInfo, constrFlag: boolean = false): CellInfo | null => {
     let area: AreaInfo = currentArea;
-    if (select.referenceAreaLayer === 'current') {
+    if (select.offsetLayer === 'current') {
         area = currentArea;
-    } else if (select.referenceAreaLayer === 'root') {
+    } else if (select.offsetLayer === 'root') {
         area = rootArea;
-    } else if (select.referenceAreaLayer === 'parent') {
+    } else if (select.offsetLayer === 'parent') {
         area = currentArea.parent!;
     } else {
-        const layer = currentArea.areaLayer - select.referenceAreaLayer(currentArea);
+        const layer = currentArea.areaLayer - select.offsetLayer(currentArea);
         for (let li = 0; li < layer; li++) {
             area = area.parent!;
         }
     }
 
     let cellPosi: CellPosi = {
-        x: area.x + calculateOffset(select.xOffset, currentArea, rootArea),
-        y: area.y + calculateOffset(select.yOffset, currentArea, rootArea)
+        x: area.x + calculateOffset(select.offsetX, currentArea, rootArea),
+        y: area.y + calculateOffset(select.offsetY, currentArea, rootArea)
     };  // topLeft
 
-    if (select.referenceAreaPosi === 'bottomLeft') {
+    if (select.offsetFrom === 'bottomLeft') {
         cellPosi.y += area.height - 1
     }
-    else if (select.referenceAreaPosi === 'topRight') {
+    else if (select.offsetFrom === 'topRight') {
         cellPosi.x += area.width - 1
     }
-    else if (select.referenceAreaPosi === 'bottomRight') {
+    else if (select.offsetFrom === 'bottomRight') {
         cellPosi.x += area.width - 1
         cellPosi.y += area.height - 1
     }
@@ -198,11 +198,11 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
 }
 
 
-const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yOffset: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo): AreaInfo | null => {
+const matchArea = (template: AllParams<TableTidierTemplate>, offsetX: number, offsetY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo): AreaInfo | null => {
 
-    let x = currentArea.x + xOffset, y = currentArea.y + yOffset;
+    let x = currentArea.x + offsetX, y = currentArea.y + offsetY;
 
-    if (template.match.startCell.referenceAreaLayer !== "current") {
+    if (template.match.startCell.offsetLayer !== "current") {
         const cellInfo = getCellBySelect(template.match.startCell, currentArea, rootArea);
         if (cellInfo === null) {
             return null;
@@ -218,8 +218,8 @@ const matchArea = (template: AllParams<TableTidierTemplate>, xOffset: number, yO
         instanceIndex: index.instanceIndex,
         xIndex: index.xIndex,
         yIndex: index.yIndex,
-        xOffset,
-        yOffset,
+        offsetX,
+        offsetY,
         x,
         y,
         width,
@@ -259,40 +259,40 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
             const ctxCols: (CellValueType | null)[] = []
             const ctxCellsInfo: CellInfo[][] = [];
 
-            const ctxSelections: CellSelection[][] = [];
+            const ctxSelections: RegionPosition[][] = [];
             if (context.position === 'above') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
-                        ctxSelections.push([completeCellSelection({
-                            xOffset: ci,
-                            yOffset: ri - 1,
+                        ctxSelections.push([completeRegionPosition({
+                            offsetX: ci,
+                            offsetY: ri - 1,
                         })]);
                     })
                 })
             } else if (context.position === 'below') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
-                        ctxSelections.push([completeCellSelection({
-                            xOffset: ci,
-                            yOffset: ri + 1,
+                        ctxSelections.push([completeRegionPosition({
+                            offsetX: ci,
+                            offsetY: ri + 1,
                         })]);
                     })
                 })
             } else if (context.position === 'left') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
-                        ctxSelections.push([completeCellSelection({
-                            xOffset: ci - 1,
-                            yOffset: ri,
+                        ctxSelections.push([completeRegionPosition({
+                            offsetX: ci - 1,
+                            offsetY: ri,
                         })]);
                     })
                 })
             } else if (context.position === 'right') {
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
-                        ctxSelections.push([completeCellSelection({
-                            xOffset: ci + 1,
-                            yOffset: ri,
+                        ctxSelections.push([completeRegionPosition({
+                            offsetX: ci + 1,
+                            offsetY: ri,
                         })]);
                     })
                 })
@@ -301,11 +301,11 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                 currentArea.areaTbl.forEach((row, ri) => {
                     row.forEach((cell, ci) => {
                         const customSelections = ctxPosiFn({
-                            xOffset: ci,
-                            yOffset: ri,
+                            offsetX: ci,
+                            offsetY: ri,
                             value: cell
                         }, currentArea, rootArea);
-                        const customSelectionsWithDefaults = customSelections.map(selection => completeCellSelection(selection));
+                        const customSelectionsWithDefaults = customSelections.map(selection => completeRegionPosition(selection));
                         ctxSelections.push(customSelectionsWithDefaults);
                     })
                 })
@@ -315,7 +315,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
                 ctxSelections.forEach((cellCtxs) => {
                     const cellCtxsInfo: CellInfo[] = [];
                     cellCtxs.forEach((selection) => {
-                        const cell = getCellBySelect(selection as AllParams<CellSelection>, currentArea, rootArea);
+                        const cell = getCellBySelect(selection as AllParams<RegionPosition>, currentArea, rootArea);
                         if (cell === null) {
                             return null;
                         }
@@ -395,24 +395,24 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
         return null;
     };
 
-    const xOffset = startCell.x - currentArea.x;
-    const yOffset = startCell.y - currentArea.y;
+    const offsetX = startCell.x - currentArea.x;
+    const offsetY = startCell.y - currentArea.y;
 
     // Calculate size
-    const width = calculateSize(template.match.size.width, xOffset, yOffset, currentArea);
-    const height = calculateSize(template.match.size.height, xOffset, yOffset, currentArea);
+    const width = calculateSize(template.match.size.width, offsetX, offsetY, currentArea);
+    const height = calculateSize(template.match.size.height, offsetX, offsetY, currentArea);
 
     let startX, startY, endX, endY;
 
     if (xDirection === null) {
-        startX = xOffset;
+        startX = offsetX;
         if (template.match.size.width === null) endX = currentArea.width - 1;
         else endX = startX + width - 1;
     } else if (xDirection === 'before') {
         startX = 0;
-        endX = xOffset;
+        endX = offsetX;
     } else if (xDirection === 'after') {
-        startX = xOffset;
+        startX = offsetX;
         endX = currentArea.width - 1;
     } else {  //  if (xDirection === 'whole')
         startX = 0;
@@ -420,14 +420,14 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
     }
 
     if (yDirection === null) {
-        startY = yOffset;
+        startY = offsetY;
         if (template.match.size.height === null) endY = currentArea.height - 1;
         else endY = startY + height - 1;
     } else if (yDirection === 'before') {
         startY = 0;
-        endY = yOffset;
+        endY = offsetY;
     } else if (yDirection === 'after') {
-        startY = yOffset;
+        startY = offsetY;
         endY = currentArea.height - 1;
     } else {  // if (yDirection === 'whole')
         startY = 0;
@@ -473,8 +473,8 @@ export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
         instanceIndex: 0,
         xIndex: 0,
         yIndex: 0,
-        xOffset: 0,
-        yOffset: 0,
+        offsetX: 0,
+        offsetY: 0,
         x: 0,
         y: 0,
         width: table.length > 0 ? table[0].length : 0,

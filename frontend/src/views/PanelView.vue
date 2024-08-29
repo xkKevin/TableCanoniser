@@ -29,7 +29,7 @@
         </div>
 
         <div style="flex: 1; display: flex; min-height: 0px;">
-          <PatternVis />
+          <PatternVis ref="patternVis" />
         </div>
       </div>
 
@@ -38,7 +38,7 @@
           <div class="view-title">
             <span>Code Panel</span>
             <span style="float: right; margin-right: 20px">
-              <a-button size="small" :loading="loading" @click="transformTablebyCode">
+              <a-button size="small" @click="transformTablebyCode"> <!-- :loading="loading" -->
                 <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
                 <span>Run</span>
               </a-button>
@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, triggerRef } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
@@ -110,7 +110,7 @@ const caseOption = computed(() => {
 const currentCase = computed(() => tableStore.currentCase);
 
 const codePanel = ref("1");
-const loading = ref<boolean>(false);
+// const loading = ref<boolean>(false);
 
 const undoFlag = computed(() => tableStore.spec.undoHistory.length === 0);
 const redoFlag = computed(() => tableStore.spec.redoHistory.length === 0);
@@ -135,10 +135,16 @@ function redo() {
   }
 }
 
+// 获取组件 PatternVis 的实例引用
+const patternVis = ref();
 function transformTablebyCode() {
-  loading.value = true;
-  tableStore.transformTablebyCode();
-  loading.value = false;
+  // loading.value = true;
+  // tableStore.transformTablebyCode();
+  // triggerRef(ref(tableStore.editor.mappingSpec.code));
+  // 即使新值和旧值相同，重新赋值依然会触发 watch：
+  // PatternVis.methods!.handleCodeChange(tableStore.editor.mappingSpec.code);
+  patternVis.value.handleCodeChange(tableStore.editor.mappingSpec.code);
+  // loading.value = false;
 }
 
 function handleKeydown(event: KeyboardEvent) {

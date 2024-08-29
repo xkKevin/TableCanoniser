@@ -2,8 +2,8 @@ const option: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
-        xOffset: 0,
-        yOffset: 1,
+        offsetX: 0,
+        offsetY: 1,
       },
       size: {
         width: 4,
@@ -14,7 +14,28 @@ const option: TableTidierTemplate[] = [
       },
     },
     extract: {
-      byPositionToTargetCols: ["Rank", "Name", "Location", "Total Score", null, null, null, null, null, "Level", "Resources", "Education", null, null, null, null, null, "Research", "Elite", "Global"],
+      byPositionToTargetCols: [
+        "Rank",
+        "Name",
+        "Location",
+        "Total Score",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "Level",
+        "Resources",
+        "Education",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "Research",
+        "Elite",
+        "Global",
+      ],
     },
   },
 ];

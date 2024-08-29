@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, CellConstraint, completeCellConstraint } from "@/grammar/grammar"
+import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, completeCellConstraint } from "@/grammar/grammar"
 import { transformTable, serialize, getCellBySelect } from "@/grammar/handleSpec"
 import { TreeChart, NodeData } from '@/tree/drawTree';
 import { CustomError } from "@/types";
@@ -94,8 +94,8 @@ export interface VisTreeNode extends TableTidierTemplate, AreaBox {
 }
 
 export interface AreaForm {
-  referenceAreaLayer: any,
-  referenceAreaPosi: any,
+  offsetLayer: any,
+  offsetFrom: any,
   position: {
     x: any,
     y: any
@@ -123,7 +123,6 @@ export const useTableStore = defineStore('table', {
   // data
   state() {
     return {
-      specMode: false,
       caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"],
       currentCase: "1. university", // caseList[0],
       spec: {
@@ -140,6 +139,7 @@ export const useTableStore = defineStore('table', {
         selectionsAreaFromLegend: shallowRef<Selection[]>([]),
         selectionsPath: shallowRef<number[][]>([]),  // 每一个selection在rawSpecs中对应的path
         dragConfigOpen: false,
+        disableGoToInstFlag: true,
         areaConfig: shallowRef<TableTidierTemplate>({
           match: {
             startCell: {},
@@ -152,8 +152,8 @@ export const useTableStore = defineStore('table', {
           children: [],
         }),
         areaFormData: shallowRef<AreaForm>({
-          referenceAreaLayer: null,
-          referenceAreaPosi: null,
+          offsetLayer: null,
+          offsetFrom: null,
           position: {
             x: null,
             y: null
@@ -195,7 +195,7 @@ export const useTableStore = defineStore('table', {
       input_tbl: {
         instance: {} as Handsontable,
         // cells: [] as [number, number][],  // highlighted cells
-        tbl: shallowRef<Table2D>([]),
+        tbl: shallowRef<Table2D>([]),  // 使用 shallowRef 会导致 watch时只对引用本身的变化做出响应，而不会追踪引用对象内部的深层变化。这意味着，当你改变 tbl 的某个单元格的值时，watch 并不会被触发，因为 tbl 引用本身并没有发生变化。但是，ref 性能开销很大
         in2out: shallowRef<{ [key: string]: string[] }>({}),
         in2nodes: shallowRef<{ [key: string]: Set<number> }>({}),  // 'x-y-width-height' -> {node.id} 的映射
         colInfo: shallowRef<ColInfo[]>([]),
@@ -406,8 +406,9 @@ export const useTableStore = defineStore('table', {
         if (this.spec.visTree.children!.length === 0) return;
         node = this.spec.visTree.children![0];
       }
+      if (node.matchs === undefined) return;
       if (areaBox === null) {
-        const instance = node.matchs![this.tree.instanceIndex];
+        const instance = node.matchs[this.tree.instanceIndex];
         areaBox = {
           width: instance.width,
           height: instance.height,
@@ -416,7 +417,6 @@ export const useTableStore = defineStore('table', {
         }
         Object.assign(node, areaBox);
       } else {
-        if (node.matchs === undefined) return;
         for (const match of node.matchs) {
           const { x, y, width, height } = match;
           if (x >= areaBox.x && y >= areaBox.y && x + width <= areaBox.x + areaBox.width && y + height <= areaBox.y + areaBox.height) {
@@ -439,6 +439,10 @@ export const useTableStore = defineStore('table', {
     },
 
     goToInstance(instance: number) {
+      if (this.spec.disableGoToInstFlag) {
+        // message.error("No matched instance!");
+        return;
+      }
       if (isNaN(instance)) {
         message.error("The input number is invalid!");
         return;
@@ -501,13 +505,17 @@ export const useTableStore = defineStore('table', {
     },
 
     optimizeMiniTempDistance(maxDistance: number = 120) {
-      const miniG = d3.select('g.left g.matrix')
-      const miniWidth = (miniG.node() as SVGGraphicsElement).getBBox().width
-      const distanceGap = this.tree.offset.right.x - this.tree.offset.left.x - miniWidth - maxDistance;
+      try {
+        const miniG = d3.select('g.left g.matrix')
+        const miniWidth = (miniG.node() as SVGGraphicsElement).getBBox().width
+        const distanceGap = this.tree.offset.right.x - this.tree.offset.left.x - miniWidth - maxDistance;
 
-      if (distanceGap > 0) {
-        this.tree.offset.left.x += distanceGap;
-        miniG.attr('transform', `translate(${this.tree.offset.left.x}, ${this.tree.offset.left.y})`);
+        if (distanceGap > 0) {
+          this.tree.offset.left.x += distanceGap;
+          miniG.attr('transform', `translate(${this.tree.offset.left.x}, ${this.tree.offset.left.y})`);
+        }
+      } catch (e) {
+        console.error(e);
       }
     },
 
@@ -841,7 +849,7 @@ export const useTableStore = defineStore('table', {
             traverse.yDirection = undefined;
           }
           newSpec.match = {
-            startCell: { xOffset: startCol - px, yOffset: startRow - py },
+            startCell: { offsetX: startCol - px, offsetY: startRow - py },
             size: { width, height },
             traverse
           }
@@ -1025,11 +1033,15 @@ export const useTableStore = defineStore('table', {
     },
 
     prepareDataAfterCodeChange() {
+      const codeFormat = "Example format:\n" + this.editor.mappingSpec.codePref + "[\n // Please write the specification here\n];"
       try {
         // Step 1: update specs, including rawSpecs and visTree
         // let code = this.editor.mappingSpec.instance!.getValue();
         let code = this.editor.mappingSpec.code;
-        if (code.trim() === "") return false;
+        if (code.trim() === "") {
+          message.error("Empty code!\nPlease provide your code input. " + codeFormat);
+          return false;
+        };
         code += this.editor.mappingSpec.codeSuff;
         const result = ts.transpileModule(code, {
           compilerOptions: {
@@ -1041,6 +1053,10 @@ export const useTableStore = defineStore('table', {
         // const specification: TableTidierTemplate = eval(code);
         const evalFunction = new Function('TableTidierKeyWords', result.outputText);
         const specs: TableTidierTemplate[] = evalFunction(TableTidierKeyWords);
+        if (Array.isArray(specs) === false) {
+          message.error("Invalid code!\nPlease provide your code input. " + codeFormat);
+          return false;
+        }
         this.spec.rawSpecs = specs;
         this.spec.visTree.children = JSON.parse(JSON.stringify(specs, (key, value) => typeof value === 'function' ? 'function' : value)); // cloneDeep(specs);
         // this.spec.visTree.children!.forEach((spec) => {
@@ -1072,10 +1088,12 @@ export const useTableStore = defineStore('table', {
         this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);*/
         return true
       }
-      catch (e) {
-        message.error(`Failed to parse the specification:\n ${e}`);
-        console.error(e);
-        return false
+      catch (e: any) {
+        if (e.message.includes("option")) {
+          message.error(e + "\n" + codeFormat);
+        }
+        else message.error(`Failed to parse the specification:\n ${e}`);
+        return false;
       }
     },
 
@@ -1141,13 +1159,15 @@ export const useTableStore = defineStore('table', {
             } else {
               messageContent += `For the ${this.numberToOrdinal(index + 1)} template, no instance is matched.`
             }
+          } else {
+            messageContent += `For the ${this.numberToOrdinal(index + 1)} template, no instance is matched.`
           }
         })
 
         if (Object.keys(tidyData).length === 0) {
           if (messageContent) messageContent += '\n';
           messageContent += 'The output table is empty based on the specification.';
-          this.tree.instanceIndex = -1;
+          // this.tree.instanceIndex = -1;
           // return;
         }
         message.info(messageContent)
@@ -1158,6 +1178,9 @@ export const useTableStore = defineStore('table', {
         this.output_tbl.instance.updateData(this.output_tbl.tbl);
         this.output_tbl.instance.updateSettings({ colHeaders: this.output_tbl.cols });
         // this.output_tbl.instance.render();
+
+        // this.tree.minimapInstHighlight!.select('rect:nth-child(1)').attr('stroke', typeMapColor.selection);
+        this.highlightMinimapInsts();
       } catch (e) {
         if (e instanceof CustomError) {
           messageContent = `Failed to transform the table based on the specification:\n ${e}`
@@ -1167,8 +1190,6 @@ export const useTableStore = defineStore('table', {
         message.error(messageContent);
         console.error(e);
       }
-      // this.tree.minimapInstHighlight!.select('rect:nth-child(1)').attr('stroke', typeMapColor.selection);
-      this.highlightMinimapInsts();
     },
 
     derivePosiMapping(outTbl: { [key: string]: CellInfo[] }) {
@@ -1252,10 +1273,10 @@ export const useTableStore = defineStore('table', {
         if (node.matchs === undefined) continue;
         for (const match of node.matchs) {
           const { x, y, width, height } = match;
-          const xOffset = x - box[0];
-          const yOffset = y - box[1];
+          const offsetX = x - box[0];
+          const offsetY = y - box[1];
 
-          if (!(xOffset >= 0 && yOffset >= 0 && x + width <= box[2] && y + height <= box[3])) continue;
+          if (!(offsetX >= 0 && offsetY >= 0 && x + width <= box[2] && y + height <= box[3])) continue;
 
           let bgColor: TypeColor = node.type!;
           let textColor: TypeColor = "cellFill";
@@ -1268,7 +1289,7 @@ export const useTableStore = defineStore('table', {
           }
           for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-              const cell = grids[(yOffset + i) * firstNode.width + (xOffset + j)]
+              const cell = grids[(offsetY + i) * firstNode.width + (offsetX + j)]
               cell.bgColor = bgColor; // typeMapColor[bgColor as TypeColor];
               cell.text = new Set();
               cell.textColor = textColor; // typeMapColor[textColor];
@@ -1413,10 +1434,10 @@ export const useTableStore = defineStore('table', {
       const newSpec: TableTidierTemplate = {
         match: {
           startCell: {
-            referenceAreaLayer: formData.referenceAreaLayer,
-            referenceAreaPosi: formData.referenceAreaPosi,
-            xOffset: formData.position.x,
-            yOffset: formData.position.y,
+            offsetLayer: formData.offsetLayer,
+            offsetFrom: formData.offsetFrom,
+            offsetX: formData.position.x,
+            offsetY: formData.position.y,
           },
           size: {
             width: formData.size.width,
@@ -1581,6 +1602,8 @@ export const useTableStore = defineStore('table', {
           number: [],
           none: []
         };
+
+        if (colInfo.width === null) colInfo.width = 60; // truncated 中 min-width 为 60
 
         for (let row = 0; row < table.length; row++) {
           const cell = table[row][col];

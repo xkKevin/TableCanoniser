@@ -4,8 +4,9 @@
             <a-flex justify="space-between" align="center">
                 <span style="font-size: 18px; font-weight: bold;">Pattern Panel</span>
                 <span>
-                    Current instance: <a-input-number class="goToInstance" :value="tableStore.tree.instanceIndex"
-                        :defaultValue="-1" :disabled="tableStore.output_tbl.tbl.length === 0"
+                    <span :title="instanceContent">Current instance:</span>
+                    <a-input-number class="goToInstance" :value="tableStore.tree.instanceIndex" :defaultValue="-1"
+                        :disabled="tableStore.spec.disableGoToInstFlag"
                         @pressEnter="tableStore.goToInstance(+$event.target.value - 1)" size="small" :precision="0"
                         :formatter="handleFormatter" @step="handleStep"
                         @blur="tableStore.goToInstance(+$event.target.value - 1)"></a-input-number>
@@ -112,6 +113,7 @@ const data: TreeNode = {
 // const currentInstFlag = ref(false);
 // const disableNextFlag = ref(false);
 // const disableGoToInstFlag = ref(false);
+const instanceContent = ref("");
 const menuList = computed(() => tableStore.tree.menuList);
 // const contextMenuVisible = tableStore.tree.contextMenuVisible;
 const contextMenuVisible = computed(() => tableStore.tree.contextMenuVisible && tableStore.tree.menuList.length > 0);
@@ -256,9 +258,6 @@ const selectMatchExtractArea = (type: TypeColor) => {
 
 const tblContainer = ref<SVGSVGElement | null>(null);
 
-
-
-
 /*
 import { debounce } from 'lodash';
 
@@ -275,7 +274,8 @@ const resizeObserver = new ResizeObserver(() => {
 
 const handleFormatter = (v: any) => {
     // console.log(v, tableStore.output_tbl.tbl.length);
-    return tableStore.output_tbl.tbl.length === 0 ? '' : isNaN(v) ? 0 : parseInt(v) + 1
+    // return tableStore.output_tbl.tbl.length === 0 ? '' : isNaN(v) ? 0 : parseInt(v) + 1
+    return tableStore.spec.disableGoToInstFlag ? '' : isNaN(v) ? 0 : parseInt(v) + 1
 }
 
 const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) => {
@@ -290,12 +290,22 @@ const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) =>
     }
 }
 
-watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
+function handleCodeChange(newVal: string) {
     // console.log('watch code changed: start');
     tableStore.editor.mappingSpec.instance?.setValue(newVal);
     const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
+    if (document.body.style.cursor === 'default') {
+        drawMinimap(tableStore.input_tbl.tbl.length, tableStore.input_tbl.tbl[0].length, tblContainer.value, tableStore);
+    }
     tableStore.transformTablebyCode();  // auto run
+    tableStore.spec.disableGoToInstFlag = tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.spec.visTree.children![0].matchs.length === 0;
+    if (tableStore.spec.disableGoToInstFlag) {
+        instanceContent.value = 'No matched instance';
+        tableStore.tree.instanceIndex = -1;
+    } else {
+        instanceContent.value = 'Total ' + tableStore.spec.visTree.children![0].matchs!.length + ' instance(s)';
+    }
     tableStore.computeColInfo("output_tbl");
     drawTree(tableStore.spec.visTree); // 会默认选择第一个节点
     drawTblTemplate(tblContainer.value, tableStore);
@@ -305,9 +315,14 @@ watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
     tableStore.updateCurve();
     // currentInstFlag.value = tableStore.spec.visTree.children!.length > 0 && tableStore.spec.visTree.children![0].matchs !== undefined && tableStore.spec.visTree.children![0].matchs!.length > 0;
     // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
-});
+}
 
-watch(() => tableStore.tree.instanceIndex, (newVal) => {
+// 在Vue 3的<script setup>模式下，不能像在Vue 2中那样直接通过 组件.methods 访问组件的方法。<script setup>模式的代码是模块化的，组件的methods不会自动暴露为一个对象供外部访问。使用 defineExpose 暴露方法
+defineExpose({ handleCodeChange });
+
+watch(() => tableStore.editor.mappingSpec.code, handleCodeChange);
+
+watch(() => tableStore.tree.instanceIndex, () => {
     drawTblTemplate(tblContainer.value, tableStore);
     // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
     tableStore.updateCurve();
@@ -319,7 +334,12 @@ watch(() => tableStore.input_tbl.tbl, (newVal) => {
     // console.log('watch: input_tbl changed: start');
     drawMinimap(newVal.length, newVal[0].length, tblContainer.value, tableStore);
     tableStore.computeColInfo("input_tbl");
-});
+});  // , { deep: true }
+
+// watch(() => tableStore.output_tbl.tbl, () => {
+//     // console.log('watch: output_tbl changed: start');
+//     tableStore.computeColInfo("output_tbl");
+// }, { deep: true });
 
 // watch(() => tableStore.spec.visTree.size.height, (newVal) => {
 //     console.log('watch tbl size changed: start');

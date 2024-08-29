@@ -226,6 +226,8 @@ function normalizeSelection(selections: Selection[]): Selection[] {
   });
 }
 
+import { drawMinimap } from '@/tree/minimap';
+
 function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   let tblInst1: Handsontable, tblInst2: Handsontable;
   const tbl2 = tbl === "input_tbl" ? "output_tbl" : "input_tbl";
@@ -273,11 +275,44 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       return true;
     },
   });
+  const updateColInfoFn = () => {
+    if (tbl === "input_tbl") {
+      const tblData = tableStore.input_tbl.tbl;
+      drawMinimap(tblData.length, tblData[0].length, document.querySelector('svg.tbl-container') as SVGSVGElement, tableStore);
+      tableStore.optimizeMiniTempDistance();
+      tableStore.clearStatus("miniHighlight");
+      tableStore.initTblInfo(false);
+      tableStore.computeColInfo("output_tbl");
+      tableStore.spec.disableGoToInstFlag = true;
+    }
+    tableStore.computeColInfo(tbl);
+  }
+  tblInst1.addHook("afterColumnResize", (currentColumn, newSize, isDoubleClick) => {
+    // 修改单元格宽度后的回调
+    tableStore.computeColInfo(tbl);
+  });
+  // 因为添加了对tbl的修改监听，所以这些钩子函数可以不用定义
+  tblInst1.addHook("afterChange", (changes, source) => {
+    // 修改单元格内容后的回调
+    if (changes) {
+      if (tbl === "input_tbl") {
+        tableStore.clearStatus("miniHighlight");
+        tableStore.initTblInfo(false);
+        tableStore.computeColInfo("output_tbl");
+        tableStore.spec.disableGoToInstFlag = true;
+      }
+      tableStore.computeColInfo(tbl);
+    }
+  });
+  tblInst1.addHook("afterCreateRow", updateColInfoFn);
+  tblInst1.addHook("afterCreateCol", updateColInfoFn);
+  tblInst1.addHook("afterRemoveRow", updateColInfoFn);
+  tblInst1.addHook("afterRemoveCol", updateColInfoFn);
+
   tblInst1.addHook("afterOnCellMouseDown", (e) => {
     tblInst2.updateSettings({ cell: [] });
   });
   tblInst1.addHook("afterOnCellMouseUp", (event, coords, TD) => {
-    if (tableStore.specMode) return;
     const selected = normalizeSelection(tblInst1.getSelected() || []);
     // key 表示所选区域，value 表示所选区域所有单元格的坐标
     const { selectedCoords, hightedCells } = tableStore.getHightlightedCells(selected);
@@ -301,7 +336,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           const visNode = selectType === "0" ? tableStore.spec.selectNode!.parent!.data : tableStore.spec.selectNode!.data;
           const nx = visNode.x, ny = visNode.y, nw = visNode.width, nh = visNode.height;
           const [startRow, startCol, endRow, endCol] = selected[0];
-          const xOffset = startCol - nx, yOffset = startRow - ny;
+          const offsetX = startCol - nx, offsetY = startRow - ny;
           let match: TableTidierTemplate["match"] = {};
           switch (selectType) {
             case "0":
@@ -316,10 +351,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               }
               match = {
                 startCell: {
-                  // referenceAreaLayer: "current",
-                  // referenceAreaPosi: "topLeft",
-                  xOffset,
-                  yOffset
+                  // offsetLayer: "current",
+                  // offsetFrom: "topLeft",
+                  offsetX: offsetX,
+                  offsetY: offsetY
                 },
                 size: { width, height },
                 traverse
@@ -338,8 +373,8 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               const cellValue = inHotInst.getDataAtCell(startRow, startCol);
               match = {
                 constraints: [{
-                  xOffset,
-                  yOffset,
+                  offsetX: offsetX,
+                  offsetY: offsetY,
                   valueCstr: tableStore.getCellDataType(cellValue) // TableTidierKeyWords.String,
                 }]
               }
@@ -353,10 +388,10 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           /*
           const areaConfig = tableStore.spec.areaConfig;
           areaConfig.match!.startCell = {
-            referenceAreaLayer: "root",
-            referenceAreaPosi: "topLeft",
-            xOffset: selected[0][1] < 0 ? 0 : selected[0][1],
-            yOffset: selected[0][0] < 0 ? 0 : selected[0][0]
+            offsetLayer: "root",
+            offsetFrom: "topLeft",
+            offsetX: selected[0][1] < 0 ? 0 : selected[0][1],
+            offsetY: selected[0][0] < 0 ? 0 : selected[0][0]
           }
           areaConfig.match!.size = {
             width: selected[0][3] - selected[0][1] + 1,
@@ -367,11 +402,11 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
             yDirection: "after"
           }
           const areaFormData = tableStore.spec.areaFormData;
-          areaFormData.referenceAreaLayer = areaConfig.match!.startCell?.referenceAreaLayer;
-          areaFormData.referenceAreaPosi = areaConfig.match!.startCell?.referenceAreaPosi;
+          areaFormData.offsetLayer = areaConfig.match!.startCell?.offsetLayer;
+          areaFormData.offsetFrom = areaConfig.match!.startCell?.offsetFrom;
           areaFormData.position = {
-            x: areaConfig.match!.startCell?.xOffset,
-            y: areaConfig.match!.startCell?.yOffset
+            x: areaConfig.match!.startCell?.offsetX,
+            y: areaConfig.match!.startCell?.offsetY
           }
           areaFormData.traverse = {
             xDirection: areaConfig.match!.traverse?.xDirection,

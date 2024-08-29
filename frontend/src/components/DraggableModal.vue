@@ -5,9 +5,9 @@
             <div>
                 <a-divider>startCell</a-divider>
                 <a-row>
-                    <a-col flex="100px">referenceAreaLayer</a-col>
+                    <a-col flex="100px">offsetLayer</a-col>
                     <a-col flex="auto">
-                        <a-radio-group v-model:value="formData.referenceAreaLayer">
+                        <a-radio-group v-model:value="formData.offsetLayer">
                             <a-radio-button value="current">current</a-radio-button>
                             <a-radio-button value="parent">parent</a-radio-button>
                             <a-radio-button value="root">root</a-radio-button>
@@ -18,7 +18,7 @@
                 <a-row>
                     <a-col flex="100px">referenceAreaPosition</a-col>
                     <a-col flex="auto">
-                        <a-radio-group v-model:value="formData.referenceAreaPosi">
+                        <a-radio-group v-model:value="formData.offsetFrom">
                             <a-radio-button value="topLeft">topLeft</a-radio-button>
                             <a-radio-button value="topRight">topRight</a-radio-button>
                             <a-radio-button value="bottomLeft">bottomLeft</a-radio-button>
@@ -31,15 +31,15 @@
                     <a-col flex="auto">
                         <span>x (col):</span>
                         <a-radio-group v-model:value="formData.position.x">
-                            <a-radio-button :value="areaConfig.match!.startCell!.xOffset">{{
-                                areaConfig.match!.startCell!.xOffset
+                            <a-radio-button :value="areaConfig.match!.startCell!.offsetX">{{
+                                areaConfig.match!.startCell!.offsetX
                                 }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
                         <span>y (row):</span>
                         <a-radio-group v-model:value="formData.position.y">
-                            <a-radio-button :value="areaConfig.match!.startCell!.yOffset">{{
-                                areaConfig.match!.startCell!.yOffset
+                            <a-radio-button :value="areaConfig.match!.startCell!.offsetY">{{
+                                areaConfig.match!.startCell!.offsetY
                                 }}</a-radio-button>
                             <a-radio-button value="offsetFn" title="areaLayerFn">Custom Func</a-radio-button>
                         </a-radio-group>
@@ -126,11 +126,11 @@ const handleOk = (values: any) => {
 };
 const resetForm = () => {
     formData.value = {
-        referenceAreaLayer: areaConfig.match!.startCell?.referenceAreaLayer,
-        referenceAreaPosi: areaConfig.match!.startCell?.referenceAreaPosi,
+        offsetLayer: areaConfig.match!.startCell?.offsetLayer,
+        offsetFrom: areaConfig.match!.startCell?.offsetFrom,
         position: {
-            x: areaConfig.match!.startCell?.xOffset,
-            y: areaConfig.match!.startCell?.yOffset
+            x: areaConfig.match!.startCell?.offsetX,
+            y: areaConfig.match!.startCell?.offsetY
         },
         traverse: {
             xDirection: areaConfig.match!.traverse?.xDirection,

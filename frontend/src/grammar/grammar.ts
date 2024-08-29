@@ -1,4 +1,4 @@
-// The Declarative Grammar v0.4.3
+// The Declarative Grammar v0.4.4
 
 type CellValueType = string | number | undefined;
 
@@ -88,19 +88,19 @@ interface MatchedIndex {
 
 /**
  * Represents a single cell within an area
- * - `xOffset`: The x-axis offset of the cell within the area
- * - `yOffset`: The y-axis offset of the cell within the area
+ * - `offsetX`: The x-axis offset of the cell within the area
+ * - `offsetY`: The y-axis offset of the cell within the area
  * - `value`: The value of the cell
  */
 interface AreaCell {
     /**
      * The x-axis offset of the cell within the area
      */
-    xOffset: number;
+    offsetX: number;
     /**
      * The y-axis offset of the cell within the area
      */
-    yOffset: number;
+    offsetY: number;
     /**
      * The value of the cell
      */
@@ -178,7 +178,7 @@ type contextPosiFn = (
     cell: AreaCell,
     currentArea: AreaInfo,
     rootArea: AreaInfo
-) => CellSelection[];
+) => RegionPosition[];
 
 /**
  * A function that determines the layer of an area based on its current area information.
@@ -195,8 +195,8 @@ type areaLayerFn = (currentArea: AreaInfo) => number;
  * - `instanceIndex`: The instance index of this area that matches the templateRef within the parent area
  * - `xIndex`: The x-axis index of this area within the parent area
  * - `yIndex`: The y-axis index of this area within the parent area
- * - `xOffset`: The x-axis offset of this area within the parent area
- * - `yOffset`: The y-axis offset of this area within the parent area
+ * - `offsetX`: The x-axis offset of this area within the parent area
+ * - `offsetY`: The y-axis offset of this area within the parent area
  * - `x`: The x-coordinate of this area within the entire table
  * - `y`: The y-coordinate of this area within the entire table
  * - `width`: The width of this area
@@ -216,11 +216,11 @@ interface AreaInfo extends MatchedIndex {
     /**
      * The x-axis offset of this area within the parent area
      */
-    xOffset: number;
+    offsetX: number;
     /**
      * The y-axis offset of this area within the parent area
      */
-    yOffset: number;
+    offsetY: number;
     /**
      * The x-coordinate of this area within the entire table
      */
@@ -252,43 +252,43 @@ interface AreaInfo extends MatchedIndex {
 }
 
 /**
- * Represents the selection of a cell within the table
- * - `referenceAreaLayer`: The reference area layer for selection, default is 'current'
- * - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
- * - `xOffset`: The x-axis offset relative to the reference area, default is 0
- * - `yOffset`: The y-axis offset relative to the reference area, default is 0
+ * Defines the selection position for a region within the table
+ * - `offsetLayer`: The layer of the reference area for selection, default is 'current'
+ * - `offsetFrom`: The start position of the reference area for selection, default is 'topLeft'
+ * - `offsetX`: The x-axis offset relative to the start position of the reference area, default is 0
+ * - `offsetY`: The y-axis offset relative to the start position of the reference area, default is 0
  */
-interface CellSelection {
+interface RegionPosition {
     /**
-     * The reference area layer for selection, default is 'current'
+     * The layer of the reference area for selection, default is 'current'
      * - `areaLayerFn` (currentArea: AreaInfo) => number: A function that determines the layer of an area based on its current area information.
      *   - `currentArea` : The current area information.
      *   @example
      *   (currentArea) => currentArea.areaLayer - 2
      */
-    referenceAreaLayer?: 'current' | 'parent' | 'root' | areaLayerFn;
+    offsetLayer?: 'current' | 'parent' | 'root' | areaLayerFn;
     /**
-     * The reference area position for selection, default is 'topLeft'
+     * The start position of the reference area for selection, default is 'topLeft'
      */
-    referenceAreaPosi?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';
+    offsetFrom?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';
     /**
-     * The x-axis offset relative to the reference area, default is 0
+     * The x-axis offset relative to the start position of the reference area, default is 0
      * - `offsetFn` (currentArea: AreaInfo, rootArea: AreaInfo) => number: A function that returns the x-axis offset
      *   - `currentArea` : The current area information.
      *   - `rootArea` : The root area information.
      *   @example
      *   (currentArea, rootArea) => currentArea.x - rootArea.x
      */
-    xOffset?: number | offsetFn;
+    offsetX?: number | offsetFn;
     /**
-     * The y-axis offset relative to the reference area, default is 0
+     * The y-axis offset relative to the start position of the reference area, default is 0
      * - `offsetFn` (currentArea: AreaInfo, rootArea: AreaInfo) => number: A function that returns the y-axis offset
      *   - `currentArea` : The current area information.
      *   - `rootArea` : The root area information.
      *   @example
      *   (currentArea, rootArea) => currentArea.y - rootArea.y
      */
-    yOffset?: number | offsetFn;
+    offsetY?: number | offsetFn;
 }
 
 /**
@@ -304,7 +304,7 @@ interface CellSelection {
  *   - `true` (default) means that if the specified cell is out of bounds, the constraint will be ignored, and the search will continue with other checks.
  *   - `false` means that if the specified cell is out of bounds, the pattern will be considered as not matching, even if other conditions are satisfied.
  */
-interface CellConstraint extends CellSelection {
+interface CellConstraint extends RegionPosition {
     /**
      * The value constraint
      * - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
@@ -347,7 +347,7 @@ interface ContextTransform {
        * - 'below': The context cell is located directly below the current cell.
        * - 'left': The context cell is located directly to the left of the current cell.
        * - 'right': The context cell is located directly to the right of the current cell.
-       * - `contextPosiFn` (cell: AreaCell, currentArea: AreaInfo, rootArea: AreaInfo) => CellSelection[]: A custom function to determine the position of a cell's context
+       * - `contextPosiFn` (cell: AreaCell, currentArea: AreaInfo, rootArea: AreaInfo) => RegionPosition[]: A custom function to determine the position of a cell's context
        *   - `cell`: The current cell's value and its position relative to the current area.
        *   - `currentArea`: The current area information.
        *   - `rootArea`: The root area information.
@@ -355,8 +355,8 @@ interface ContextTransform {
        *   @example
        *   (cell, currentArea, rootArea) => {
                   return [{
-                      xOffset: cell.xOffset,
-                      yOffset: cell.yOffset - (currentArea.yIndex + 1) * currentArea.height,
+                      offsetX: cell.offsetX,
+                      offsetY: cell.offsetY - (currentArea.yIndex + 1) * currentArea.height,
                   }];
               }
        */
@@ -384,18 +384,18 @@ interface ContextTransform {
  * The main template for defining the transformation rules
  * - `match`: The matching criteria for a selecting area
  *   - `startCell`: The starting cell for the selection
- *     - `referenceAreaLayer`: The reference area layer for selection, default is 'current'
- *     - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
- *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
- *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
+ *     - `offsetLayer`: The layer of the reference area for selection, default is 'current'
+ *     - `offsetFrom`: The start position of the reference area for selection, default is 'topLeft'
+ *     - `offsetX`: The x-axis offset relative to the start position of the reference area, default is 0
+ *     - `offsetY`: The y-axis offset relative to the start position of the reference area, default is 0
  *   - `size`: The size of the selected area
  *     - `width`: The width of the selected area; 'toParentX' means the distance from the startCell to the parent's x-axis end; `null` means no fixed width, default is 1
  *     - `height`: The height of the selected area; 'toParentY' means the distance from the startCell to the parent's y-axis end; `null` means no fixed height, default is 1
  *   - `constraints`: Constraints to apply to the cells within the selected area
- *     - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
- *     - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
- *     - `xOffset`: The x-axis offset relative to the reference area, default is 0
- *     - `yOffset`: The y-axis offset relative to the reference area, default is 0
+ *     - `offsetLayer`: The reference area layer for the constrainted cell, default is 'current'
+ *     - `offsetFrom`: The reference area position for the constrainted cell, default is 'topLeft'
+ *     - `offsetX`: The x-axis offset relative to the reference area, default is 0
+ *     - `offsetY`: The y-axis offset relative to the reference area, default is 0
  *     - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
  *     - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
  *   - `traverse`: The traversal direction for the selected area
@@ -421,12 +421,12 @@ interface TableTidierTemplate {
     match?: {
         /**
          * The starting cell for the selection
-         * - `referenceAreaLayer`: The reference area layer for selection, default is 'current'
-         * - `referenceAreaPosi`: The reference area position for selection, default is 'topLeft'
-         * - `xOffset`: The x-axis offset relative to the reference area, default is 0
-         * - `yOffset`: The y-axis offset relative to the reference area, default is 0
+         * - `offsetLayer`: The layer of the reference area for selection, default is 'current'
+         * - `offsetFrom`: The start position of the reference area for selection, default is 'topLeft'
+         * - `offsetX`: The x-axis offset relative to the start position of the reference area, default is 0
+         * - `offsetY`: The y-axis offset relative to the start position of the reference area, default is 0
          */
-        startCell?: CellSelection;
+        startCell?: RegionPosition;
         /**
          * The size of the selected area
          */
@@ -442,10 +442,10 @@ interface TableTidierTemplate {
         };
         /**
          * Constraints to apply to the cells within the selected area
-         * - `referenceAreaLayer`: The reference area layer for the constrainted cell, default is 'current'
-         * - `referenceAreaPosi`: The reference area position for the constrainted cell, default is 'topLeft'
-         * - `xOffset`: The x-axis offset relative to the reference area, default is 0
-         * - `yOffset`: The y-axis offset relative to the reference area, default is 0
+         * - `offsetLayer`: The reference area layer for the constrainted cell, default is 'current'
+         * - `offsetFrom`: The reference area position for the constrainted cell, default is 'topLeft'
+         * - `offsetX`: The x-axis offset relative to the reference area, default is 0
+         * - `offsetY`: The y-axis offset relative to the reference area, default is 0
          * - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
          * - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
          */
@@ -578,33 +578,33 @@ const DEFAULT_VALUE_CSTR = TableTidierKeyWords.String;
 const DEFAULT_IGNORE_OUT_OF_BOUNDS = true;
 const DEFAULT_FILL = TableTidierKeyWords.Auto; // null;
 
-function completeCellSelection(
-    selection: CellSelection | undefined
-): CellSelection {
+function completeRegionPosition(
+    selection: RegionPosition | undefined
+): RegionPosition {
     if (!selection) {
         return {
-            referenceAreaLayer: DEFAULT_REFERENCE_AREA_LAYER,
-            referenceAreaPosi: DEFAULT_REFERENCE_AREA_POSI,
-            xOffset: DEFAULT_X_OFFSET,
-            yOffset: DEFAULT_Y_OFFSET,
+            offsetLayer: DEFAULT_REFERENCE_AREA_LAYER,
+            offsetFrom: DEFAULT_REFERENCE_AREA_POSI,
+            offsetX: DEFAULT_X_OFFSET,
+            offsetY: DEFAULT_Y_OFFSET,
         };
     }
     return {
-        referenceAreaLayer:
-            selection.referenceAreaLayer || DEFAULT_REFERENCE_AREA_LAYER,
-        referenceAreaPosi:
-            selection.referenceAreaPosi || DEFAULT_REFERENCE_AREA_POSI,
-        xOffset:
-            selection.xOffset === undefined ? DEFAULT_X_OFFSET : selection.xOffset,
-        yOffset:
-            selection.yOffset === undefined ? DEFAULT_Y_OFFSET : selection.yOffset,
+        offsetLayer:
+            selection.offsetLayer || DEFAULT_REFERENCE_AREA_LAYER,
+        offsetFrom:
+            selection.offsetFrom || DEFAULT_REFERENCE_AREA_POSI,
+        offsetX:
+            selection.offsetX === undefined ? DEFAULT_X_OFFSET : selection.offsetX,
+        offsetY:
+            selection.offsetY === undefined ? DEFAULT_Y_OFFSET : selection.offsetY,
     };
 }
 
 function completeCellConstraint(
     constraint: CellConstraint
 ): AllParams<CellConstraint> {
-    const completedSelection = completeCellSelection(constraint);
+    const completedSelection = completeRegionPosition(constraint);
     return {
         ...completedSelection,
         valueCstr:
@@ -632,7 +632,7 @@ function completeSpecification(
 ): AllParams<TableTidierTemplate> {
     return {
         match: {
-            startCell: completeCellSelection(template.match?.startCell),
+            startCell: completeRegionPosition(template.match?.startCell),
             size: {
                 width:
                     template.match?.size?.width === undefined
@@ -688,9 +688,9 @@ export {
     AllParams,
     AreaInfo,
     MatchedIndex,
-    CellSelection,
+    RegionPosition,
     offsetFn,
     completeSpecification,
-    completeCellSelection,
+    completeRegionPosition,
     completeCellConstraint,
 };
