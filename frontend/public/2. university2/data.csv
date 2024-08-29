@@ -12,17 +12,17 @@ Rank,Name,Location,Total Score
 3,Zhejiang,Zhejiang,793.8
 ,Level,Resources,Education
 ,34.9,28.4,284.7
-,Research,,Global
-,92.6,,53.7
+,Research,Elite,Global
+,92.6,64.3,53.7
 ,Notation,The above are the top three universities in the rankings,
 4,Shangjiao,Shanghai,776.3
-,Level,Resources,Education
-,35.6,26.4,267.2
-,Research,Elite,Global
-,106.5,64.6,39.6
+,Level,Research,Education
+,35.6,106.5,267.2
+,Resources,Elite,Global
+,26.4,64.6,39.6
 5,Fudan,Shanghai,697.0
-,Level,Resources,Education
-,36.6,21.3,252.6
+,Level,,Education
+,36.6,,252.6
 ,Research,Elite,Global
 ,79.3,62.6,44.1
 6,Nanjing,Jiangsu,656.1

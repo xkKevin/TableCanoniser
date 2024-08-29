@@ -2,8 +2,8 @@ const option: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
-        xOffset: 0,
-        yOffset: 0,
+        offsetX: 0,
+        offsetY: 0,
       },
       size: {
         width: 7,
@@ -11,17 +11,17 @@ const option: TableTidierTemplate[] = [
       },
       constraints: [
         {
-          xOffset: 1,
-          yOffset: 0,
+          offsetX: 1,
+          offsetY: 0,
           valueCstr: (value) => {
             if (typeof value === "string") return value.startsWith("$");
             return false;
           },
         },
         {
-          referenceAreaPosi: "bottomLeft",
-          xOffset: 0,
-          yOffset: 1,
+          offsetFrom: "bottomLeft",
+          offsetX: 0,
+          offsetY: 1,
           valueCstr: TableTidierKeyWords.None,
         },
       ],
@@ -33,8 +33,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 0,
-            yOffset: 0,
+            offsetX: 0,
+            offsetY: 0,
           },
           size: {
             width: 2,
@@ -48,18 +48,18 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 1,
-            yOffset: 1,
+            offsetX: 1,
+            offsetY: 1,
           },
           constraints: [
             {
-              xOffset: -1,
-              yOffset: 0,
+              offsetX: -1,
+              offsetY: 0,
               valueCstr: TableTidierKeyWords.String,
             },
             {
-              xOffset: 1,
-              yOffset: 0,
+              offsetX: 1,
+              offsetY: 0,
               valueCstr: TableTidierKeyWords.None,
             },
           ],
@@ -80,8 +80,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 1,
-            yOffset: 2,
+            offsetX: 1,
+            offsetY: 2,
           },
           size: {
             width: 6,
@@ -89,8 +89,8 @@ const option: TableTidierTemplate[] = [
           },
           constraints: [
             {
-              xOffset: -1,
-              yOffset: 0,
+              offsetX: -1,
+              offsetY: 0,
               valueCstr: "Dimensions",
             },
           ],
@@ -102,13 +102,13 @@ const option: TableTidierTemplate[] = [
           {
             match: {
               startCell: {
-                xOffset: 1,
-                yOffset: 0,
+                offsetX: 1,
+                offsetY: 0,
               },
               constraints: [
                 {
-                  xOffset: 0,
-                  yOffset: 0,
+                  offsetX: 0,
+                  offsetY: 0,
                   valueCstr: (value) => {
                     if (typeof value === "string") return value.endsWith("mm");
                     return false;
@@ -138,8 +138,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 1,
-            yOffset: 4,
+            offsetX: 1,
+            offsetY: 4,
           },
           size: {
             width: 2,
@@ -147,8 +147,8 @@ const option: TableTidierTemplate[] = [
           },
           constraints: [
             {
-              xOffset: -1,
-              yOffset: 0,
+              offsetX: -1,
+              offsetY: 0,
               valueCstr: "Camera",
             },
           ],

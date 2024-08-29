@@ -588,17 +588,29 @@ export const useTableStore = defineStore('table', {
         const areaKey = `${node.x}-${node.y}-${node.width}-${node.height}`;
 
         // 给每个node赋予type，并计算selectionsAreaFromLegend和selectAreaFromLegend
-        if (node.extract === undefined || node.extract === null) {
-          node.type = "null";
-        } else {
+        node.type = "null";
+        if (node.extract !== undefined && node.extract != null) {
+          let extractKeys = 0;
+          if (node.extract.byValue !== undefined) {
+            node.type = "value";
+            extractKeys++; // extractKeys.push('byValue');
+          }
+          if (node.extract.byContext !== undefined) {
+            node.type = "context";
+            extractKeys++; // extractKeys.push('byContext');
+          }
           if (node.extract.byPositionToTargetCols !== undefined) {
             node.type = "position";
-          } else if (node.extract.byContext !== undefined) {
-            node.type = "context";
-          } else if (node.extract.byValue !== undefined) {
-            node.type = "value";
-          } else {
-            node.type = "null";
+            extractKeys++; // extractKeys.push('byPositionToTargetCols');
+          }
+
+          if (this.editor.mappingSpec.highlightCode === null && extractKeys > 1) {
+            this.editor.mappingSpec.highlightCode = [...this.getHighlightCodeStartEndLine(node.extract, this.getNodebyPath(this.spec.rawSpecs, node.path!)), 'selectionShallow'];
+
+            const startLine = this.editor.mappingSpec.highlightCode[0];
+            const endLine = this.editor.mappingSpec.highlightCode[1];
+            message.warning(`Multiple keys (${Object.keys(node.extract)}) detected in 'extract' (lines ${startLine}-${endLine}). We'll prioritize and parse in this order: byPositionToTargetCols, byContext, byValue. Any others will be ignored.\nPlease provide only one key for accurate processing.`)
+            this.highlightCode(...this.editor.mappingSpec.highlightCode);
           }
         }
         this.spec.selectionsAreaFromLegend.push([node.y, node.x, node.y + node.height - 1, node.x + node.width - 1]);
@@ -636,6 +648,7 @@ export const useTableStore = defineStore('table', {
       this.spec.selectAreaFromLegend = []
       this.spec.selectionsAreaFromLegend = []
       this.spec.selectionsPath = []
+      this.editor.mappingSpec.highlightCode = null;
       this.traverseTree4UpdateIn2Nodes(this.spec.visTree.children!);
       return tidyData;
     },

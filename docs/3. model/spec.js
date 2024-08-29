@@ -2,8 +2,8 @@ const option: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
-        xOffset: 0,
-        yOffset: 0,
+        offsetX: 0,
+        offsetY: 0,
       },
       size: {
         width: 2,
@@ -17,8 +17,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 0,
-            yOffset: 1,
+            offsetX: 0,
+            offsetY: 1,
           },
           size: {
             width: 2,
@@ -35,8 +35,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 0,
-            yOffset: 0,
+            offsetX: 0,
+            offsetY: 0,
           },
         },
         extract: {
@@ -52,8 +52,8 @@ const option2: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
-        xOffset: 0,
-        yOffset: 1,
+        offsetX: 0,
+        offsetY: 1,
       },
       size: {
         width: 2,
@@ -71,9 +71,9 @@ const option2: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            referenceAreaLayer: "root",
-            xOffset: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
-            yOffset: 0,
+            offsetLayer: "root",
+            offsetX: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
+            offsetY: 0,
           },
         },
         extract: {

@@ -2,8 +2,8 @@ const option: TableTidierTemplate[] = [
   {
     match: {
       startCell: {
-        xOffset: 0,
-        yOffset: 0,
+        offsetX: 0,
+        offsetY: 0,
       },
       size: {
         width: "toParentX", // 12,
@@ -11,14 +11,14 @@ const option: TableTidierTemplate[] = [
       },
       constraints: [
         {
-          xOffset: 5,
-          yOffset: 0,
+          offsetX: 5,
+          offsetY: 0,
           valueCstr: "Employee Previous Earnings",
         },
         {
-          referenceAreaPosi: "bottomLeft",
-          xOffset: 0,
-          yOffset: 1,
+          offsetFrom: "bottomLeft",
+          offsetX: 0,
+          offsetY: 1,
           valueCstr: (value) => {
             if (typeof value === "string")
               return value.startsWith("ACME Payroll");
@@ -35,8 +35,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 0,
-            yOffset: 4,
+            offsetX: 0,
+            offsetY: 4,
           },
           size: {
             width: 2,
@@ -49,8 +49,8 @@ const option: TableTidierTemplate[] = [
       {
         match: {
           startCell: {
-            xOffset: 0,
-            yOffset: 8,
+            offsetX: 0,
+            offsetY: 8,
           },
           size: {
             width: "toParentX",
@@ -62,14 +62,14 @@ const option: TableTidierTemplate[] = [
         extract: {
           byContext: {
             position: (cell) => {
-              let xOffset = cell.xOffset,
-                yOffset = 7;
-              if (cell.xOffset == 4) yOffset = 6;
+              let offsetX = cell.offsetX,
+                offsetY = 7;
+              if (cell.offsetX == 4) offsetY = 6;
               return [
                 {
-                  xOffset,
-                  yOffset,
-                  referenceAreaLayer: "parent",
+                  offsetX,
+                  offsetY,
+                  offsetLayer: "parent",
                 },
               ];
             },
