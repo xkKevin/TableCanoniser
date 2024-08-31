@@ -3,7 +3,7 @@ import Handsontable from "handsontable";
 import * as d3 from 'd3';
 import { shallowRef } from 'vue';
 
-import { Table2D, TableTidierTemplate, TableTidierKeyWords, CellInfo, CellValueType, AreaInfo, completeCellConstraint } from "@/grammar/grammar"
+import { Table2D, TableCanoniserTemplate, TableCanoniserKeyWords, CellInfo, CellValueType, AreaInfo, completeCellConstraint } from "@/grammar/grammar"
 import { transformTable, serialize, getCellBySelect } from "@/grammar/handleSpec"
 import { TreeChart, NodeData } from '@/tree/drawTree';
 import { CustomError } from "@/types";
@@ -77,19 +77,20 @@ export interface AreaBox {
   height: number,
   x: number,
   y: number,
+  instIndex?: number,
   isDefinedFromSpec?: boolean
 }
 
 // type CoordinateMap = Map<number, Map<number, any>>;  // 根据坐标获取某值
 
-export interface VisTreeNode extends TableTidierTemplate, AreaBox {
+export interface VisTreeNode extends TableCanoniserTemplate, AreaBox {
   id?: number,
   type?: "position" | "value" | "context" | "null",
   path?: number[],
   matchs?: AreaBox[],
   currentMatchs?: AreaBox[],
   // currentAreas?: AreaInfo[],
-  constrsInfo?: { x: number, y: number, isDefinedFromSpec: boolean }[][],
+  constrsInfo?: { x: number, y: number, isDefinedFromSpec: boolean, instIndex: number }[][],
   children?: VisTreeNode[]
 }
 
@@ -128,7 +129,7 @@ export const useTableStore = defineStore('table', {
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],
-        rawSpecs: shallowRef<TableTidierTemplate[]>([]),
+        rawSpecs: shallowRef<TableCanoniserTemplate[]>([]),
         visTree: shallowRef<VisTreeNode>({ id: 0, width: 0, height: 0, x: 0, y: 0, type: "null", path: [], children: [] }),
         visTreeMatchPath: shallowRef<{ [key: string]: VisTreeNode }>({}),
         selectNode: shallowRef<NodeData | null>(null),
@@ -140,7 +141,7 @@ export const useTableStore = defineStore('table', {
         selectionsPath: shallowRef<number[][]>([]),  // 每一个selection在rawSpecs中对应的path
         dragConfigOpen: false,
         disableGoToInstFlag: true,
-        areaConfig: shallowRef<TableTidierTemplate>({
+        areaConfig: shallowRef<TableCanoniserTemplate>({
           match: {
             startCell: {},
             size: {},
@@ -171,7 +172,7 @@ export const useTableStore = defineStore('table', {
       editor: {
         mappingSpec: {
           code: '',
-          codePref: 'const option: TableTidierTemplate[] = ',
+          codePref: 'const option: TableCanoniserTemplate[] = ',
           codeSuff: '\nreturn option;',
           errorMark: null as monaco.editor.IMarker | null,
           decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
@@ -179,6 +180,7 @@ export const useTableStore = defineStore('table', {
           language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null),
           triggerCodeChange: true,
+          codeUpdateFromEditor: false
         },
         rootArea: {
           code: '',
@@ -351,10 +353,13 @@ export const useTableStore = defineStore('table', {
     /**
      * Update visTree's matchs
      */
-    traverseTree4UpdateMatchs(nodes: AreaInfo[]) {
+    traverseTree4UpdateMatchs(nodes: AreaInfo[], instIndex: number = -1) {
       let visNode: VisTreeNode | null = null;
-      nodes.forEach((node) => {
+      nodes.forEach((node, index) => {
         const path = node.templateRef.toString()
+        const firstLayerFlag = node.templateRef.length === 1;
+        const isDefinedFromSpec = firstLayerFlag || node.isDefinedFromSpec
+        if (firstLayerFlag) instIndex = index;
         if (!this.spec.visTreeMatchPath.hasOwnProperty(path)) {
           visNode = this.getNodebyPath(this.spec.visTree.children!, node.templateRef) as VisTreeNode;
           if (visNode === null) return;
@@ -364,7 +369,8 @@ export const useTableStore = defineStore('table', {
             y: node.y,
             width: node.width,
             height: node.height,
-            isDefinedFromSpec: node.isDefinedFromSpec
+            instIndex,
+            isDefinedFromSpec
           }];
           // visNode.currentAreas = [node];
           visNode.constrsInfo = [];
@@ -373,7 +379,7 @@ export const useTableStore = defineStore('table', {
             const allConstr = completeCellConstraint(constraint);
             const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
             if (cellInfo) {
-              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec: node.isDefinedFromSpec });
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec, instIndex });
             }
             visNode!.constrsInfo!.push(cellInfoSelections);
           })
@@ -383,7 +389,8 @@ export const useTableStore = defineStore('table', {
             y: node.y,
             width: node.width,
             height: node.height,
-            isDefinedFromSpec: node.isDefinedFromSpec
+            instIndex,
+            isDefinedFromSpec
           });
           // this.spec.visTreeMatchPath[path].currentAreas!.push(node);
           visNode = this.spec.visTreeMatchPath[path];
@@ -392,50 +399,55 @@ export const useTableStore = defineStore('table', {
             const allConstr = completeCellConstraint(constraint);
             const cellInfo = getCellBySelect(allConstr, node, this.editor.rootArea.object!, true);
             if (cellInfo) {
-              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec: node.isDefinedFromSpec });
+              cellInfoSelections.push({ x: cellInfo.x, y: cellInfo.y, isDefinedFromSpec, instIndex });
             }
           })
         }
-        this.traverseTree4UpdateMatchs(node.children)
+        this.traverseTree4UpdateMatchs(node.children, instIndex);
       })
     },
 
     /**
      * Update visTree's AreaBox properties
      */
-    updateVisTreeAreaBox(node: VisTreeNode | null = null, areaBox: AreaBox | null = null) {
+    updateVisTreeAreaBox(node: VisTreeNode | null = null) {
       if (node === null) {
         if (this.spec.visTree.children!.length === 0) return;
         node = this.spec.visTree.children![0];
       }
       if (node.matchs === undefined) return;
-      if (areaBox === null) {
-        const instance = node.matchs[this.tree.instanceIndex];
-        areaBox = {
-          width: instance.width,
-          height: instance.height,
-          x: instance.x,
-          y: instance.y
-        }
-        Object.assign(node, areaBox);
-      } else {
-        for (const match of node.matchs) {
-          const { x, y, width, height } = match;
-          if (x >= areaBox.x && y >= areaBox.y && x + width <= areaBox.x + areaBox.width && y + height <= areaBox.y + areaBox.height) {
-            if (node.currentMatchs === undefined) node.currentMatchs = [match];
-            else node.currentMatchs.push(match);
-            if (match.isDefinedFromSpec) {
-              Object.assign(node, match);
-            }
+      const matchedInsts = node.matchs.filter((match) => match.instIndex === this.tree.instanceIndex);
+      node.currentMatchs = [];
+      let isDefinedFromSpecInst: any = null;
+      matchedInsts.forEach((match) => {
+        if (node!.currentMatchs!.some((cm) => cm.x === match.x && cm.y === match.y)) return;
+        const newMatch: AreaBox = { ...match };
+        if (match.isDefinedFromSpec) {
+          if (isDefinedFromSpecInst === null) {
+            isDefinedFromSpecInst = newMatch;
+          } else {
+            newMatch.isDefinedFromSpec = false;
           }
         }
-        if (node.x === undefined && node.currentMatchs) {
-          Object.assign(node, node.currentMatchs[0]);
-        }
+        node!.currentMatchs!.push(newMatch);
+      })
+
+      if (isDefinedFromSpecInst !== null) {
+        node.x = isDefinedFromSpecInst.x;
+        node.y = isDefinedFromSpecInst.y;
+        node.width = isDefinedFromSpecInst.width;
+        node.height = isDefinedFromSpecInst.height;
+      } else {
+        const areaBox = node.currentMatchs[0];
+        node.x = areaBox.x;
+        node.y = areaBox.y;
+        node.width = areaBox.width;
+        node.height = areaBox.height;
       }
+
       if (node.children) {
         node.children.forEach((child) => {
-          this.updateVisTreeAreaBox(child, areaBox);
+          this.updateVisTreeAreaBox(child);
         })
       }
     },
@@ -614,7 +626,6 @@ export const useTableStore = defineStore('table', {
             message.warning(`Multiple keys (${Object.keys(node.extract)}) detected in 'extract' (lines ${startLine}-${endLine}). We'll prioritize and parse in this order: byPositionToTargetCols, byContext, byValue. Any others will be ignored.\nPlease provide only one key for accurate processing.`)
             this.editor.mappingSpec.triggerCodeChange = false; // 下面的代码修改不会触发 handleCodeChange 函数
             this.stringifySpec();
-            // this.highlightCode(...this.editor.mappingSpec.highlightCode);
           }
         }
         this.spec.selectionsAreaFromLegend.push([node.y, node.x, node.y + node.height - 1, node.x + node.width - 1]);
@@ -639,7 +650,7 @@ export const useTableStore = defineStore('table', {
       })
     },
 
-    transformTblUpdateRootArea(specs: TableTidierTemplate[] = []) {
+    transformTblUpdateRootArea(specs: TableCanoniserTemplate[] = []) {
       const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
       // this.editor.rootArea.codePref + JSON.stringify(rootArea)
       this.editor.rootArea.object = rootArea;
@@ -835,18 +846,18 @@ export const useTableStore = defineStore('table', {
           rootNodes.push(newNode);
         }
       }
-      const specs: TableTidierTemplate[] = [];
+      const specs: TableCanoniserTemplate[] = [];
       const addedSpec: [any] = [null];
       this.traverseTree4buildSpecs(rootNodes, specs, [0, 0, this.input_tbl.tbl.length - 1, this.input_tbl.tbl[0].length - 1], addedSpec);
       return { rootNodes, specs, newSpec: addedSpec[0] };
     },
 
-    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableTidierTemplate[], pSelection: Selection, addedSpec: [any]) {
+    traverseTree4buildSpecs(nodes: TreeNode[], specs: TableCanoniserTemplate[], pSelection: Selection, addedSpec: [any]) {
       const px = pSelection[1], py = pSelection[0];
       const pw = pSelection[3] - px + 1, ph = pSelection[2] - py + 1;
       nodes.forEach((node) => {
 
-        const newSpec: TableTidierTemplate = {};
+        const newSpec: TableCanoniserTemplate = {};
         const { selection, type } = node;
 
         if (node.path.length > 0) {
@@ -943,20 +954,28 @@ export const useTableStore = defineStore('table', {
       return highlightNodesId;
     },
 
-    highlightTblTemplate(area: AreaBox, icon = null) {
-      if (area.x === undefined || area.y === undefined || area.width === undefined || area.height === undefined) {
-        return
+    highlightTblTemplate(areas: AreaBox[]) {
+      try {
+        const highlight = this.tree.tblVisHighlight!;  // .tbl-container .tbl-template-highlight
+        const tblVisInfo = this.tree.tblVisInfo!;
+
+        areas.forEach((area) => {
+          if (area.x === undefined || area.y === undefined || area.width === undefined || area.height === undefined) {
+            return
+          }
+          highlight.raise().append('rect')
+            .attr('x', (area.x - tblVisInfo.x) * tblVisInfo.width)
+            .attr('y', (area.y - tblVisInfo.y) * tblVisInfo.height)
+            .attr('width', area.width * tblVisInfo.width)
+            .attr('height', area.height * tblVisInfo.height)
+            .attr('fill', 'none')
+            .attr('stroke', typeMapColor.selection)
+            .attr('stroke-width', 3)
+            .attr("stroke-dasharray", area.isDefinedFromSpec ? "0" : "6,6");
+        });
+      } catch (e) {
+        console.log(e);
       }
-      const highlight = this.tree.tblVisHighlight!;  // .tbl-container .tbl-template-highlight
-      const tblVisInfo = this.tree.tblVisInfo!;
-      highlight.raise().append('rect')
-        .attr('x', (area.x - tblVisInfo.x) * tblVisInfo.width)
-        .attr('y', (area.y - tblVisInfo.y) * tblVisInfo.height)
-        .attr('width', area.width * tblVisInfo.width)
-        .attr('height', area.height * tblVisInfo.height)
-        .attr('fill', 'none')
-        .attr('stroke', typeMapColor.selection)
-        .attr('stroke-width', 3);
     },
 
     /*
@@ -1067,9 +1086,9 @@ export const useTableStore = defineStore('table', {
           }
         })
         // console.log(result.outputText);
-        // const specification: TableTidierTemplate = eval(code);
-        const evalFunction = new Function('TableTidierKeyWords', result.outputText);
-        const specs: TableTidierTemplate[] = evalFunction(TableTidierKeyWords);
+        // const specification: TableCanoniserTemplate = eval(code);
+        const evalFunction = new Function('TableCanoniserKeyWords', result.outputText);
+        const specs: TableCanoniserTemplate[] = evalFunction(TableCanoniserKeyWords);
         if (Array.isArray(specs) === false) {
           message.error("Invalid code!\nPlease provide your code input. " + codeFormat);
           return false;
@@ -1084,10 +1103,11 @@ export const useTableStore = defineStore('table', {
 
 
         // Step 2: highlightCode
-        if (this.editor.mappingSpec.highlightCode) {
-          this.highlightCode(...this.editor.mappingSpec.highlightCode);
-          this.editor.mappingSpec.highlightCode = null;
-        }
+        // if (this.editor.mappingSpec.highlightCode) {
+        //   console.log('prepareDataAfterCodeChange-highlightCode', this.editor.mappingSpec.highlightCode);
+        //   this.highlightCode(...this.editor.mappingSpec.highlightCode);
+        //   this.editor.mappingSpec.highlightCode = null;
+        // }
 
         // Step 3: update visTree's AreaBox properties
         // const { rootArea } = transformTable(this.input_tbl.tbl, this.spec.rawSpecs, false);
@@ -1350,7 +1370,7 @@ export const useTableStore = defineStore('table', {
 
       if (constrIndex !== -1) {
         // 说明删除的是约束
-        const currentNode = this.getNodebyPath(nodes, path) as TableTidierTemplate;
+        const currentNode = this.getNodebyPath(nodes, path) as TableCanoniserTemplate;
         if (currentNode) {
           currentNode.match!.constraints!.splice(constrIndex, 1);
           if (currentNode.match!.constraints!.length === 0) {
@@ -1410,15 +1430,15 @@ export const useTableStore = defineStore('table', {
       if (specs === null) specs = this.spec.rawSpecs;
       let strSpec = JSON.stringify(specs, replacer, 2);
       fnList.forEach((fn) => {
-        strSpec = strSpec.replace(`"$TableTidier$"`, fn);
+        strSpec = strSpec.replace(`"$TableCanoniser$"`, fn);
       })
 
       // 正则表达式匹配 JSON 对象中的键（包括可能的空白字符和引号）
       const removeQuotesFromKeysRegex = /"(\w+)":/g;
       strSpec = strSpec.replace(removeQuotesFromKeysRegex, '$1:');
 
-      const replaceTableTidierKeyWordsRegex = /"TableTidierKeyWords\.(\w+)"/g;
-      strSpec = strSpec.replace(replaceTableTidierKeyWordsRegex, 'TableTidierKeyWords.$1');
+      const replaceTableCanoniserKeyWordsRegex = /"TableCanoniserKeyWords\.(\w+)"/g;
+      strSpec = strSpec.replace(replaceTableCanoniserKeyWordsRegex, 'TableCanoniserKeyWords.$1');
 
       if (replaceSpace === "all") {
         strSpec = removeSpaceType.all(strSpec);
@@ -1437,7 +1457,7 @@ export const useTableStore = defineStore('table', {
       function replacer(key: string, value: any) {
         if (typeof value === 'function') {
           fnList.push(removeSpaceType[replaceSpace](value.toString()));
-          return "$TableTidier$" // value.toString(); // 将函数转化为字符串
+          return "$TableCanoniser$" // value.toString(); // 将函数转化为字符串
         }
         return value;
       }
@@ -1448,7 +1468,7 @@ export const useTableStore = defineStore('table', {
     selectArea() {
       const visNode = this.spec.selectNode!.data;
       const formData = this.spec.areaFormData
-      const newSpec: TableTidierTemplate = {
+      const newSpec: TableCanoniserTemplate = {
         match: {
           startCell: {
             offsetLayer: formData.offsetLayer,
@@ -1626,13 +1646,13 @@ export const useTableStore = defineStore('table', {
           const cell = table[row][col];
           const type = this.getCellDataType(cell);
           switch (type) {
-            case TableTidierKeyWords.String:
+            case TableCanoniserKeyWords.String:
               colInfo.string.push(row);
               break;
-            case TableTidierKeyWords.Number:
+            case TableCanoniserKeyWords.Number:
               colInfo.number.push(row);
               break;
-            case TableTidierKeyWords.None:
+            case TableCanoniserKeyWords.None:
               colInfo.none.push(row);
               break;
           }
@@ -1643,15 +1663,15 @@ export const useTableStore = defineStore('table', {
 
     getCellDataType(value: CellValueType) {
       if (value === '' || value === null || value === undefined) {
-        return TableTidierKeyWords.None;
+        return TableCanoniserKeyWords.None;
       }
       if (!isNaN(Number(value))) {
-        return TableTidierKeyWords.Number;
+        return TableCanoniserKeyWords.Number;
       }
       if (typeof value === 'string') {
-        return TableTidierKeyWords.String;
+        return TableCanoniserKeyWords.String;
       }
-      return TableTidierKeyWords.NotNone;
+      return TableCanoniserKeyWords.NotNone;
     },
     clearStatus(type: string) {
       switch (type) {
@@ -1685,6 +1705,7 @@ export const useTableStore = defineStore('table', {
           break
       }
     },
+    /*
     debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
       let timeout: any = null;
       return function (...args: Parameters<T>) {
@@ -1693,7 +1714,7 @@ export const useTableStore = defineStore('table', {
           func(...args);
         }, wait);
       };
-    }
+    }*/
   },
   // computed
   getters: {}

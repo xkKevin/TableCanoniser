@@ -69,9 +69,10 @@ const initEditor = () => {
             tableStore.spec.undoHistory.push(tableStore.editor.mappingSpec.code);
             // 当执行新的操作时，重做历史应当清空
             tableStore.spec.redoHistory = [];
+            tableStore.editor.mappingSpec.codeUpdateFromEditor = true;
         }
         tableStore.editor[codeType].code = value;
-        console.log('onblur', e);
+        // console.log('onblur', e);
     });
     if (codeType === "mappingSpec") {
         // 编辑器内容变化时取消高亮

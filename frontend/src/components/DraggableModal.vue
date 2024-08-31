@@ -108,14 +108,14 @@
 import { ref, computed, CSSProperties, watch, watchEffect } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { useTableStore, AreaForm } from '@/store/table';
-// import { TableTidierTemplate } from '@/grammar/grammar';
+// import { TableCanoniserTemplate } from '@/grammar/grammar';
 const tableStore = useTableStore();
 const areaConfig = tableStore.spec.areaConfig;
 
 
 
 /* ---------- Area Form ---------- */
-// const formData = ref<TableTidierTemplate>(areaConfig)
+// const formData = ref<TableCanoniserTemplate>(areaConfig)
 const formData = ref<AreaForm>(tableStore.spec.areaFormData)
 
 tableStore.spec.areaFormData = formData.value

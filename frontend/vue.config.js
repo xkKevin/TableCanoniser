@@ -4,7 +4,7 @@ const webpack = require("webpack");
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  publicPath: "/TableTidier/",
+  publicPath: "/TableCanoniser/",
   outputDir: "../docs",
   // chainWebpack: (config) => {
   //   config.module

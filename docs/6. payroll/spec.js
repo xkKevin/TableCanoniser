@@ -1,4 +1,4 @@
-const option: TableTidierTemplate[] = [
+const option: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -30,7 +30,7 @@ const option: TableTidierTemplate[] = [
         yDirection: "after",
       },
     },
-    fill: "", // TableTidierKeyWords.Forward,
+    fill: "", // TableCanoniserKeyWords.Forward,
     children: [
       {
         match: {

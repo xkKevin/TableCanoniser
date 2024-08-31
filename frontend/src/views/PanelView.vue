@@ -1,7 +1,7 @@
 <template>
   <div id="panel">
     <div class="system-name">
-      <span id="system_name">TableTidier</span>
+      <span id="system_name">TableCanoniser</span>
       <span style="left: 20px; position: absolute;">
         <span style="font-size: 16px; font-weight: normal; margin-right: 5px">Cases:</span>
         <!-- @mouseenter="selectEnter" @mouseleave="selectLeave"  :open="isDropdownOpen" :getPopupContainer="(triggerNode: any) => triggerNode.parentNode" -->
@@ -143,8 +143,7 @@ function transformTablebyCode() {
   // triggerRef(ref(tableStore.editor.mappingSpec.code));
   // 即使新值和旧值相同，重新赋值依然会触发 watch：
   // PatternVis.methods!.handleCodeChange(tableStore.editor.mappingSpec.code);
-  console.log('click');
-  patternVis.value.debouncedHandleCodeChange(); // handleCodeChange();
+  patternVis.value.handleCodeChange(true); // handleCodeChange();
   // loading.value = false;
 }
 

@@ -1,4 +1,4 @@
-import { Table2D, TableTidierTemplate, CellValueType, CellConstraint, CellPosi, TableTidierKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, RegionPosition, offsetFn, completeRegionPosition, completeSpecification, ContextTransform } from "./grammar";
+import { Table2D, TableCanoniserTemplate, CellValueType, CellConstraint, CellPosi, TableCanoniserKeyWords, CellInfo, AllParams, AreaInfo, MatchedIndex, RegionPosition, offsetFn, completeRegionPosition, completeSpecification, ContextTransform } from "./grammar";
 
 import { CustomError } from "../types";
 
@@ -22,16 +22,16 @@ const evaluateConstraint = (cellValue: CellValueType, constraint: CellConstraint
     if (typeof constraint.valueCstr === 'function') {
         return constraint.valueCstr(cellValue);
     }
-    if (constraint.valueCstr === TableTidierKeyWords.String) {
+    if (constraint.valueCstr === TableCanoniserKeyWords.String) {
         return typeof cellValue === 'string' && cellValue !== '' && isNaN(Number(cellValue));
     }
-    if (constraint.valueCstr === TableTidierKeyWords.Number) {
+    if (constraint.valueCstr === TableCanoniserKeyWords.Number) {
         return typeof cellValue === 'number' || (typeof cellValue === 'string' && cellValue !== '' && !isNaN(Number(cellValue)));
     }
-    if (constraint.valueCstr === TableTidierKeyWords.None) {
+    if (constraint.valueCstr === TableCanoniserKeyWords.None) {
         return cellValue === null || cellValue === '' || cellValue === undefined;
     }
-    if (constraint.valueCstr === TableTidierKeyWords.NotNone) {
+    if (constraint.valueCstr === TableCanoniserKeyWords.NotNone) {
         return cellValue !== null && cellValue !== '' && cellValue !== undefined;
     }
     return cellValue === constraint.valueCstr;
@@ -119,7 +119,7 @@ const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueTyp
     // 对每一列进行填充处理
     for (const key in tidyData) {
         const column = tidyData[key];
-        const fillValue = fill === TableTidierKeyWords.Forward ? column[column.length - 1] : {
+        const fillValue = fill === TableCanoniserKeyWords.Forward ? column[column.length - 1] : {
             x: -1,
             y: -1,
             value: fill
@@ -132,7 +132,7 @@ const fillColumns = (tidyData: { [key: string]: CellInfo[] }, fill: CellValueTyp
     }
 }
 
-const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo) => {
+const traverseArea = (template: AllParams<TableCanoniserTemplate>, startX: number, startY: number, endX: number, endY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo) => {
 
     let currentStartX = startX;
     let currentEndX = startX + width - 1;
@@ -198,7 +198,7 @@ const traverseArea = (template: AllParams<TableTidierTemplate>, startX: number, 
 }
 
 
-const matchArea = (template: AllParams<TableTidierTemplate>, offsetX: number, offsetY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo): AreaInfo | null => {
+const matchArea = (template: AllParams<TableCanoniserTemplate>, offsetX: number, offsetY: number, width: number, height: number, index: MatchedIndex, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, startCell: CellInfo): AreaInfo | null => {
 
     let x = currentArea.x + offsetX, y = currentArea.y + offsetY;
 
@@ -247,7 +247,7 @@ const matchArea = (template: AllParams<TableTidierTemplate>, offsetX: number, of
 };
 
 
-const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
+const transformArea = (template: AllParams<TableCanoniserTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }) => {
 
     const cellArray = currentArea.areaTbl.flat();
     if (template.extract) {
@@ -377,7 +377,7 @@ const transformArea = (template: AllParams<TableTidierTemplate>, currentArea: Ar
 
 
 // Recursive function to process a template
-const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, templateIndex: number = 0) => {
+const processTemplate = (template: AllParams<TableCanoniserTemplate>, currentArea: AreaInfo, rootArea: AreaInfo, tidyData: { [key: string]: CellInfo[] }, templateIndex: number = 0) => {
 
     const index: MatchedIndex = {
         templateRef: [...currentArea.templateRef, templateIndex],
@@ -445,7 +445,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
             template.children.forEach((templateChild, ti) => {
                 processTemplate(templateChild, areaChild, rootArea, tidyData, ti);
             });
-            if (template.fill === TableTidierKeyWords.Auto) {
+            if (template.fill === TableCanoniserKeyWords.Auto) {
                 if (index.templateRef.length > 1) {
                     fillColumns(tidyData, null);
                 } else {
@@ -460,7 +460,7 @@ const processTemplate = (template: AllParams<TableTidierTemplate>, currentArea: 
 
 }
 
-export function transformTable(table: Table2D, specs: TableTidierTemplate[]) {
+export function transformTable(table: Table2D, specs: TableCanoniserTemplate[]) {
 
     // const specWithDefaults = completeSpecification(spec);
     // console.log(JSON.stringify(specWithDefaults, null, 2));

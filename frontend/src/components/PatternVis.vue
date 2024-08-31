@@ -261,7 +261,7 @@ const tblContainer = ref<SVGSVGElement | null>(null);
 /*
 import { debounce } from 'lodash';
 
-// import { TableTidierTemplate } from '@/grammar/grammar';
+// import { TableCanoniserTemplate } from '@/grammar/grammar';
 
 const debouncedResize = debounce(() => {
     drawTree(tableStore.spec.visTree);
@@ -290,14 +290,32 @@ const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) =>
     }
 }
 
-function handleCodeChange() {
-    console.log("handleCodeChange: start");
+function handleCodeChange(clickFlag = false) {
+    // console.log("handleCodeChange: start", tableStore.editor.mappingSpec.codeUpdateFromEditor);
+    if (tableStore.editor.mappingSpec.codeUpdateFromEditor) {
+        setTimeout(() => {
+            tableStore.editor.mappingSpec.codeUpdateFromEditor = false;
+        }, 600)
+        if (clickFlag) return;
+    }
+    if (tableStore.editor.mappingSpec.code !== tableStore.editor.mappingSpec.instance!.getValue()) {
+        tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.code);
+    }
     const setFlag = tableStore.prepareDataAfterCodeChange();
     if (!setFlag) return;
     if (document.body.style.cursor === 'default') {
         drawMinimap(tableStore.input_tbl.tbl.length, tableStore.input_tbl.tbl[0].length, tblContainer.value, tableStore);
     }
     tableStore.transformTablebyCode();  // auto run
+    if (tableStore.editor.mappingSpec.highlightCode) {
+        // console.log('handleCodeChange-highlightCode', tableStore.editor.mappingSpec.highlightCode);
+        tableStore.highlightCode(...tableStore.editor.mappingSpec.highlightCode);
+        // tableStore.editor.mappingSpec.highlightCode = null;
+    }
+    setTimeout(() => {
+        tableStore.editor.mappingSpec.triggerCodeChange = true;
+    }, 600)
+    // tableStore.editor.mappingSpec.triggerCodeChange = true;
     tableStore.spec.disableGoToInstFlag = tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.spec.visTree.children![0].matchs.length === 0;
     if (tableStore.spec.disableGoToInstFlag) {
         instanceContent.value = 'No matched instance';
@@ -316,21 +334,20 @@ function handleCodeChange() {
     // disableNextFlag.value = tableStore.spec.selectNode === null || tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.tree.instanceIndex === tableStore.spec.visTree.children![0].matchs!.length - 1;
 }
 
-const debouncedHandleCodeChange = tableStore.debounce(handleCodeChange, 200); // 200ms 的延迟
+// const debouncedHandleCodeChange = tableStore.debounce(handleCodeChange, 200); // 200ms 的延迟
 
 
 // 在Vue 3的<script setup>模式下，不能像在Vue 2中那样直接通过 组件.methods 访问组件的方法。<script setup>模式的代码是模块化的，组件的methods不会自动暴露为一个对象供外部访问。使用 defineExpose 暴露方法
-defineExpose({ debouncedHandleCodeChange });
+defineExpose({ handleCodeChange });
 
 watch(() => tableStore.editor.mappingSpec.code, (newVal) => {
-    console.log('watch code changed: start');
-    tableStore.editor.mappingSpec.instance?.setValue(newVal);
     if (tableStore.editor.mappingSpec.triggerCodeChange) {
-        debouncedHandleCodeChange();
+        handleCodeChange()
     } else if (tableStore.editor.mappingSpec.highlightCode) {
+        tableStore.editor.mappingSpec.instance?.setValue(newVal);
         tableStore.highlightCode(...tableStore.editor.mappingSpec.highlightCode);
+        tableStore.editor.mappingSpec.triggerCodeChange = true;
     }
-    tableStore.editor.mappingSpec.triggerCodeChange = true;
 });
 
 watch(() => tableStore.tree.instanceIndex, () => {

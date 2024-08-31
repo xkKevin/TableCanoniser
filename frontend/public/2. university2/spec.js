@@ -1,4 +1,4 @@
-const option: TableTidierTemplate[] = [
+const option: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -16,7 +16,7 @@ const option: TableTidierTemplate[] = [
         {
           offsetX: 0,
           offsetY: 0,
-          valueCstr: TableTidierKeyWords.Number,
+          valueCstr: TableCanoniserKeyWords.Number,
         },
       ],
     },
@@ -74,7 +74,7 @@ const option: TableTidierTemplate[] = [
   },
 ];
 
-const option2: TableTidierTemplate[] = [
+const option2: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -89,7 +89,7 @@ const option2: TableTidierTemplate[] = [
         {
           offsetX: 0,
           offsetY: 0,
-          valueCstr: TableTidierKeyWords.Number,
+          valueCstr: TableCanoniserKeyWords.Number,
         },
       ],
       traverse: {
@@ -122,12 +122,12 @@ const option2: TableTidierTemplate[] = [
             {
               offsetX: 0,
               offsetY: 0,
-              valueCstr: TableTidierKeyWords.Number,
+              valueCstr: TableCanoniserKeyWords.Number,
             },
             {
               offsetX: 0,
               offsetY: -1,
-              valueCstr: TableTidierKeyWords.String,
+              valueCstr: TableCanoniserKeyWords.String,
             },
           ],
           traverse: {

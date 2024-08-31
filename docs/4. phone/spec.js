@@ -1,4 +1,4 @@
-const option: TableTidierTemplate[] = [
+const option: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -22,7 +22,7 @@ const option: TableTidierTemplate[] = [
           offsetFrom: "bottomLeft",
           offsetX: 0,
           offsetY: 1,
-          valueCstr: TableTidierKeyWords.None,
+          valueCstr: TableCanoniserKeyWords.None,
         },
       ],
       traverse: {
@@ -55,12 +55,12 @@ const option: TableTidierTemplate[] = [
             {
               offsetX: -1,
               offsetY: 0,
-              valueCstr: TableTidierKeyWords.String,
+              valueCstr: TableCanoniserKeyWords.String,
             },
             {
               offsetX: 1,
               offsetY: 0,
-              valueCstr: TableTidierKeyWords.None,
+              valueCstr: TableCanoniserKeyWords.None,
             },
           ],
           traverse: {
@@ -159,7 +159,7 @@ const option: TableTidierTemplate[] = [
         extract: {
           byValue: (currentAreaTbl) => {
             // console.log(currentAreaTbl[0].map(Number));
-            return TableTidierKeyWords.pairSort(
+            return TableCanoniserKeyWords.pairSort(
               currentAreaTbl[0].map(Number),
               ["Front Camera", "Rear Camera"],
               "asc"

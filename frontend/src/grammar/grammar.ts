@@ -3,7 +3,7 @@
 type CellValueType = string | number | undefined;
 
 /**
- * Defines a set of keywords used in the TableTidier Grammar.
+ * Defines a set of keywords used in the TableCanoniser Grammar.
  *
  * - `String`: Used in `valueCstr` of `constraints` to specify that a cell must contain a string value.
  * - `Number`: Used in `valueCstr` of `constraints` to specify that a cell must contain a numeric value.
@@ -13,31 +13,31 @@ type CellValueType = string | number | undefined;
  * - `Auto`: Used in the `fill` property to indicate that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
  * - `pairSort`: Used in user-defined functions to sort array `A` according to the specified order (`asc` or `desc`) and reorders array `B`, so that its elements correspond to the newly sorted order of `A`.
  */
-const TableTidierKeyWords = {
+const TableCanoniserKeyWords = {
     /**
      * Used in `valueCstr` of `constraints` to specify that a cell must contain a string value.
      */
-    String: 'TableTidierKeyWords.String',
+    String: 'TableCanoniserKeyWords.String',
     /**
      * Used in `valueCstr` of `constraints` to specify that a cell must contain a numeric value.
      */
-    Number: 'TableTidierKeyWords.Number',
+    Number: 'TableCanoniserKeyWords.Number',
     /**
      * Used in `valueCstr` of `constraints` to specify that a cell must be empty, null, or undefined.
      */
-    None: 'TableTidierKeyWords.None',
+    None: 'TableCanoniserKeyWords.None',
     /**
      * Used in `valueCstr` of `constraints` to specify that a cell must not be empty, null, or undefined.
      */
-    NotNone: 'TableTidierKeyWords.NotNone',
+    NotNone: 'TableCanoniserKeyWords.NotNone',
     /**
      * Used in the `fill` property to indicate that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
      */
-    Forward: 'TableTidierKeyWords.Forward',
+    Forward: 'TableCanoniserKeyWords.Forward',
     /**
      * Used in the `fill` property to indicate that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
      */
-    Auto: 'TableTidierKeyWords.Auto',
+    Auto: 'TableCanoniserKeyWords.Auto',
     /**
      * Used in user-defined functions to sort array `A` according to the specified order (`asc` or `desc`) and reorders array `B`
      * so that its elements correspond to the newly sorted order of `A`.
@@ -51,9 +51,9 @@ const TableTidierKeyWords = {
      * ```typeScript
      * const A = [3, 1, 2];
      * const B = ['Col1', 'Col2', 'Col3'];
-     * const correspondingB_Asc = TableTidierKeyWords.pairSort(A, B, 'asc');
+     * const correspondingB_Asc = TableCanoniserKeyWords.pairSort(A, B, 'asc');
      * // ['Col3', 'Col1', 'Col2']
-     * const correspondingB_Desc = TableTidierKeyWords.pairSort(A, B, 'desc');
+     * const correspondingB_Desc = TableCanoniserKeyWords.pairSort(A, B, 'desc');
      * // ['Col1', 'Col3', 'Col2']
      * ```
      */
@@ -294,10 +294,10 @@ interface RegionPosition {
 /**
  * Represents a constraint on a cell's value
  * - `valueCstr`: The value constraint
- *   - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
- *   - `TableTidierKeyWords.Number`: Specifies that the cell's value must be a number.
- *   - `TableTidierKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
- *   - `TableTidierKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
+ *   - `TableCanoniserKeyWords.String` (default): Specifies that the cell's value must be a string.
+ *   - `TableCanoniserKeyWords.Number`: Specifies that the cell's value must be a number.
+ *   - `TableCanoniserKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
+ *   - `TableCanoniserKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
  *   - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
  *   - `checkValueFn`: Specifies a custom function to check if the cell's value meets certain conditions.
  * - `ignoreOutOfBounds` - Determines whether to ignore the constraint when the specified cell exceeds the table boundaries.
@@ -307,10 +307,10 @@ interface RegionPosition {
 interface CellConstraint extends RegionPosition {
     /**
      * The value constraint
-     * - `TableTidierKeyWords.String` (default): Specifies that the cell's value must be a string.
-     * - `TableTidierKeyWords.Number`: Specifies that the cell's value must be a number.
-     * - `TableTidierKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
-     * - `TableTidierKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
+     * - `TableCanoniserKeyWords.String` (default): Specifies that the cell's value must be a string.
+     * - `TableCanoniserKeyWords.Number`: Specifies that the cell's value must be a number.
+     * - `TableCanoniserKeyWords.None`: Specifies that the cell must be empty, null, or undefined.
+     * - `TableCanoniserKeyWords.NotNone`: Specifies that the cell must not be empty, null, or undefined.
      * - `CellValueType`: Specifies that the cell's value must be equal to the provided value.
      * - `checkValueFn` (value: CellValueType) => boolean: Specifies a custom function to check if the cell's value meets certain conditions.
      *   - `value` : The value of the constrained cell.
@@ -396,7 +396,7 @@ interface ContextTransform {
  *     - `offsetFrom`: The reference area position for the constrainted cell, default is 'topLeft'
  *     - `offsetX`: The x-axis offset relative to the reference area, default is 0
  *     - `offsetY`: The y-axis offset relative to the reference area, default is 0
- *     - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
+ *     - `valueCstr`: The value constraint, default is `TableCanoniserKeyWords.String`
  *     - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
  *   - `traverse`: The traversal direction for the selected area
  *     - `xDirection`: The x-axis traversal direction; 'after' means traversing after the startCell; 'before' means traversing before the startCell; 'whole' means traversing the entire area; default is null, meaning no traversal
@@ -408,13 +408,13 @@ interface ContextTransform {
  *   - `byPositionToTargetCols`: The target columns for the transformation, which is an array (position-based transformation)
  *   - `byValue`: The custom function for value-based transformation
  * - `fill`: Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
- *   - `TableTidierKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
- *   - `TableTidierKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+ *   - `TableCanoniserKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
+ *   - `TableCanoniserKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
  *   - `null` means no filling will occur, and columns can have different lengths.
  *   - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
  * - `children`: The child templates for nested selections
  */
-interface TableTidierTemplate {
+interface TableCanoniserTemplate {
     /**
      * The matching criteria for a selecting area
      */
@@ -446,7 +446,7 @@ interface TableTidierTemplate {
          * - `offsetFrom`: The reference area position for the constrainted cell, default is 'topLeft'
          * - `offsetX`: The x-axis offset relative to the reference area, default is 0
          * - `offsetY`: The y-axis offset relative to the reference area, default is 0
-         * - `valueCstr`: The value constraint, default is `TableTidierKeyWords.String`
+         * - `valueCstr`: The value constraint, default is `TableCanoniserKeyWords.String`
          * - `ignoreOutOfBounds`: Determines whether to ignore the constraint when the specified cell exceeds the table boundaries, default is true
          */
         constraints?: CellConstraint[];
@@ -490,8 +490,8 @@ interface TableTidierTemplate {
     } | null;
     /**
      * Specifies how to handle columns in the output table that have different lengths after extracting values from the matched region.
-     * - `TableTidierKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
-     * - `TableTidierKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
+     * - `TableCanoniserKeyWords.Auto` (default) means that columns with a length less than the maximum length will be automatically filled with null or empty strings, depending on the information of the matching area and pattern.
+     * - `TableCanoniserKeyWords.Forward` means that columns with a length less than the maximum length will be filled with the last available value, ensuring that all columns in the output table have equal lengths.
      * - `null` means no filling will occur, and columns can have different lengths.
      * - `CellValueType`: A custom value can also be provided, which will be used to fill the column to match the length of the longest column.
      */
@@ -499,10 +499,10 @@ interface TableTidierTemplate {
     /**
      * The child templates for nested selections
      */
-    children?: TableTidierTemplate[];
+    children?: TableCanoniserTemplate[];
 }
 
-// TableTidierTemplate 是我定义的一个转换表格的语法，我现在想为这个语法写注释，目的是为了让用户在前端使用我的语法时，鼠标悬浮在语法的属性上，能看到这个属性的完整数据类型，以及解释说明，如果这个属性可以是自定义函数的数据类型，则一定要展示这个自定义函数的参数（包括其解释和数据类型）以及返回值，并根据这个函数定义再提供一个example，让用户更好地理解。
+// TableCanoniserTemplate 是我定义的一个转换表格的语法，我现在想为这个语法写注释，目的是为了让用户在前端使用我的语法时，鼠标悬浮在语法的属性上，能看到这个属性的完整数据类型，以及解释说明，如果这个属性可以是自定义函数的数据类型，则一定要展示这个自定义函数的参数（包括其解释和数据类型）以及返回值，并根据这个函数定义再提供一个example，让用户更好地理解。
 // 因此，请帮我重新组织一下我的语法comment，以方便用户悬浮在语法上，看到完整的数据类型，以及解释说明。
 
 /**
@@ -574,9 +574,9 @@ const DEFAULT_X_DIRECTION = null;
 const DEFAULT_Y_DIRECTION = null;
 const DEFAULT_CONTEXT_POSITION = "above";
 const DEFAULT_TARGET_COL = (ctxCells => ctxCells[0].value) as mapColbyContextFn; // null;
-const DEFAULT_VALUE_CSTR = TableTidierKeyWords.String;
+const DEFAULT_VALUE_CSTR = TableCanoniserKeyWords.String;
 const DEFAULT_IGNORE_OUT_OF_BOUNDS = true;
-const DEFAULT_FILL = TableTidierKeyWords.Auto; // null;
+const DEFAULT_FILL = TableCanoniserKeyWords.Auto; // null;
 
 function completeRegionPosition(
     selection: RegionPosition | undefined
@@ -628,8 +628,8 @@ function completeContextTransform(
 }
 
 function completeSpecification(
-    template: TableTidierTemplate
-): AllParams<TableTidierTemplate> {
+    template: TableCanoniserTemplate
+): AllParams<TableCanoniserTemplate> {
     return {
         match: {
             startCell: completeRegionPosition(template.match?.startCell),
@@ -668,22 +668,22 @@ function completeSpecification(
             : null,
         fill: template.fill === undefined ? DEFAULT_FILL : template.fill,
         children: template.children?.map(completeSpecification) || [],
-    } as AllParams<TableTidierTemplate>;
+    } as AllParams<TableCanoniserTemplate>;
 }
 
 // Complete the specification with default values
-// function completeSpecification(specification: TableTidierTemplate): AllParams<TableTidierTemplate> {
-//     return completeTemplate(specification) as AllParams<TableTidierTemplate>;
+// function completeSpecification(specification: TableCanoniserTemplate): AllParams<TableCanoniserTemplate> {
+//     return completeTemplate(specification) as AllParams<TableCanoniserTemplate>;
 // }
 
 export {
     Table2D,
-    TableTidierTemplate,
+    TableCanoniserTemplate,
     CellValueType,
     CellConstraint,
     ContextTransform,
     CellPosi,
-    TableTidierKeyWords,
+    TableCanoniserKeyWords,
     CellInfo,
     AllParams,
     AreaInfo,

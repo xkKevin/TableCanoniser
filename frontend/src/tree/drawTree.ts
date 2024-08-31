@@ -12,7 +12,8 @@ import {
 } from './types';
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, Selection } from "@/store/table";
-import { CellConstraint, TableTidierKeyWords } from '@/grammar/grammar';
+import { CellConstraint, TableCanoniserKeyWords } from '@/grammar/grammar';
+import { info } from 'handsontable/helpers';
 
 
 export type NodeData = {
@@ -644,16 +645,11 @@ export class TreeChart {
         nodeGroups.select(`.node-circle-${node.id}`)
           .attr('class', `node-circle-${node.id} type-node`)
           .attr('r', typeNodeStyle.nodeCircleRadius)
-          .attr('fill', typeMapColor[node.data.type!])
+          .attr('fill', '#f5f5f5') // typeMapColor[node.data.type!]
+          .attr('stroke', typeNodeStyle.connectorLineColor)
+          .attr('stroke-width', typeNodeStyle.connectorLineWidth)
           .attr('transform', `translate(${typeNodeStyle.nodeWidth / 2}, ${typeNodeStyle.nodeHeight / 2})`)
-          // .attr('cursor', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'pointer'))
           .attr('cursor', 'pointer')
-        // .attr('pointer-events', (d: any) => (!d.children && !d.hiddenChildren ? 'none' : 'all'));
-        // @ts-ignore
-        // current.patternify({ tag: 'svg:title', selector: 'node-tooltip' });
-        // current.select('.node-tooltip')
-        //   // .filter(({ data: info }: any) => info.dataTypeText !== info.dataTypeTextTruncated)
-        //   .text("Path: " + JSON.stringify(node.data.path));
         return;
       }
 
@@ -665,7 +661,6 @@ export class TreeChart {
       }
 
       const nodeRectData = {
-        // "rectColor": typeNodeStyle.nodeRectFillColor,
         "rectHeight": typeNodeStyle.nodeHeight,
         "rectWidth": typeNodeStyle.nodeWidth,
         "starty": 0,
@@ -729,16 +724,16 @@ export class TreeChart {
               iconPath = require('@/assets/function.png');
             } else {
               switch (valueCstr) {
-                case TableTidierKeyWords.String:
+                case TableCanoniserKeyWords.String:
                   iconPath = require('@/assets/string.png');
                   break;
-                case TableTidierKeyWords.Number:
+                case TableCanoniserKeyWords.Number:
                   iconPath = require('@/assets/number.png');
                   break;
-                case TableTidierKeyWords.None:
+                case TableCanoniserKeyWords.None:
                   iconPath = require('@/assets/minus.png');
                   break;
-                case TableTidierKeyWords.NotNone:
+                case TableCanoniserKeyWords.NotNone:
                   iconPath = require('@/assets/plus.png');
                   break;
                 default:
@@ -751,24 +746,30 @@ export class TreeChart {
           .attr('width', iconsz)
           .attr('height', iconsz)
           .on('mouseover', (_e: any, d: NodeData) => {
+            // console.log('mouseover', d);
             try {
               constrNodeRect.attr('visibility', 'visible');
-              let cellInfo;
-              if (d.data.path?.length === 1) {
-                cellInfo = d.data.constrsInfo![i][tableStore.tree.instanceIndex]
-                constrIndex = tableStore.tree.instanceIndex
-              } else {
-                cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter((info) => info.ele.isDefinedFromSpec)[tableStore.tree.instanceIndex];
-                constrIndex = cellInfo.index;
-                cellInfo = cellInfo.ele;
-              }
+              // let cellInfo;
+              // if (d.data.path?.length === 1) {
+              //   cellInfo = d.data.constrsInfo![i][tableStore.tree.instanceIndex]
+              //   constrIndex = tableStore.tree.instanceIndex
+              // } else {
+              //   cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter((info) => info.ele.isDefinedFromSpec)[tableStore.tree.instanceIndex];
+              //   constrIndex = cellInfo.index;
+              //   cellInfo = cellInfo.ele;
+              // }
+              let cellInfo = d.data.constrsInfo![i].map((ele, index) => ({ ele, index })).filter(info => info.ele.instIndex === tableStore.tree.instanceIndex);
               if (cellInfo === undefined) return;
-              tableStore.highlightTblTemplate({
-                x: cellInfo.x,
-                y: cellInfo.y,
-                width: 1,
-                height: 1
-              });
+              tableStore.highlightTblTemplate(cellInfo.map((info) => {
+                if (info.ele.isDefinedFromSpec) constrIndex = info.index;
+                return {
+                  x: info.ele.x,
+                  y: info.ele.y,
+                  width: 1,
+                  height: 1,
+                  isDefinedFromSpec: info.ele.isDefinedFromSpec
+                }
+              }));
             } catch (e) {
               console.log('Constraint mouseover error: \n', e)
             }
@@ -776,7 +777,7 @@ export class TreeChart {
           .on('mouseout', (_e: any, d: NodeData) => {
             if (tableStore.spec.constrNodeRectClickId !== constrId)
               constrNodeRect.attr('visibility', 'hidden');
-            d3.select('.tbl-container .tbl-template-highlight').select('rect').remove();
+            d3.select('.tbl-container .tbl-template-highlight').selectAll('rect').remove();
           })
           .on('contextmenu', declareContextMenu.bind(null, tableStore, node, i))  // bind 第一个参数为 this，这种情况下最后一个参数为 event
           .on('click', (_e: any, d: NodeData) => {
@@ -815,13 +816,13 @@ export class TreeChart {
               return "The cell is constrained by a custom function:\nClick to see details in the Code Panel.";
             } else {
               switch (valueCstr) {
-                case TableTidierKeyWords.String:
+                case TableCanoniserKeyWords.String:
                   return "The cell's data type should be a string.";
-                case TableTidierKeyWords.Number:
+                case TableCanoniserKeyWords.Number:
                   return "The cell's data type should be a number.";
-                case TableTidierKeyWords.None:
+                case TableCanoniserKeyWords.None:
                   return "The cell should be an empty string, null, or undefined.";
-                case TableTidierKeyWords.NotNone:
+                case TableCanoniserKeyWords.NotNone:
                   return "The cell should not be an empty string, null, or undefined.";
                 default:
                   return "The cell should be " + valueCstr;
@@ -878,26 +879,25 @@ export class TreeChart {
 
     // 为所有circle和rect绑定展开收起交互事件
     // d3.selectAll('.type-node, .node-text-g')
-    d3.selectAll('.type-node')
+    d3.selectAll<SVGElement, NodeData>('.type-node')
       .on('contextmenu', (e, d) => {
-        declareContextMenu(tableStore, d as NodeData, -1, e);
+        declareContextMenu(tableStore, d, -1, e);
       })
-      .on('mouseover', function (event: any, node: any) {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
-        // console.log('mouseover', event, node);  // event: any, node: any
-        if (node.id) tableStore.highlightTblTemplate(node.data);
+      .on('mouseover', function (event, node) {  // 只有 function 才有 this，箭头函数的 this 是定义时的上下文
+        // console.log('mouseover', node);  // event: any, node: any
+        if (node.id) tableStore.highlightTblTemplate(node.data.currentMatchs!);
       })
-      .on('mouseout', function (event: any, node: any) {
-        d3.select('.tbl-container .tbl-template-highlight').select('rect').remove();
+      .on('mouseout', function () {
+        d3.select('.tbl-container .tbl-template-highlight').selectAll('rect').remove();
       })
-      .on('click', function (event: any, node: any) {
+      .on('click', function (event, d) {
         event.stopPropagation();
-        const d = node as NodeData;
         // d3.selectAll('.type-node').classed('selection', false);
         tableStore.clearStatus("tree");
         if (d.id) {
           tableStore.editor.mappingSpec.instance?.setValue(tableStore.editor.mappingSpec.codePref + tableStore.stringifySpec(null, "even", false));
           // if (tableStore.spec.selectNode === null || tableStore.spec.selectNode.data.id !== node.data.id) {}
-          tableStore.spec.selectNode = node;
+          tableStore.spec.selectNode = d;
           // tableStore.tree.instanceIndex = 0;
           d3.select(this).classed('selection', true);
 
@@ -905,7 +905,7 @@ export class TreeChart {
 
           // console.log(event, d);
           // [startRow, startCol, endRow, endCol]
-          const visData = d.data as VisTreeNode;
+          const visData = d.data;
           tableStore.goToInstance(0);  // 默认选择第一个节点
 
           /************** 与 monaco editor 交互 ***************/

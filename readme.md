@@ -1,6 +1,6 @@
-# TableTidier
+# TableCanoniser
 
-This repository contains the source code and some cases for TableTidier.
+This repository contains the source code and some cases for TableCanoniser.
 
 ## Project Setup
 

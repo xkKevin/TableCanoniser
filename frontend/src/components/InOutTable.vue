@@ -62,7 +62,7 @@ import Handsontable from "handsontable";
 import { useTableStore, Selection } from "@/store/table";
 // import Papa from 'papaparse';  // parse csv data
 import * as XLSX from 'xlsx';  // parse excel data
-import { Table2D, TableTidierTemplate } from "@/grammar/grammar"
+import { Table2D, TableCanoniserTemplate } from "@/grammar/grammar"
 import { message } from "ant-design-vue";
 
 // import { ArrowUpTrayIcon } from '@heroicons/vue/24/solid'
@@ -337,7 +337,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
           const nx = visNode.x, ny = visNode.y, nw = visNode.width, nh = visNode.height;
           const [startRow, startCol, endRow, endCol] = selected[0];
           const offsetX = startCol - nx, offsetY = startRow - ny;
-          let match: TableTidierTemplate["match"] = {};
+          let match: TableCanoniserTemplate["match"] = {};
           switch (selectType) {
             case "0":
             // Reset Area Logic
@@ -361,7 +361,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
               }
               if (selectType === "0") {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "match");
-                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode!.data.path!) as TableTidierTemplate;
+                const currentSpec = tableStore.getNodebyPath(tableStore.spec.rawSpecs, tableStore.spec.selectNode!.data.path!) as TableCanoniserTemplate;
                 tableStore.editor.mappingSpec.highlightCode = [...tableStore.getHighlightCodeStartEndLine(currentSpec.match, currentSpec), `${tableStore.spec.selectNode!.data.type}Shallow`];
               } else {
                 tableStore.insertNodeOrPropertyIntoSpecs(match, "children");
@@ -375,7 +375,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
                 constraints: [{
                   offsetX: offsetX,
                   offsetY: offsetY,
-                  valueCstr: tableStore.getCellDataType(cellValue) // TableTidierKeyWords.String,
+                  valueCstr: tableStore.getCellDataType(cellValue) // TableCanoniserKeyWords.String,
                 }]
               }
               const constraint = match.constraints![0]

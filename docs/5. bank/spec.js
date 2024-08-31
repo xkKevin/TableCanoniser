@@ -1,4 +1,4 @@
-const option: TableTidierTemplate[] = [
+const option: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -44,7 +44,7 @@ const option: TableTidierTemplate[] = [
   },
 ];
 
-const option2: TableTidierTemplate[] = [
+const option2: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {

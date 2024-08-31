@@ -1,4 +1,4 @@
-const option: TableTidierTemplate[] = [
+const option: TableCanoniserTemplate[] = [
   {
     match: {
       startCell: {
@@ -11,12 +11,12 @@ const option: TableTidierTemplate[] = [
       },
       constraints: [
         {
-          valueCstr: TableTidierKeyWords.NotNone,
+          valueCstr: TableCanoniserKeyWords.NotNone,
         },
         {
           offsetFrom: "bottomLeft",
           offsetY: 1,
-          valueCstr: TableTidierKeyWords.None,
+          valueCstr: TableCanoniserKeyWords.None,
         },
       ],
       traverse: {
