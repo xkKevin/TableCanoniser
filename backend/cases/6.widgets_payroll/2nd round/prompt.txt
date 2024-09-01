@@ -1,1 +1,0 @@
-你的程序虽然不报错，但是得到的表并不是我想要的，其中EmployeeID 和 Employee Name 应该分别来自 Payroll Company 单元格下方的两个单元格，如：001POWED 和 Dominick Powers，以下是output table的第一行示例：["001POWED", "Dominick Powers", "6/12/1982",	"1W01 - Weekly", "CARCOSA", "1", "", "", ""]，分别对应 ["EmployeeID", "Employee Name", "Period End Date", "Pay Frequency", "Location", "Number of", "Description", "Hours", "Amount" ] 列

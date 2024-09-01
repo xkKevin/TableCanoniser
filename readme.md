@@ -1,23 +1,38 @@
 # TableCanoniser
 
-This repository contains the source code and some cases for TableCanoniser.
+TableCanoniser is an interactive visualization system designed to help transform messy data (non-aligned tables) into canonical/tidy tables (axis-aligned tables).
 
-## Project Setup
+It is implemented using [Vue.js 3.0](https://vuejs.org/) as the frontend framework, with [Handsontable](https://handsontable.com/) for table rendering, [Monaco Editor](https://microsoft.github.io/monaco-editor/) for code display, and [D3.js](https://d3js.org/) for visualization.
+This system is entirely frontend-based, eliminating the need for user-side deployment.
+It can be accessed directly through a web browser ([TableCanoniser URL](https://xkkevin.github.io/TableCanoniser/)).
+We expect that the ease of access and the rich visualization and interaction features of TableCanoniser can significantly enhance the efficiency of table transformation for users, while also fostering greater trust in the results.
 
-### Back End
+Our declarative grammar, [_table-canoniser_](https://www.npmjs.com/package/table-canoniser) (which has been built and published as an open-source NPM package), is defined in `src/table-canoniser/`
 
-- go to backend folder: `cd backend`
-- create conda environment or venv with python 3.10
-- install requirements: `pip install -r requirements.txt`
-- run flask: `python src/app.py`
+## System Interface
 
-The backend by default runs on `localhost:5000`, make sure it is not occupied. If you want to change the flask running port, make sure simultaneously change it in both `backend/src/app.py` & `frontend/vue.config.js`.
+![System Interface](./system-interface.png)
 
-### Front End
+## Project setup
 
-- go to frontend folder: `cd frontend`
+### Install dependencies
+
+```
+npm install
+```
+
 - use `node --version` to check current node version, we expect it to be **19.5.0**. To install multiple version of node, we recommend using [nvm](https://github.com/nvm-sh/nvm).
-- install dependencies: `npm install`
-- run app: `npm run serve`
 
-Now the project is running on your [localhost](http://localhost:8080/).
+### Compiles and hot-reloads for development
+
+```
+npm run serve
+```
+
+Now the project is running on [http://localhost:8080/TableCanoniser/](http://localhost:8080/TableCanoniser/).
+
+### Compiles and minifies for production
+
+```
+npm run build
+```

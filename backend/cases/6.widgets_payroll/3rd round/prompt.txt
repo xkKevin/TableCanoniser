@@ -1,2 +1,0 @@
-你的 Employee ID 和 Employee Name 还是提取错了，你需要在 "Payroll Company" 下方的两个单元格中获取，例如： ["Payroll Company", "", "AMALGAMATED WIDGETS - AMALGAMATED WIDGETS PTY LTD", "", "", "", "", "", "", "", "", ""],
-["001POWED", "Dominick Powers", "", "", "", "", "", "", "", "", "", ""], 其下方的两个单元格是："001POWED", "Dominick Powers"，因此，其Employee ID 和 Employee Name 分别为："001POWED", "Dominick Powers"

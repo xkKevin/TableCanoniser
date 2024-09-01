@@ -1,9 +1,0 @@
-Method,Accuracy,Category
-baseline,93.78,Unsupervised DA
-DeepFace,91.4,SOTA (image-based)
-PCA,93.56,Unsupervised DA
-FaceNet,95.12,SOTA (image-based)
-CORAL,94.5,Unsupervised DA
-CenterFace,94.9,SOTA (image-based)
-Ours (F),95.38,Unsupervised DA
-CNN+AvePool,95.2,SOTA (image-based)
