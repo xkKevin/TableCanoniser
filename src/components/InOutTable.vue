@@ -2,7 +2,7 @@
   <div class="view">
     <div class="view-title">
       <span class="head-text">Input Table</span>
-      <span style="float: right; margin-right: 20px">
+      <span style="float: right; margin-right: 10px">
         <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
           :customRequest="handleUpload" @remove="handleRemove" @preview="handlePreview" :showUploadList="{
             showRemoveIcon: true,
@@ -30,7 +30,7 @@
   <div class="view">
     <div class="view-title">
       <span>Output Table</span>
-      <span style="float: right; margin-right: 20px">
+      <span style="float: right; margin-right: 10px">
         <a-button size="small" @click="handleDownload">
           <v-icon name="bi-download" scale="0.85"></v-icon>
           <span>Download</span>

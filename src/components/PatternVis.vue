@@ -11,28 +11,8 @@
                         :formatter="handleFormatter" @step="handleStep"
                         @blur="tableStore.goToInstance(+$event.target.value - 1)"></a-input-number>
                     <span style="font-weight: normal">/ [{{ tableStore.spec.matchedInstNum }}]</span>
-                    <!--
-                    <span style="font-size: 15px; display: inline-block; width: 157px;" v-show="currentInstFlag">
-                        Current instance: {{ tableStore.tree.instanceIndex + 1 }}
-                    </span>
-                    <a-button-group class="goToInstance">
-                        <a-button size="small" @click="tableStore.goToInstance(-1)"
-                            :disabled="tableStore.spec.selectNode === null || tableStore.tree.instanceIndex === 0"
-                            title="Last instance">
-                            <v-icon name="bi-chevron-left" scale="0.85"></v-icon>
-                            <span>Last</span>
-                        </a-button>
-                        <a-button size="small" @click="tableStore.goToInstance(1)" :disabled="disableNextFlag"
-                            title="Next instance">
-                            <span>Next</span>
-                            <v-icon name="bi-chevron-right" scale="0.85"></v-icon>
-                        </a-button>
-                    </a-button-group>-->
                 </span>
                 <span style="font-size: 15px; height: 25px">
-                    <!-- <span>Match:</span>
-                    <a-button class="legend legend-null" size="small">Region</a-button>
-                    <span>Extract by:</span> -->
                     <span>Match:</span>
                     <a-button-group style="margin: 0 15px 0 6px">
                         <a-button class="legend legend-null" size="small" @click="selectMatchExtractArea('null')"
@@ -49,7 +29,7 @@
                             title="Click to select a starting area in the input table for matching and extracting by value. Press 'Esc' to cancel the selection mode.">Value</a-button>
                     </a-button-group>
                 </span>
-                <span style="margin-right: 20px">
+                <span style="margin-right: 10px">
                     <a-button id="draw_tree" size="small" @click="resetZoom">
                         <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
                         <span>Reset View</span>

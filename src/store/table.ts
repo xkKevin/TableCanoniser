@@ -179,23 +179,18 @@ export const useTableStore = defineStore('table', {
           errorMark: null as monaco.editor.IMarker | null,
           decorations: shallowRef<monaco.editor.IEditorDecorationsCollection | null>(null),
           highlightCode: null as [number, number, string] | null,  // [startLine, endLine, color]
-          language: 'typescript',
+          // language: 'typescript',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null),
           triggerCodeChange: true,
           codeUpdateFromEditor: false
         },
         rootArea: {
           code: '',
-          // codePref: 'const rootArea: AreaInfo = ',
+          codePref: 'const matchedResult: AreaInfo = ',
           object: shallowRef<AreaInfo | null>(null),
-          language: 'json',
+          // language: 'json',
           instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
         },
-        // transformScript: {
-        //   code: '',
-        //   language: 'python',
-        //   instance: shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
-        // }
       },
       input_tbl: {
         instance: {} as Handsontable,
@@ -657,7 +652,10 @@ export const useTableStore = defineStore('table', {
       const { rootArea, tidyData } = transformTable(this.input_tbl.tbl, specs);
       // this.editor.rootArea.codePref + JSON.stringify(rootArea)
       this.editor.rootArea.object = rootArea;
-      this.editor.rootArea.code = serialize(rootArea);
+      const strSpec = serialize(rootArea);
+      // 正则表达式匹配 JSON 对象中的键（包括可能的空白字符和引号）
+      const removeQuotesFromKeysRegex = /"(\w+)":/g;
+      this.editor.rootArea.code = this.editor.rootArea.codePref + strSpec.replace(removeQuotesFromKeysRegex, '$1:');
       // this.editor.rootArea.instance!.setValue(this.editor.rootArea.code);
       this.traverseTree4UpdateMatchs(rootArea.children);
       this.tree.instanceIndex = 0;

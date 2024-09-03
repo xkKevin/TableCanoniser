@@ -14,13 +14,13 @@ const tableStore = useTableStore();
 
 const editorDefaultOptions = {
     value: '',
-    language: tableStore.editor[codeType].language,
+    language: 'typescript', // tableStore.editor[codeType].language,
     theme: 'vs',
     fontSize: 14,
     glyphMargin: false,
     automaticLayout: false, // Automatic layout may cause "ResizeObserver loop completed with undelivered notifications." warning. To avoid this, set automaticLayout to false
     autoIndent: 'advanced',
-    readOnly: false, // codeType === "rootArea" ? true : false,
+    readOnly: codeType === "rootArea" ? true : false,
     minimap: {
         enabled: codeType === "rootArea" ? true : false,
     },

@@ -8,7 +8,7 @@ function serialize(obj) {
         if (typeof value === 'object' && value !== null) {
             if (seen.has(value)) {
                 // 如果之前见过这个对象，则返回一个标记字符串
-                return `[Circular reference: ${key}]`;
+                return `[Reference to: ${key}]`;
             }
             seen.add(value);
         }

@@ -35,26 +35,19 @@
 
       <div class="column" style="flex: 5;">
         <div class="view">
-          <!-- <div class="view-title">
-            <span>Code Panel</span>
-            <span style="float: right; margin-right: 20px">
-              <a-button size="small" @click="transformTablebyCode"> 
-                <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
-                <span>Run</span>
-              </a-button>
-            </span>
-          </div> -->
-          <div class="view-content" style="position: relative;">
-            <span style="position: absolute; right: 20px; z-index: 1;">
-              <a-button size="small" @click="transformTablebyCode">
-                <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
-                <span>Run</span>
-              </a-button>
-            </span>
+          <div class="view-content">
             <a-tabs v-model:activeKey="codePanel" type="card">
+              <template #rightExtra>
+                <a-button size="small" style="margin-right: 10px; margin-bottom: 10px;" @click="transformTablebyCode">
+                  <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
+                  <span>Run</span>
+                </a-button>
+              </template>
+
               <a-tab-pane key="1">
                 <template #tab>
-                  <span>
+                  <span style="font-size: 15px"
+                    title="The mapping specification that transforms the input table to the output table">
                     Specification
                   </span>
                 </template>
@@ -62,7 +55,8 @@
               </a-tab-pane>
               <a-tab-pane key="2">
                 <template #tab>
-                  <span>
+                  <span style="font-size: 15px"
+                    title="A tree data structure that contains the AreaInfo of the matched instances">
                     Matched Instances [{{ tableStore.spec.matchedInstNum }}]
                   </span>
                 </template>
