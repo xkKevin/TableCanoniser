@@ -1,4 +1,4 @@
-type CellValueType = string | number | undefined;
+declare type CellValueType = string | number | undefined;
 /**
  * Defines a set of keywords used in the TableCanoniser Grammar.
  *
@@ -126,32 +126,32 @@ interface CellInfo extends CellPosi {
      */
     value: CellValueType;
 }
-type Table2D = CellValueType[][];
+declare type Table2D = CellValueType[][];
 /**
  * A function that calculates an offset based on the current area information and the root area information.
  * @param currentArea - The current area information.
  * @param rootArea - The root area information.
  * @returns The calculated offset.
  */
-type offsetFn = (currentArea: AreaInfo, rootArea: AreaInfo) => number;
+declare type offsetFn = (currentArea: AreaInfo, rootArea: AreaInfo) => number;
 /**
  * A function that checks if a cell value meets a custom condition.
  * @param value - The value of the constrained cell.
  * @returns A boolean indicating whether the cell value meets the condition.
  */
-type checkValueFn = (value: CellValueType) => boolean;
+declare type checkValueFn = (value: CellValueType) => boolean;
 /**
  * A function that maps the cells in an area to their corresponding target columns.
  * @param currentAreaTbl - The current area table.
  * @returns An array of target column names or null values.
  */
-type mapColsFn = (currentAreaTbl: Table2D) => (CellValueType | null)[];
+declare type mapColsFn = (currentAreaTbl: Table2D) => (CellValueType | null)[];
 /**
  * A function that maps the context cells to a specific target column.
  * @param ctxCells - The info (position and value) of the context cells.
  * @returns The name of the target column or null.
  */
-type mapColbyContextFn = (ctxCells: CellInfo[]) => CellValueType | null;
+declare type mapColbyContextFn = (ctxCells: CellInfo[]) => CellValueType | null;
 /**
  * A function that defines the position of a cell's context based on the current area information and the root area information.
  * @param cell - The current cell's value and its position relative to the current area.
@@ -159,13 +159,13 @@ type mapColbyContextFn = (ctxCells: CellInfo[]) => CellValueType | null;
  * @param rootArea - The root area information.
  * @returns An array of cell selections that define the positions of the cell's context.
  */
-type contextPosiFn = (cell: AreaCell, currentArea: AreaInfo, rootArea: AreaInfo) => RegionPosition[];
+declare type contextPosiFn = (cell: AreaCell, currentArea: AreaInfo, rootArea: AreaInfo) => RegionPosition[];
 /**
  * A function that determines the layer of an area based on its current area information.
  * @param currentArea - The current area information.
  * @returns The layer number of the area.
  */
-type areaLayerFn = (currentArea: AreaInfo) => number;
+declare type areaLayerFn = (currentArea: AreaInfo) => number;
 /**
  * Represents the information of a selected area within the table
  * - `parent`: The parent area of this area
@@ -493,8 +493,8 @@ interface TableCanoniserTemplate {
  */
 declare function sortWithCorrespondingArray(A: any[], B: any[], sortOrder: 'asc' | 'desc'): any[];
 /********************************************************************************/
-type NonUndefined<T> = T extends undefined ? never : T;
-type AllParams<T> = {
+declare type NonUndefined<T> = T extends undefined ? never : T;
+declare type AllParams<T> = {
     [K in keyof T]-?: NonUndefined<T[K]> extends object ? AllParams<NonUndefined<T[K]>> : NonUndefined<T[K]>;
 };
 declare function completeRegionPosition(selection: RegionPosition | undefined): RegionPosition;

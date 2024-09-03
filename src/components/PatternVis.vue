@@ -2,14 +2,15 @@
     <div class="view"> <!-- style="flex: 4.5" -->
         <div class="view-title">
             <a-flex justify="space-between" align="center">
-                <span style="font-size: 18px; font-weight: bold;">Pattern Panel</span>
+                <span style="font-size: 18px; font-weight: bold;">Mapping Patterns</span>
                 <span>
                     <span :title="instanceContent">Current instance:</span>
                     <a-input-number class="goToInstance" :value="tableStore.tree.instanceIndex" :defaultValue="-1"
-                        :disabled="tableStore.spec.disableGoToInstFlag"
+                        :disabled="tableStore.spec.matchedInstNum === 0"
                         @pressEnter="tableStore.goToInstance(+$event.target.value - 1)" size="small" :precision="0"
                         :formatter="handleFormatter" @step="handleStep"
                         @blur="tableStore.goToInstance(+$event.target.value - 1)"></a-input-number>
+                    <span style="font-weight: normal">/ [{{ tableStore.spec.matchedInstNum }}]</span>
                     <!--
                     <span style="font-size: 15px; display: inline-block; width: 157px;" v-show="currentInstFlag">
                         Current instance: {{ tableStore.tree.instanceIndex + 1 }}
@@ -275,7 +276,7 @@ const resizeObserver = new ResizeObserver(() => {
 const handleFormatter = (v: any) => {
     // console.log(v, tableStore.output_tbl.tbl.length);
     // return tableStore.output_tbl.tbl.length === 0 ? '' : isNaN(v) ? 0 : parseInt(v) + 1
-    return tableStore.spec.disableGoToInstFlag ? '' : isNaN(v) ? 0 : parseInt(v) + 1
+    return tableStore.spec.matchedInstNum === 0 ? '' : isNaN(v) ? 0 : parseInt(v) + 1
 }
 
 const handleStep = (v: number, info: { offset: number, type: 'up' | 'down' }) => {
@@ -315,13 +316,12 @@ function handleCodeChange(clickFlag = false) {
     setTimeout(() => {
         tableStore.editor.mappingSpec.triggerCodeChange = true;
     }, 600)
-    // tableStore.editor.mappingSpec.triggerCodeChange = true;
-    tableStore.spec.disableGoToInstFlag = tableStore.spec.visTree.children!.length === 0 || tableStore.spec.visTree.children![0].matchs === undefined || tableStore.spec.visTree.children![0].matchs.length === 0;
-    if (tableStore.spec.disableGoToInstFlag) {
+
+    if (tableStore.spec.matchedInstNum === 0) {
         instanceContent.value = 'No matched instance';
         tableStore.tree.instanceIndex = -1;
     } else {
-        instanceContent.value = 'Total ' + tableStore.spec.visTree.children![0].matchs!.length + ' instance(s)';
+        instanceContent.value = 'Total ' + tableStore.spec.matchedInstNum + ' instance(s)';
     }
     tableStore.computeColInfo("output_tbl");
     drawTree(tableStore.spec.visTree); // 会默认选择第一个节点
@@ -390,8 +390,8 @@ onMounted(() => {
 <style lang="less">
 .goToInstance {
     // margin-right: calc(40vw - 430px);
-    width: 60px;
-    margin-left: 6px;
+    width: 58px;
+    margin: 0 6px;
 }
 
 .tree-container {

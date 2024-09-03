@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCellBySelect = void 0;
-exports.serialize = serialize;
-exports.transformTable = transformTable;
+exports.transformTable = exports.getCellBySelect = exports.serialize = void 0;
 const grammar_1 = require("./grammar");
 function serialize(obj) {
     const seen = new WeakSet();
@@ -17,6 +15,7 @@ function serialize(obj) {
         return value;
     }, 2);
 }
+exports.serialize = serialize;
 // Helper function to evaluate constraints
 const evaluateConstraint = (cellValue, constraint) => {
     if (typeof constraint.valueCstr === 'function') {
@@ -209,7 +208,7 @@ const matchArea = (template, offsetX, offsetY, width, height, index, currentArea
     const tmpArea = {
         parent: currentArea,
         areaLayer: currentArea.areaLayer + 1,
-        templateRef: index.templateRef.slice(), // copy
+        templateRef: index.templateRef.slice(),
         instanceIndex: index.instanceIndex,
         xIndex: index.xIndex,
         yIndex: index.yIndex,
@@ -454,10 +453,10 @@ const processTemplate = (template, currentArea, rootArea, tidyData, templateInde
         });
     }
 };
+/**
+ * Transforms messy, two-dimensional data (non-aligned table) into a canonical/tidy table (axis-aligned table) based on a given specification that adheres to the TableCanoniserTemplate interface.
+ */
 function transformTable(table, specs) {
-    // const specWithDefaults = completeSpecification(spec);
-    // console.log(JSON.stringify(specWithDefaults, null, 2));
-    // Create initial AreaInfo for the root
     const rootArea = {
         parent: null,
         areaLayer: 0,
@@ -486,6 +485,7 @@ function transformTable(table, specs) {
         //     fillColumns(tidyData, specWithDefaults.fill);
         // }
     });
-    return { rootArea, tidyData };
+    return { tidyData, rootArea };
 }
+exports.transformTable = transformTable;
 //# sourceMappingURL=parser.js.map

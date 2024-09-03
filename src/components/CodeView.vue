@@ -2,13 +2,6 @@
     <div ref="editorWrapper" class="editor-container"></div>
 </template>
 
-<!-- <script lang="ts">
-import { defineComponent } from "vue";
-export default defineComponent({
-    name: "CodeView",
-});
-</script> -->
-
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, ref, watch } from "vue";
@@ -33,8 +26,10 @@ const editorDefaultOptions = {
     },
     lineNumbersMinChars: 1,
     scrollBeyondLastLine: false, // Prevent scrolling beyond the last line
+    wordWrap: 'on', // 设置自动换行，这样就不会有左右滚动条了
+    // wordWrapColumn: 80, // 当一行代码超过 80 个字符时，编辑器将会在接近第 80 列的地方自动进行换行，而不是等到超出编辑器宽度才进行换行。
     padding: {
-        bottom: 80, // Adjust the bottom padding to 80px
+        bottom: 50, // Adjust the bottom padding to 50px
     },
 };
 
@@ -92,23 +87,24 @@ watch(() => tableStore.editor[codeType].code, (newVal) => {
     // console.log("watch editor code", codeType);
     editor?.setValue(newVal);  // update editor content; ? means if editor is not null then call setValue, else do nothing
 });
+*/
 
-
-import { debounce } from 'lodash';
-const handleResize = debounce(() => {
+// import { debounce } from 'lodash';
+const handleResize = tableStore.debounce(() => {
     if (editor) {
         editor.layout();
     }
-}, 100); // Adjust the delay time, in milliseconds
+}, 300); // Adjust the delay time, in milliseconds
 
 // 监听整个窗口的大小变化，通常会引发更多不必要的回调执行，可能会影响性能。
 // window.addEventListener('resize', handleResize);
 
-const resizeObserver = new ResizeObserver(() => {
-    // console.log("Resize observed", entries);
-    handleResize();
-});
-*/
+// const resizeObserver = new ResizeObserver(() => {
+//     // console.log("Resize observed", entries);
+//     try { handleResize(); }
+//     catch (e) { console.log(e) }
+// });
+const resizeObserver = new ResizeObserver(handleResize);
 
 if (codeType === "mappingSpec") {
 
@@ -146,7 +142,7 @@ if (codeType === "mappingSpec") {
 onMounted(() => {
     initEditor();
     // 可以精确地监听元素大小变化，避免了全局 resize 事件可能带来的性能问题，尤其是当页面上有多个需要监听大小变化的元素时。
-    // resizeObserver.observe(editorWrapper.value!);
+    resizeObserver.observe(editorWrapper.value!);
     if (editor) {
         tableStore.editor[codeType].instance = editor;
         if (codeType === "mappingSpec") {

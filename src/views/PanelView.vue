@@ -35,16 +35,22 @@
 
       <div class="column" style="flex: 5;">
         <div class="view">
-          <div class="view-title">
+          <!-- <div class="view-title">
             <span>Code Panel</span>
             <span style="float: right; margin-right: 20px">
-              <a-button size="small" @click="transformTablebyCode"> <!-- :loading="loading" -->
+              <a-button size="small" @click="transformTablebyCode"> 
                 <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
                 <span>Run</span>
               </a-button>
             </span>
-          </div>
-          <div class="view-content">
+          </div> -->
+          <div class="view-content" style="position: relative;">
+            <span style="position: absolute; right: 20px; z-index: 1;">
+              <a-button size="small" @click="transformTablebyCode">
+                <v-icon name="la-rocket-solid" scale="0.85"></v-icon>
+                <span>Run</span>
+              </a-button>
+            </span>
             <a-tabs v-model:activeKey="codePanel" type="card">
               <a-tab-pane key="1">
                 <template #tab>
@@ -57,7 +63,7 @@
               <a-tab-pane key="2">
                 <template #tab>
                   <span>
-                    Matched Instances
+                    Matched Instances [{{ tableStore.spec.matchedInstNum }}]
                   </span>
                 </template>
                 <CodeView codeType="rootArea" />

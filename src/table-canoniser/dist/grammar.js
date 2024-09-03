@@ -1,10 +1,7 @@
 "use strict";
 // The Declarative Grammar v0.4.4
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CustomError = exports.TableCanoniserKeyWords = void 0;
-exports.completeSpecification = completeSpecification;
-exports.completeRegionPosition = completeRegionPosition;
-exports.completeCellConstraint = completeCellConstraint;
+exports.CustomError = exports.completeCellConstraint = exports.completeRegionPosition = exports.completeSpecification = exports.TableCanoniserKeyWords = void 0;
 /**
  * Defines a set of keywords used in the TableCanoniser Grammar.
  *
@@ -139,6 +136,7 @@ function completeRegionPosition(selection) {
         offsetY: selection.offsetY === undefined ? DEFAULT_Y_OFFSET : selection.offsetY,
     };
 }
+exports.completeRegionPosition = completeRegionPosition;
 function completeCellConstraint(constraint) {
     const completedSelection = completeRegionPosition(constraint);
     return Object.assign(Object.assign({}, completedSelection), { valueCstr: constraint.valueCstr === undefined
@@ -147,6 +145,7 @@ function completeCellConstraint(constraint) {
             ? DEFAULT_IGNORE_OUT_OF_BOUNDS
             : constraint.ignoreOutOfBounds });
 }
+exports.completeCellConstraint = completeCellConstraint;
 function completeContextTransform(transform) {
     return {
         position: transform.position || DEFAULT_CONTEXT_POSITION,
@@ -189,6 +188,7 @@ function completeSpecification(template) {
         children: ((_m = template.children) === null || _m === void 0 ? void 0 : _m.map(completeSpecification)) || [],
     };
 }
+exports.completeSpecification = completeSpecification;
 class CustomError extends Error {
     constructor(message, name = "CustomError") {
         super(message);

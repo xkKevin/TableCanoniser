@@ -124,8 +124,9 @@ export const useTableStore = defineStore('table', {
   // data
   state() {
     return {
-      caseList: ["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"],
+      caseList: shallowRef<string[]>(["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"]),
       currentCase: "1. university", // caseList[0],
+      currentInitData: shallowRef<Table2D>([]),
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
         redoHistory: [] as string[],
@@ -140,7 +141,8 @@ export const useTableStore = defineStore('table', {
         selectionsAreaFromLegend: shallowRef<Selection[]>([]),
         selectionsPath: shallowRef<number[][]>([]),  // 每一个selection在rawSpecs中对应的path
         dragConfigOpen: false,
-        disableGoToInstFlag: true,
+        // disableGoToInstFlag: true,
+        matchedInstNum: 0,
         areaConfig: shallowRef<TableCanoniserTemplate>({
           match: {
             startCell: {},
@@ -317,6 +319,7 @@ export const useTableStore = defineStore('table', {
         if (dataText !== null) {
           this.input_tbl.tbl = csvToMatrix(dataText) // JSON.parse(dataText).input_tbl;
           this.input_tbl.instance.updateData(this.input_tbl.tbl);
+          this.currentInitData = csvToMatrix(dataText);
           // 每次都是页面刷新后，所有单元格/列的宽度为50，只有点击一下界面之后，才会突然自动列大小，变成有的列width大一点，有的列width小一点，这是为什么呢
           // 通常是由于Handsontable在初始化时还没有正确计算出表格容器的尺寸，或者在Vue组件生命周期的某个阶段，Handsontable的重新渲染没有正确触发。这个问题可能与表格渲染的时机有关。
           this.input_tbl.instance.render();
@@ -453,7 +456,7 @@ export const useTableStore = defineStore('table', {
     },
 
     goToInstance(instance: number) {
-      if (this.spec.disableGoToInstFlag) {
+      if (this.spec.matchedInstNum === 0) {
         // message.error("No matched instance!");
         return;
       }
@@ -1186,8 +1189,12 @@ export const useTableStore = defineStore('table', {
         this.initTblInfo(false);
         // this.tree.visInst?.render();
 
+        this.spec.matchedInstNum = 0;
         this.spec.visTree.children?.forEach((spec, index) => {
-          if (index) messageContent += '\n'
+          if (index) messageContent += '\n';
+          else if (spec.matchs) {
+            this.spec.matchedInstNum = spec.matchs.length;
+          }
           if (spec.matchs) {
             if (spec.matchs.length > 1) {
               messageContent += `For the ${this.numberToOrdinal(index + 1)} template, ${spec.matchs.length} instances are matched.`
@@ -1705,7 +1712,6 @@ export const useTableStore = defineStore('table', {
           break
       }
     },
-    /*
     debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
       let timeout: any = null;
       return function (...args: Parameters<T>) {
@@ -1714,7 +1720,7 @@ export const useTableStore = defineStore('table', {
           func(...args);
         }, wait);
       };
-    }*/
+    }
   },
   // computed
   getters: {}

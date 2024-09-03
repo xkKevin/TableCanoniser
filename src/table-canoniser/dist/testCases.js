@@ -175,7 +175,7 @@ const case2_spec = {
             match: {
                 startCell: {
                     offsetLayer: "root",
-                    offsetX: (currentArea) => currentArea.x, // currentArea.xIndex * 2,
+                    offsetX: (currentArea) => currentArea.x,
                     offsetY: 0,
                 }
             },
@@ -528,7 +528,7 @@ const case4_spec = {
             offsetY: 7,
         },
         size: {
-            width: "toParentX", // 12,
+            width: "toParentX",
             height: 2,
         },
         traverse: {
@@ -553,7 +553,7 @@ const case4_spec2 = {
             offsetY: 7,
         },
         size: {
-            width: "toParentX", // 12,
+            width: "toParentX",
             height: 2,
         },
         traverse: {
@@ -574,7 +574,7 @@ const case5_spec = {
             offsetY: 0,
         },
         size: {
-            width: "toParentX", // 12,
+            width: "toParentX",
             height: null,
         },
         constraints: [

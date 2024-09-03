@@ -3,17 +3,19 @@
     <div class="view-title">
       <span class="head-text">Input Table</span>
       <span style="float: right; margin-right: 20px">
-        <span class="controller">
-          <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
-            :customRequest="handleUpload" @remove="handleRemove" @preview="handlePreview" :showUploadList="{
-              showRemoveIcon: true,
-            }">
-            <a-button size="small">
-              <v-icon name="bi-upload" scale="0.85" />
-              <span>Upload</span>
-            </a-button>
-          </a-upload>
-        </span>
+        <a-upload v-model:file-list="fileList" :max-count="1" accept=".csv, .txt, .xls, .xlsx"
+          :customRequest="handleUpload" @remove="handleRemove" @preview="handlePreview" :showUploadList="{
+            showRemoveIcon: true,
+          }">
+          <a-button size="small">
+            <v-icon name="bi-upload" scale="0.85" />
+            <span>Upload</span>
+          </a-button>
+        </a-upload>
+        <a-button style="margin-left: 5px;" size="small" @click="resetData">
+          <v-icon name="bi-arrow-clockwise" scale="0.9"></v-icon>
+          <span>Reset Data</span>
+        </a-button>
       </span>
     </div>
     <div class="view-content">
@@ -92,6 +94,27 @@ function renderTblCell(instance: Handsontable,
   td.innerHTML = `<div class="truncated">${value}</div>`
 }
 
+function updateColInfoFn(tbl: "input_tbl" | "output_tbl") {
+  if (tbl === "input_tbl") {
+    const tblData = tableStore.input_tbl.tbl;
+    drawMinimap(tblData.length, tblData[0].length, document.querySelector('svg.tbl-container') as SVGSVGElement, tableStore);
+    tableStore.optimizeMiniTempDistance();
+    tableStore.clearStatus("miniHighlight");
+    tableStore.initTblInfo(false);
+    // tableStore.computeColInfo("output_tbl");
+    tableStore.output_tbl.colInfo = [];
+    tableStore.spec.matchedInstNum = 0;
+  }
+  tableStore.computeColInfo(tbl);
+}
+
+function resetData() {
+  tableStore.input_tbl.tbl = JSON.parse(JSON.stringify(tableStore.currentInitData));
+  tableStore.input_tbl.instance.updateData(tableStore.input_tbl.tbl);
+  tableStore.input_tbl.instance.render();
+  updateColInfoFn("input_tbl");
+}
+
 // const handleUploadChange = (info: any) => {
 //   if (info.file.status === 'done') {
 //     message.success(`${info.file.name} file uploaded successfully`);
@@ -168,6 +191,7 @@ const handlePreview = () => {
   tableStore.input_tbl.tbl = fileTblData;
   tableStore.input_tbl.instance.updateData(fileTblData);
   tableStore.input_tbl.instance.render();
+  tableStore.currentInitData = JSON.parse(JSON.stringify(fileTblData));
   tableStore.transformTblUpdateRootArea();
   if (!tableStore.currentCase.startsWith("Custom")) {
     saveLastCase = tableStore.currentCase
@@ -275,18 +299,7 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
       return true;
     },
   });
-  const updateColInfoFn = () => {
-    if (tbl === "input_tbl") {
-      const tblData = tableStore.input_tbl.tbl;
-      drawMinimap(tblData.length, tblData[0].length, document.querySelector('svg.tbl-container') as SVGSVGElement, tableStore);
-      tableStore.optimizeMiniTempDistance();
-      tableStore.clearStatus("miniHighlight");
-      tableStore.initTblInfo(false);
-      tableStore.computeColInfo("output_tbl");
-      tableStore.spec.disableGoToInstFlag = true;
-    }
-    tableStore.computeColInfo(tbl);
-  }
+
   tblInst1.addHook("afterColumnResize", (currentColumn, newSize, isDoubleClick) => {
     // 修改单元格宽度后的回调
     tableStore.computeColInfo(tbl);
@@ -299,15 +312,15 @@ function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
         tableStore.clearStatus("miniHighlight");
         tableStore.initTblInfo(false);
         tableStore.computeColInfo("output_tbl");
-        tableStore.spec.disableGoToInstFlag = true;
+        tableStore.spec.matchedInstNum = 0;
       }
       tableStore.computeColInfo(tbl);
     }
   });
-  tblInst1.addHook("afterCreateRow", updateColInfoFn);
-  tblInst1.addHook("afterCreateCol", updateColInfoFn);
-  tblInst1.addHook("afterRemoveRow", updateColInfoFn);
-  tblInst1.addHook("afterRemoveCol", updateColInfoFn);
+  tblInst1.addHook("afterCreateRow", () => updateColInfoFn(tbl));
+  tblInst1.addHook("afterCreateCol", () => updateColInfoFn(tbl));
+  tblInst1.addHook("afterRemoveRow", () => updateColInfoFn(tbl));
+  tblInst1.addHook("afterRemoveCol", () => updateColInfoFn(tbl));
 
   tblInst1.addHook("afterOnCellMouseDown", (e) => {
     tblInst2.updateSettings({ cell: [] });

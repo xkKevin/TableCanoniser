@@ -2,6 +2,10 @@
 
 Define a declarative grammar that transforms messy data (non-aligned tables) into canonical/tidy tables (axis-aligned tables).
 
+## System Interface
+
+![System Interface](https://github.com/xkKevin/TableCanoniser/blob/dev/system-interface.png)
+
 ## Installation
 
 Install the package into your project using [NPM](https://npmjs.com):

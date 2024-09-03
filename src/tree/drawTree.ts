@@ -13,7 +13,6 @@ import {
 import letterAspectRatio from './letterAspectRatio';
 import { VisTreeNode, TableStore, Selection } from "@/store/table";
 import { CellConstraint, TableCanoniserKeyWords } from '@/table-canoniser/dist/grammar';
-import { info } from 'handsontable/helpers';
 
 
 export type NodeData = {
