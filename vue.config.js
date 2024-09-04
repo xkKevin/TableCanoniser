@@ -4,7 +4,7 @@ const webpack = require("webpack");
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  publicPath: "/TableCanoniser/",
+  // publicPath: "/TableCanoniser/",
   outputDir: "./docs",
   configureWebpack: {
     plugins: [

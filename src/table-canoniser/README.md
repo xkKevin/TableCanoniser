@@ -4,7 +4,7 @@ Define a declarative grammar that transforms messy data (non-aligned tables) int
 
 ## System Interface
 
-![System Interface](https://github.com/xkKevin/TableCanoniser/blob/dev/system-interface.png)
+![System Interface](https://github.com/TableCanoniser/TableCanoniser.github.io/blob/deploy/system-interface.png)
 
 ## Installation
 
