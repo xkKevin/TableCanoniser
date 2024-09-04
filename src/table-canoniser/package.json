@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git@github.com:xkKevin/TableCanoniser.git"
+    "url": "git@github.com:TableCanoniser/TableCanoniser.github.io.git"
   },
   "keywords": [
     "table",
@@ -15,11 +15,10 @@
     "transform",
     "grammar"
   ],
-  "homepage": "https://xkkevin.github.io/TableCanoniser",
+  "homepage": "https://tablecanoniser.github.io/",
   "scripts": {
     "build": "tsc"
   },
-  "author": "Kai Xiong",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.5.4"
