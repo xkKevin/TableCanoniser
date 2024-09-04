@@ -20,6 +20,7 @@
     "oh-vue-icons": "^1.0.0-rc3",
     "pinia": "^2.1.7",
     "vue": "^3.2.13",
+    "vue-resizable": "^2.1.7",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -27,6 +27,7 @@
       </div>
     </div>
   </div>
+  <div class="divider-w" @mousedown="getNeighborEls($event, 'width')" title="Drag to resize"></div>
   <div class="view">
     <div class="view-title">
       <span>Output Table</span>
@@ -66,6 +67,7 @@ import { useTableStore, Selection } from "@/store/table";
 import * as XLSX from 'xlsx';  // parse excel data
 import { Table2D, TableCanoniserTemplate } from "@/table-canoniser/dist/grammar"
 import { message } from "ant-design-vue";
+import { getNeighborEls } from '@/utils/dragLayout';
 
 // import { ArrowUpTrayIcon } from '@heroicons/vue/24/solid'
 
@@ -250,7 +252,7 @@ function normalizeSelection(selections: Selection[]): Selection[] {
   });
 }
 
-import { drawMinimap } from '@/tree/minimap';
+import { drawMinimap } from '@/utils/minimap';
 
 function initEventsForTbl(tbl: "input_tbl" | "output_tbl") {
   let tblInst1: Handsontable, tblInst2: Handsontable;
@@ -470,6 +472,20 @@ onMounted(() => {
 
   initEventsForTbl("input_tbl");
   initEventsForTbl("output_tbl");
+
+  // keepIconsSynchronizedWithTable() { },
+  const iconScrolls = document.querySelectorAll('.icons-container .icon-scroll');
+  const tblScrolls = document.querySelectorAll('.ht_master .wtHolder');
+
+  iconScrolls.forEach((iconScroll, index) => {
+    iconScroll.addEventListener('scroll', () => {
+      tblScrolls[index].scrollLeft = iconScroll.scrollLeft;
+    });
+
+    tblScrolls[index].addEventListener('scroll', () => {
+      iconScroll.scrollLeft = tblScrolls[index].scrollLeft;
+    });
+  })
 });
 
 // function showDropdown() {

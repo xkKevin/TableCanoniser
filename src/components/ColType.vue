@@ -76,21 +76,6 @@ function handleIconClick(col: number, rows: number[]) {
         tableStore.highlightTblCells("input_tbl", correspondingTblCells);
     }
 }
-
-const tblIndex = tblType === "input_tbl" ? 0 : 1;
-
-document.addEventListener('DOMContentLoaded', () => {
-    const iconScroll = document.querySelectorAll('.icons-container .icon-scroll')[tblIndex];
-    const tblScroll = document.querySelectorAll('.ht_master .wtHolder')[tblIndex]
-
-    iconScroll.addEventListener('scroll', () => {
-        tblScroll.scrollLeft = iconScroll.scrollLeft;
-    });
-
-    tblScroll.addEventListener('scroll', () => {
-        iconScroll.scrollLeft = tblScroll.scrollLeft;
-    });
-});
 </script>
 
 <style scoped>

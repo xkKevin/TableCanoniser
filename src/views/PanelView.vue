@@ -27,12 +27,12 @@
         <div style="flex: 1; display: flex; min-height: 0px;">
           <InOutTable />
         </div>
-
+        <div class="divider-h" @mousedown="getNeighborEls($event, 'height')" title="Drag to resize"></div>
         <div style="flex: 1; display: flex; min-height: 0px;">
           <PatternVis ref="patternVis" />
         </div>
       </div>
-
+      <div class="divider-w" @mousedown="getNeighborEls($event, 'width')" title="Drag to resize"></div>
       <div class="column" style="flex: 5;">
         <div class="view">
           <div class="view-content">
@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, triggerRef } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
@@ -89,11 +89,13 @@ import PatternVis from "@/components/PatternVis.vue";
 import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
-import { typeMapColor, TypeColor } from '@/tree/style';
+import { typeMapColor, TypeColor } from '@/utils/style';
 for (const key in typeMapColor) {
   document.documentElement.style.setProperty(`--color-${key}`, typeMapColor[key as TypeColor]);
 }
 document.documentElement.style.setProperty('--custom-cursor', 'default');
+
+import { getNeighborEls, onDrag, endDrag } from '@/utils/dragLayout';
 
 import { useTableStore } from "@/store/table";
 const tableStore = useTableStore();
@@ -199,8 +201,10 @@ function selectLeave(e: any, v: any) {
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown);
   tableStore.loadCaseData(tableStore.currentCase);
+  document.addEventListener('keydown', handleKeydown);
+  document.addEventListener("mousemove", onDrag);
+  document.addEventListener("mouseup", endDrag);
 });
 
 </script>
@@ -248,6 +252,7 @@ onMounted(() => {
   width: calc(100vw - 10px);
   padding: 1px;
   box-sizing: border-box;
+  border: 1px solid #ccc;
 
   // 这是用来让图标和文字有一定间距
   svg.ov-icon+span {
@@ -255,7 +260,7 @@ onMounted(() => {
   }
 
   .column {
-    height: calc(100vh - 54px);
+    height: calc(100vh - 56px);
   }
 
   .view {
@@ -281,7 +286,7 @@ onMounted(() => {
 .view {
   //   margin: 8px 2px 2px 8px;
   padding: 10px 8px 5px 8px;
-  border: 1px solid #ccc;
+  // border: 1px solid #ccc;
   //   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -343,5 +348,17 @@ onMounted(() => {
   svg path {
     stroke: rgba(0, 0, 0, 0.25);
   }
+}
+
+.divider-w {
+  width: 2px;
+  cursor: col-resize;
+  background-color: #ccc;
+}
+
+.divider-h {
+  height: 2px;
+  cursor: row-resize;
+  background-color: #ccc;
 }
 </style>

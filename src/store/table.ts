@@ -5,14 +5,14 @@ import { shallowRef } from 'vue';
 
 import { Table2D, TableCanoniserTemplate, TableCanoniserKeyWords, CellInfo, CellValueType, AreaInfo, completeCellConstraint } from "@/table-canoniser/dist/grammar"
 import { transformTable, serialize, getCellBySelect } from "@/table-canoniser/dist/parser"
-import { TreeChart, NodeData } from '@/tree/drawTree';
+import { TreeChart, NodeData } from '@/utils/drawTree';
 import { CustomError } from "@/types";
 
 import { message } from 'ant-design-vue';
 
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
-import { typeMapColor, TypeColor } from '@/tree/style';
+import { typeMapColor, TypeColor } from '@/utils/style';
 // import { colorConfig } from '@/tree/style';
 // import { cloneDeep } from 'lodash';
 

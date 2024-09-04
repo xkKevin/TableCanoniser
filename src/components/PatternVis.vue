@@ -4,13 +4,14 @@
             <a-flex justify="space-between" align="center">
                 <span style="font-size: 18px; font-weight: bold;">Mapping Patterns</span>
                 <span>
-                    <span :title="instanceContent">Current instance:</span>
+                    <span>Current instance:</span>
                     <a-input-number class="goToInstance" :value="tableStore.tree.instanceIndex" :defaultValue="-1"
                         :disabled="tableStore.spec.matchedInstNum === 0"
                         @pressEnter="tableStore.goToInstance(+$event.target.value - 1)" size="small" :precision="0"
                         :formatter="handleFormatter" @step="handleStep"
                         @blur="tableStore.goToInstance(+$event.target.value - 1)"></a-input-number>
-                    <span style="font-weight: normal">/ [{{ tableStore.spec.matchedInstNum }}]</span>
+                    <span style="font-weight: normal" :title="instanceContent">/ [{{ tableStore.spec.matchedInstNum
+                        }}]</span>
                 </span>
                 <span style="font-size: 15px; height: 25px">
                     <span>Match:</span>
@@ -62,11 +63,11 @@
 import { computed, onMounted, ref, watch } from 'vue';
 // import * as d3 from 'd3';
 // import { flextree, FlextreeNode } from 'd3-flextree';
-import { TreeChart } from '@/tree/drawTree';
+import { TreeChart } from '@/utils/drawTree';
 import { message } from 'ant-design-vue';
-import { AreaBox, TblCell, useTableStore } from "@/store/table";
+import { useTableStore } from "@/store/table";
 import * as d3 from 'd3';
-import { TypeColor, typeMapColor } from '@/tree/style';
+import { TypeColor } from '@/utils/style';
 const tableStore = useTableStore();
 
 /*
@@ -336,8 +337,8 @@ watch(() => tableStore.tree.instanceIndex, () => {
     tableStore.updateCurve();
 });
 
-import { drawMinimap, miniZoom } from '@/tree/minimap';
-import { drawTblTemplate, tempZoom } from '@/tree/template';
+import { drawMinimap, miniZoom } from '@/utils/minimap';
+import { drawTblTemplate, tempZoom } from '@/utils/template';
 watch(() => tableStore.input_tbl.tbl, (newVal) => {
     // console.log('watch: input_tbl changed: start');
     drawMinimap(newVal.length, newVal[0].length, tblContainer.value, tableStore);
