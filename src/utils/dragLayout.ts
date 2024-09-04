@@ -40,7 +40,6 @@ function onDrag(e: MouseEvent) {
   if (!dragging || lastEl.ele === undefined || nextEl.ele === undefined) {
     return;
   }
-  console.log(e, e.target);
 
   const move = dragging === "width" ? e.clientX - startX : e.clientY - startY;
   const newLastW_H = lastEl[dragging] + move;
@@ -51,19 +50,8 @@ function onDrag(e: MouseEvent) {
   const newLastFlex = newLastRate * flexSum;
   const newNextFlex = newNextRate * flexSum;
 
-  console.log(newLastFlex, newNextFlex, (flexSum - newLastFlex));
   lastEl.ele.style.flex = `${newLastFlex}`;
   nextEl.ele.style.flex = `${newNextFlex}`;
-
-  // if (dragging === "width") {
-  //   const moveX = e.clientX - startX;
-  //   lastEl.ele.style.width = `${lastEl.width + moveX}px`;
-  //   nextEl.ele.style.width = `${nextEl.width - moveX}px`;
-  // } else {
-  //   const moveY = e.clientY - startY;
-  //   lastEl.ele.style.height = `${lastEl.height + moveY}px`;
-  //   nextEl.ele.style.height = `${nextEl.height - moveY}px`;
-  // }
 }
 
 function endDrag() {

@@ -7,7 +7,7 @@ This system is entirely frontend-based, eliminating the need for user-side deplo
 It can be accessed directly through a web browser ([TableCanoniser URL](https://tablecanoniser.github.io/)).
 We expect that the ease of access and the rich visualization and interaction features of TableCanoniser can significantly enhance the efficiency of table transformation for users, while also fostering greater trust in the results.
 
-Our declarative grammar, [_table-canoniser_](https://www.npmjs.com/package/table-canoniser) (which has been built and published as an open-source NPM package), is defined in [`src/table-canoniser/`](https://github.com/TableCanoniser/TableCanoniser.github.io/tree/delopy/src/table-canoniser)
+Our declarative grammar, [_table-canoniser_](https://www.npmjs.com/package/table-canoniser) (which has been built and published as an open-source NPM package), is defined in [`src/table-canoniser/`](https://github.com/TableCanoniser/TableCanoniser.github.io/tree/deploy/src/table-canoniser)
 
 ## System Interface
 
