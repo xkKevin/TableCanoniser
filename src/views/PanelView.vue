@@ -4,9 +4,8 @@
       <span id="system_name">TableCanoniser</span>
       <span style="left: 20px; position: absolute;">
         <span style="font-size: 16px; font-weight: normal; margin-right: 5px">Cases:</span>
-        <!-- @mouseenter="selectEnter" @mouseleave="selectLeave"  :open="isDropdownOpen" :getPopupContainer="(triggerNode: any) => triggerNode.parentNode" -->
         <a-select :value="currentCase" :options="caseOption" size="small" @change="handleCaseChange"
-          @mouseenter="selectEnter" @mouseleave="selectLeave" :open="isDropdownOpen" style="width: 124px;"></a-select>
+          @mouseenter="selectEnter" @mouseleave="selectLeave" :open="isDropdownOpen" style="width: 137px;"></a-select>
       </span>
       <span style="right: 20px; position: absolute;">
         <a-button-group>
@@ -62,20 +61,11 @@
                 </template>
                 <CodeView codeType="rootArea" />
               </a-tab-pane>
-              <!-- <a-tab-pane key="3">
-                <template #tab>
-                  <span>
-                    Transformation Script
-                  </span>
-                </template>
-                <CodeView codeType="transformScript" />
-              </a-tab-pane> -->
             </a-tabs>
           </div>
         </div>
       </div>
     </div>
-    <DraggableModal />
   </div>
 </template>
 
@@ -84,9 +74,7 @@ import { computed, onMounted, ref } from "vue";
 
 import InOutTable from "@/components/InOutTable.vue";
 import CodeView from "@/components/CodeView.vue";
-// import Minimap from "@/components/Minimap.vue";
 import PatternVis from "@/components/PatternVis.vue";
-import DraggableModal from "@/components/DraggableModal.vue";
 // import ChatBot from "@/components/ChatBot.vue";
 
 import { typeMapColor, TypeColor } from '@/utils/style';

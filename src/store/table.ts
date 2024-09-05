@@ -124,8 +124,8 @@ export const useTableStore = defineStore('table', {
   // data
   state() {
     return {
-      caseList: shallowRef<string[]>(["1. university", "2. university2", "3. model", "4. phone", "5. bank", "6. payroll", "7. York"]),
-      currentCase: "1. university", // caseList[0],
+      caseList: shallowRef<string[]>(["1a. university", "1b. university_v", "2. model", "3. phone", "4. bank", "5. payroll", "6. York"]),
+      currentCase: "1a. university", // caseList[0],
       currentInitData: shallowRef<Table2D>([]),
       spec: {
         undoHistory: [] as string[],  // 这里不能是 shallowRef，要不然 computed 计算不会被更新
